@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "prepare": "cd .. && husky disconnect/.husky",
+    "prepare": "husky",
     "web": "pnpm --dir src/apps/client dev",
     "web:build": "pnpm --dir src/apps/client build",
     "web:lint": "pnpm --dir src/apps/client lint",
