@@ -1,7 +1,11 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  sassOptions: {
+    includePaths: [path.join(process.cwd(), "src")],
+  },
   async rewrites() {
     return [
       {
