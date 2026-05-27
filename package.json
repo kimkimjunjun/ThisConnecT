@@ -2,11 +2,14 @@
   "name": "disconnect",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "prepare": "cd .. && husky disconnect/.husky",
-    "dev": "npm run dev --workspace=src/apps/client",
-    "build": "npm run build --workspace=src/apps/client",
-    "lint": "npm run lint --workspace=src/apps/client"
+    "web": "pnpm --dir src/apps/client dev",
+    "web:build": "pnpm --dir src/apps/client build",
+    "web:lint": "pnpm --dir src/apps/client lint",
+    "server": "cd src/apps/server && gradlew.bat bootRun",
+    "server:build": "cd src/apps/server && gradlew.bat build"
   },
   "devDependencies": {
     "@commitlint/cli": "^19",
