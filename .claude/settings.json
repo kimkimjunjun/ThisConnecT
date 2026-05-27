@@ -1,0 +1,59 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(git switch *)",
+      "Bash(git branch *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git fetch *)",
+      "Bash(git merge *)",
+      "Bash(git stash *)",
+      "Bash(npm install*)",
+      "Bash(npm run *)",
+      "Bash(npx *)",
+      "Bash(node *)"
+    ],
+    "deny": [
+      "Bash(git commit *--no-verify*)",
+      "Bash(git push *--force*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const o=JSON.parse(d);const cmd=o.command||'';if(cmd.includes('--no-verify')){process.stderr.write('⛔ --no-verify 사용 금지: commitlint 훅 우회는 허용되지 않습니다.\\n');process.exit(2);}if(cmd.match(/git push.*--force(?!-with-lease)/)){process.stderr.write('⛔ force push 금지: --force-with-lease 사용을 권장합니다.\\n');process.exit(2);}}catch(e){}});\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const o=JSON.parse(d);const p=o.file_path||'';const name=p.split(/[\\/\\\\]/).pop()||'';const noExt=name.replace(/\\.[^.]+$/,'');const isComponent=/^[A-Z][a-zA-Z0-9]*$/.test(noExt);const isKebab=/^[a-z0-9]+(-[a-z0-9]+)*$/.test(noExt);const isHook=/^use[A-Z]/.test(noExt);const skip=['page','layout','loading','error','not-found','route','middleware','next.config','tailwind.config','postcss.config','eslint.config','tsconfig','package','commitlint.config','.lintstagedrc'];if(skip.some(s=>noExt.includes(s)))return;if(p.includes('components')&&!p.includes('node_modules')&&!isComponent){process.stderr.write('⚠️  컴포넌트 파일명은 PascalCase여야 합니다: '+name+'\\n');}else if(p.includes('hooks')&&!p.includes('node_modules')&&!isHook&&!isKebab){process.stderr.write('⚠️  훅 파일명은 camelCase(use*)여야 합니다: '+name+'\\n');}else if(!p.includes('node_modules')&&!isComponent&&!isHook&&!isKebab&&noExt&&!/^[._]/.test(noExt)){process.stderr.write('⚠️  파일명은 kebab-case여야 합니다: '+name+'\\n');}}catch(e){}});\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const b=require('child_process').execSync('git branch --show-current 2>nul||git branch --show-current',{encoding:'utf8'}).trim();const valid=/^(main|develop|feat|fix|refactor|docs|chore|style|test|build)\\//.test(b)||['main','develop'].includes(b);if(!valid&&b){process.stdout.write('\\n💡 브랜치 규칙: feat/#1/card | fix/#2/bug | refactor/#3/my-page\\n현재 브랜치: '+b+'\\n');}\""
+          }
+        ]
+      }
+    ]
+  }
+}

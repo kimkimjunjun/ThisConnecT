@@ -1,0 +1,29 @@
+# Next.js
+src/apps/client/.next/
+src/apps/client/out/
+src/apps/client/node_modules/
+src/apps/client/.env.local
+src/apps/client/.env.development.local
+src/apps/client/.env.test.local
+src/apps/client/.env.production.local
+
+# Spring Boot
+src/apps/server/build/
+src/apps/server/.gradle/
+src/apps/server/!gradle/wrapper/gradle-wrapper.jar
+src/apps/server/*.jar
+src/apps/server/*.war
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db

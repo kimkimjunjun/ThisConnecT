@@ -1,0 +1,17 @@
+{
+  "name": "disconnect",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "prepare": "cd .. && husky disconnect/.husky",
+    "dev": "npm run dev --workspace=src/apps/client",
+    "build": "npm run build --workspace=src/apps/client",
+    "lint": "npm run lint --workspace=src/apps/client"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19",
+    "@commitlint/config-conventional": "^19",
+    "husky": "^9",
+    "lint-staged": "^15"
+  }
+}
