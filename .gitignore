@@ -1,7 +1,10 @@
+# Dependencies
+node_modules/
+src/apps/client/node_modules/
+
 # Next.js
 src/apps/client/.next/
 src/apps/client/out/
-src/apps/client/node_modules/
 src/apps/client/.env.local
 src/apps/client/.env.development.local
 src/apps/client/.env.test.local
