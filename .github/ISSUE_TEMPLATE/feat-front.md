@@ -1,8 +1,8 @@
 ---
-name: Feature Request
-about: 새로운 기능 제안 또는 개선 요청
-title: "[FEAT] "
-labels: enhancement
+name: "✨ [FE] Feature Request"
+about: 프론트엔드 기능 제안 또는 개선 요청
+title: "[FEAT/FE] "
+labels: "enhancement, frontend"
 assignees: ""
 ---
 

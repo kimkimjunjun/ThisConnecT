@@ -1,8 +1,8 @@
 ---
-name: Bug Report
-about: 버그 제보
-title: "[BUG] "
-labels: bug
+name: "🐛 [BE] Bug Report"
+about: 백엔드 버그 제보
+title: "[BUG/BE] "
+labels: "bug, backend"
 assignees: ""
 ---
 
@@ -19,4 +19,4 @@ assignees: ""
 ## ❌ 실제 동작
 
 ## 📎 추가 내용 (선택)
-<!-- 스크린샷, 로그, 환경 정보 등 -->
+<!-- 로그, 에러 메시지, API 엔드포인트, 요청/응답 정보 등 -->
