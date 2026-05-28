@@ -18,6 +18,7 @@ type Props = { children: ReactNode }
 
 export const DashboardLayout = ({ children }: Props) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [pendingRoute, setPendingRoute] = useState<string | null>(null)
 
   const router = useRouter()
   const pathname = usePathname()
@@ -32,12 +33,21 @@ export const DashboardLayout = ({ children }: Props) => {
     }
   }, [])
 
-  // Auto-close modal on login
+  // Auto-close modal on login, then navigate to pending route if any
   useEffect(() => {
-    if (accessToken) setIsModalOpen(false)
-  }, [accessToken])
+    if (accessToken) {
+      setIsModalOpen(false)
+      if (pendingRoute) {
+        router.push(pendingRoute)
+        setPendingRoute(null)
+      }
+    }
+  }, [accessToken, pendingRoute, router])
 
-  const openModal = useCallback(() => setIsModalOpen(true), [])
+  const openModal = useCallback((redirectTo?: string) => {
+    if (redirectTo) setPendingRoute(redirectTo)
+    setIsModalOpen(true)
+  }, [])
   const closeModal = useCallback(() => setIsModalOpen(false), [])
 
   const handleSelectCategory = useCallback(

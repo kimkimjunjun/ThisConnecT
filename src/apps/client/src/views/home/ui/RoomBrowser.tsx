@@ -60,8 +60,9 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms }: Props) => {
             const isFull = room.currentCount >= room.maxCount
             const handleClick = () => {
               if (isFull) return
-              if (!isLoggedIn) { openLoginModal(); return }
-              router.push(`/channels/${categoryId}/rooms/${room.id}`)
+              const dest = `/channels/${categoryId}/rooms/${room.id}`
+              if (!isLoggedIn) { openLoginModal(dest); return }
+              router.push(dest)
             }
             return (
               <button

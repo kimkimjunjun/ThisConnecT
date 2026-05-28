@@ -4,7 +4,7 @@ import { createContext, useContext } from 'react'
 
 type AuthContextValue = {
   isLoggedIn: boolean
-  openLoginModal: () => void
+  openLoginModal: (redirectTo?: string) => void
 }
 
 const AuthContext = createContext<AuthContextValue>({
