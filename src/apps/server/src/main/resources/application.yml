@@ -24,6 +24,18 @@ spring:
 server:
   port: 8080
 
+jwt:
+  secret: ${JWT_SECRET:disconnect-dev-secret-key-must-be-at-least-256-bits-long-for-hs256}
+
+oauth:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:}
+    redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:3000/callback/kakao}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/callback/google}
+
 logging:
   level:
     com.disconnect: DEBUG

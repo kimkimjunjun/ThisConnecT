@@ -8,8 +8,8 @@
     "web": "pnpm --dir src/apps/client dev",
     "web:build": "pnpm --dir src/apps/client build",
     "web:lint": "pnpm --dir src/apps/client lint",
-    "server": "cd src/apps/server && gradlew.bat bootRun",
-    "server:build": "cd src/apps/server && gradlew.bat build"
+    "server": "node -e \"const{spawnSync:s}=require('child_process'),p=require('path'),c=p.resolve('src/apps/server');s('cmd',['/c',p.join(c,'gradlew.bat'),'bootRun'],{cwd:c,stdio:'inherit'})\"",
+    "server:build": "node -e \"const{spawnSync:s}=require('child_process'),p=require('path'),c=p.resolve('src/apps/server');s('cmd',['/c',p.join(c,'gradlew.bat'),'build'],{cwd:c,stdio:'inherit'})\""
   },
   "devDependencies": {
     "@commitlint/cli": "^19",
