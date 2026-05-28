@@ -1,12 +1,17 @@
-import 'server-only'
+import "server-only";
 
-import { dehydrate, HydrationBoundary, type QueryFunction, type QueryKey } from '@tanstack/react-query'
-import { getQueryClient } from './query-client'
+import {
+  dehydrate,
+  HydrationBoundary,
+  type QueryFunction,
+  type QueryKey,
+} from "@tanstack/react-query";
+import { getQueryClient } from "./query-client";
 
 type PrefetchQuery = {
-  queryKey: QueryKey
-  queryFn: QueryFunction<unknown>
-}
+  queryKey: QueryKey;
+  queryFn: QueryFunction<unknown>;
+};
 
 /**
  * 서버에서 여러 쿼리를 병렬 prefetch하고 HydrationBoundary로 감싸는 컴포넌트.
@@ -25,10 +30,10 @@ export const PrefetchBoundary = async ({
   queries,
   children,
 }: {
-  queries: PrefetchQuery[]
-  children: React.ReactNode
+  queries: PrefetchQuery[];
+  children: React.ReactNode;
 }) => {
-  const queryClient = getQueryClient()
+  const queryClient = getQueryClient();
 
   await Promise.all(
     queries.map((q) =>
@@ -37,11 +42,11 @@ export const PrefetchBoundary = async ({
         queryFn: q.queryFn,
       }),
     ),
-  )
+  );
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       {children}
     </HydrationBoundary>
-  )
-}
+  );
+};

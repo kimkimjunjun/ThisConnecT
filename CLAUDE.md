@@ -1,7 +1,7 @@
 # Disconnect Project
 
 ## Stack
-- **Frontend**: Next.js 16 + React 19 + TypeScript + Tailwind CSS 4 (`src/apps/client`)
+- **Frontend**: Next.js 16 + React 19 + TypeScript + SCSS Modules (`src/apps/client`)
 - **Backend**: Spring Boot + Gradle (`src/apps/server`)
 
 ## Coding Conventions
@@ -42,9 +42,21 @@ build: 빌드 시스템
 
 ## Development Flow
 1. Issue 생성 → `develop`에서 브랜치 생성
-2. 구현 → `git commit` (commitlint 자동 검증)
+2. 구현 → `git commit` (commitlint 자동 검증, prepare-commit-msg 훅으로 메시지 자동 생성)
 3. PR → `develop` (PR 템플릿 사용)
 4. 배포: `develop` → `main`
+
+## Push Workflow (Claude 자동화)
+"해당 브랜치에 푸시해줘" 또는 "푸시해줘" 요청 시 Claude는 확인 없이 즉시 실행:
+```bash
+git push origin <현재 브랜치명>
+```
+`git push *` 권한이 `.claude/settings.json` allow 목록에 등록되어 있음.
+
+## Commit Message Auto-format
+`prepare-commit-msg` 훅이 브랜치명 기반으로 커밋 메시지 접두사 자동 생성:
+- 브랜치 `feat/#2/login` → 커밋 메시지 `feat(login): `
+- 브랜치 `fix/#3/bug-name` → 커밋 메시지 `fix(bug-name): `
 
 ## Project Structure
 ```

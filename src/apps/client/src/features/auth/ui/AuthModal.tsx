@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { redirectToKakao, redirectToGoogle } from '../lib/oauth'
+import { postGuestLogin } from '../api/auth-api'
 import styles from './AuthModal.module.scss'
 
 type Step = 'auth' | 'nickname'
@@ -9,26 +11,27 @@ export const AuthModal = () => {
   const [isOpen, setIsOpen] = useState(true)
   const [step, setStep] = useState<Step>('auth')
   const [nickname, setNickname] = useState('')
+  const [isPending, setIsPending] = useState(false)
 
   if (!isOpen) return null
 
-  const handleKakaoLogin = () => {
-    // TODO: Kakao OAuth redirect
-  }
+  const handleSubmitNickname = async () => {
+    const trimmed = nickname.trim()
+    if (!trimmed || isPending) return
 
-  const handleGoogleLogin = () => {
-    // TODO: Google OAuth redirect
-  }
-
-  const handleSubmitNickname = () => {
-    if (!nickname.trim()) return
-    // TODO: 비회원 세션 처리
-    setIsOpen(false)
+    setIsPending(true)
+    try {
+      await postGuestLogin(trimmed)
+      setIsOpen(false)
+    } catch {
+      // TODO: 에러 토스트 처리
+    } finally {
+      setIsPending(false)
+    }
   }
 
   return (
     <div className={styles.backdrop} onClick={() => setIsOpen(false)}>
-      {/* key={step}으로 step 변경 시 모달을 리마운트 → modal-in 애니메이션 재실행 */}
       <div className={styles.modal} key={step} onClick={(e) => e.stopPropagation()}>
         {step === 'auth' ? (
           <>
@@ -47,7 +50,7 @@ export const AuthModal = () => {
 
               <button
                 className={`${styles.button} ${styles.kakaoButton}`}
-                onClick={handleKakaoLogin}
+                onClick={redirectToKakao}
               >
                 <KakaoIcon />
                 카카오 로그인
@@ -55,7 +58,7 @@ export const AuthModal = () => {
 
               <button
                 className={`${styles.button} ${styles.googleButton}`}
-                onClick={handleGoogleLogin}
+                onClick={redirectToGoogle}
               >
                 <GoogleIcon />
                 구글 로그인
@@ -76,12 +79,14 @@ export const AuthModal = () => {
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmitNickname()}
                 autoFocus
                 maxLength={20}
+                disabled={isPending}
               />
               <button
                 className={styles.submitButton}
                 onClick={handleSubmitNickname}
+                disabled={isPending || !nickname.trim()}
               >
-                접속하기
+                {isPending ? '접속 중...' : '접속하기'}
               </button>
             </div>
           </>
