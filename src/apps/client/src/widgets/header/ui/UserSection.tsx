@@ -74,7 +74,11 @@ export default function UserSection({ onLoginClick }: Props) {
       {open && (
         <ul className={styles.dropdown} role="menu">
           <li role="none">
-            <button className={styles.dropdownItem} role="menuitem">
+            <button
+              className={styles.dropdownItem}
+              role="menuitem"
+              onClick={() => { setOpen(false); router.push('/mypage') }}
+            >
               마이페이지
             </button>
           </li>
