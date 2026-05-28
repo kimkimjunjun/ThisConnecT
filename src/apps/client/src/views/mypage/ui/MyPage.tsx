@@ -1,42 +1,62 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useAuthStore } from '@/features/auth'
-import styles from './MyPage.module.scss'
+import { useState, useEffect } from "react";
+import { useAuthStore } from "@/features/auth";
+import styles from "./MyPage.module.scss";
 
-const XP_PER_LEVEL = 100
+type MicPermission = "unknown" | "granted" | "denied" | "prompt";
+
+const useMicPermission = (): MicPermission => {
+  const [state, setState] = useState<MicPermission>("unknown");
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.permissions) return;
+    navigator.permissions
+      .query({ name: "microphone" as PermissionName })
+      .then((result) => {
+        setState(result.state as MicPermission);
+        result.onchange = () => setState(result.state as MicPermission);
+      })
+      .catch(() => setState("unknown"));
+  }, []);
+
+  return state;
+};
+
+const XP_PER_LEVEL = 100;
 
 export const MyPage = () => {
-  const nickname = useAuthStore((s) => s.nickname)
-  const role = useAuthStore((s) => s.role)
-  const level = useAuthStore((s) => s.level)
-  const updateNickname = useAuthStore((s) => s.updateNickname)
+  const nickname = useAuthStore((s) => s.nickname);
+  const role = useAuthStore((s) => s.role);
+  const level = useAuthStore((s) => s.level);
+  const updateNickname = useAuthStore((s) => s.updateNickname);
 
-  const [nicknameInput, setNicknameInput] = useState(nickname ?? '')
-  const [isSaving, setIsSaving] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
-  const [micVolume, setMicVolume] = useState(50)
-  const [speakerVolume, setSpeakerVolume] = useState(80)
-  const [isMicOn, setIsMicOn] = useState(true)
+  const [nicknameInput, setNicknameInput] = useState(nickname ?? "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [micVolume, setMicVolume] = useState(50);
+  const [speakerVolume, setSpeakerVolume] = useState(80);
+  const [isMicOn, setIsMicOn] = useState(true);
+  const micPermission = useMicPermission();
 
-  const avatarChar = nickname ? nickname[0].toUpperCase() : '?'
-  const currentXP = 0
-  const requiredXP = (level + 1) * XP_PER_LEVEL
-  const xpPercent = Math.min((currentXP / requiredXP) * 100, 100)
+  const avatarChar = nickname ? nickname[0].toUpperCase() : "?";
+  const currentXP = 0;
+  const requiredXP = (level + 1) * XP_PER_LEVEL;
+  const xpPercent = Math.min((currentXP / requiredXP) * 100, 100);
 
   const handleSaveNickname = async () => {
-    const trimmed = nicknameInput.trim()
-    if (!trimmed || isSaving) return
-    setIsSaving(true)
+    const trimmed = nicknameInput.trim();
+    if (!trimmed || isSaving) return;
+    setIsSaving(true);
     try {
       // TODO: 백엔드 API 연동
-      updateNickname(trimmed)
-      setSaveSuccess(true)
-      setTimeout(() => setSaveSuccess(false), 2000)
+      updateNickname(trimmed);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   return (
     <div className={styles.container}>
@@ -47,9 +67,9 @@ export const MyPage = () => {
           <span className={styles.levelBadge}>Lv.{level}</span>
         </div>
         <div className={styles.profileInfo}>
-          <h2 className={styles.profileName}>{nickname ?? '비회원'}</h2>
+          <h2 className={styles.profileName}>{nickname ?? "비회원"}</h2>
           <span className={styles.roleBadge}>
-            {role === 'GUEST' ? '게스트' : '멤버'}
+            {role === "GUEST" ? "게스트" : "멤버"}
           </span>
         </div>
       </div>
@@ -64,15 +84,15 @@ export const MyPage = () => {
               className={styles.input}
               value={nicknameInput}
               onChange={(e) => {
-                setNicknameInput(e.target.value)
-                setSaveSuccess(false)
+                setNicknameInput(e.target.value);
+                setSaveSuccess(false);
               }}
-              onKeyDown={(e) => e.key === 'Enter' && handleSaveNickname()}
+              onKeyDown={(e) => e.key === "Enter" && handleSaveNickname()}
               maxLength={20}
               placeholder="닉네임 입력"
             />
             <button
-              className={`${styles.saveBtn} ${saveSuccess ? styles.saveBtnSuccess : ''}`}
+              className={`${styles.saveBtn} ${saveSuccess ? styles.saveBtnSuccess : ""}`}
               onClick={handleSaveNickname}
               disabled={
                 isSaving ||
@@ -80,7 +100,7 @@ export const MyPage = () => {
                 nicknameInput.trim() === nickname
               }
             >
-              {saveSuccess ? '저장됨 ✓' : isSaving ? '저장 중...' : '저장'}
+              {saveSuccess ? "저장됨 ✓" : isSaving ? "저장 중..." : "저장"}
             </button>
           </div>
         </div>
@@ -89,23 +109,6 @@ export const MyPage = () => {
       {/* Audio settings */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>오디오 설정</h3>
-        <div className={styles.field}>
-          <div className={styles.labelRow}>
-            <label className={styles.label}>
-              <span className={styles.labelIcon}>🎤</span>
-              마이크 볼륨
-            </label>
-            <span className={styles.volumeValue}>{micVolume}%</span>
-          </div>
-          <input
-            type="range"
-            className={styles.slider}
-            min={0}
-            max={100}
-            value={micVolume}
-            onChange={(e) => setMicVolume(Number(e.target.value))}
-          />
-        </div>
         <div className={styles.field}>
           <div className={styles.labelRow}>
             <label className={styles.label}>
@@ -125,12 +128,47 @@ export const MyPage = () => {
         </div>
         <div className={styles.field}>
           <div className={styles.labelRow}>
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>🎤</span>
+              마이크 볼륨
+            </label>
+            <div className={styles.micLabelRight}>
+              <span
+                className={`${styles.permBadge} ${
+                  micPermission === "granted"
+                    ? styles.permGranted
+                    : micPermission === "denied"
+                      ? styles.permDenied
+                      : styles.permPending
+                }`}
+              >
+                {micPermission === "granted"
+                  ? "✓ 허용됨"
+                  : micPermission === "denied"
+                    ? "✗ 차단됨"
+                    : "대기 중"}
+              </span>
+              <span className={styles.volumeValue}>{micVolume}%</span>
+            </div>
+          </div>
+          <input
+            type="range"
+            disabled={micPermission === "denied"}
+            className={styles.slider}
+            min={0}
+            max={100}
+            value={micVolume}
+            onChange={(e) => setMicVolume(Number(e.target.value))}
+          />
+        </div>
+        <div className={styles.field}>
+          <div className={styles.labelRow}>
             <label className={styles.label}>마이크 테스트</label>
             <button
               className={`${styles.micToggle} ${isMicOn ? styles.micToggleOn : styles.micToggleOff}`}
               onClick={() => setIsMicOn((v) => !v)}
             >
-              {isMicOn ? '🎤 켜짐' : '🔇 꺼짐'}
+              {isMicOn ? "🎤 켜짐" : "🔇 꺼짐"}
             </button>
           </div>
         </div>
@@ -147,10 +185,7 @@ export const MyPage = () => {
             </span>
           </div>
           <div className={styles.xpBar}>
-            <div
-              className={styles.xpFill}
-              style={{ width: `${xpPercent}%` }}
-            />
+            <div className={styles.xpFill} style={{ width: `${xpPercent}%` }} />
           </div>
           <p className={styles.levelHint}>
             채팅방 활동을 통해 경험치를 획득할 수 있어요
@@ -158,5 +193,5 @@ export const MyPage = () => {
         </div>
       </section>
     </div>
-  )
-}
+  );
+};

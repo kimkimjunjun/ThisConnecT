@@ -200,6 +200,36 @@ $avatar-bg: #5865f2;
   }
 }
 
+// ─── Mic label right group ────────────────────────────────────────────────────
+.micLabelRight {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+}
+
+.permBadge {
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  padding: 2px $spacing-2;
+  border-radius: $radius-full;
+  white-space: nowrap;
+}
+
+.permGranted {
+  background-color: rgba($success, 0.15);
+  color: $success;
+}
+
+.permDenied {
+  background-color: rgba($danger, 0.15);
+  color: $danger;
+}
+
+.permPending {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: $text-muted;
+}
+
 // ─── Volume sliders ───────────────────────────────────────────────────────────
 .volumeValue {
   font-size: $text-sm;

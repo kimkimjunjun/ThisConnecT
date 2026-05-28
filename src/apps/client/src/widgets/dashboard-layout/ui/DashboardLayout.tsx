@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 
 let initialModalShown = false
+let permissionRequested = false
 import {
   AuthModal,
   useAuthStore,
@@ -32,6 +33,16 @@ export const DashboardLayout = ({ children }: Props) => {
     if (!useAuthStore.getState().accessToken) {
       setIsModalOpen(true)
     }
+  }, [])
+
+  useEffect(() => {
+    if (permissionRequested) return
+    permissionRequested = true
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) return
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => stream.getTracks().forEach((t) => t.stop()))
+      .catch(() => {})
   }, [])
 
   // Auto-close modal on login, then navigate to pending route if any
