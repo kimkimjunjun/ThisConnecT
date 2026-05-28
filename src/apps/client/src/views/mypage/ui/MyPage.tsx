@@ -23,6 +23,36 @@ const useMicPermission = (): MicPermission => {
   return state;
 };
 
+const useAudioDevices = (micPermission: MicPermission) => {
+  const [outputs, setOutputs] = useState<MediaDeviceInfo[]>([]);
+  const [inputs, setInputs] = useState<MediaDeviceInfo[]>([]);
+
+  useEffect(() => {
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.mediaDevices?.enumerateDevices
+    )
+      return;
+
+    const enumerate = () => {
+      navigator.mediaDevices
+        .enumerateDevices()
+        .then((devices) => {
+          setOutputs(devices.filter((d) => d.kind === "audiooutput"));
+          setInputs(devices.filter((d) => d.kind === "audioinput"));
+        })
+        .catch(() => {});
+    };
+
+    enumerate();
+    navigator.mediaDevices.addEventListener("devicechange", enumerate);
+    return () =>
+      navigator.mediaDevices.removeEventListener("devicechange", enumerate);
+  }, [micPermission]);
+
+  return { outputs, inputs };
+};
+
 const XP_PER_LEVEL = 100;
 
 export const MyPage = () => {
@@ -37,7 +67,15 @@ export const MyPage = () => {
   const [micVolume, setMicVolume] = useState(50);
   const [speakerVolume, setSpeakerVolume] = useState(80);
   const [isMicOn, setIsMicOn] = useState(true);
+  const [selectedOutput, setSelectedOutput] = useState("");
+  const [selectedInput, setSelectedInput] = useState("");
+
   const micPermission = useMicPermission();
+  const { outputs, inputs } = useAudioDevices(micPermission);
+  const micBlocked = micPermission === "denied";
+
+  const effectiveOutput = selectedOutput || outputs[0]?.deviceId || "";
+  const effectiveInput = selectedInput || inputs[0]?.deviceId || "";
 
   const avatarChar = nickname ? nickname[0].toUpperCase() : "?";
   const currentXP = 0;
@@ -109,66 +147,103 @@ export const MyPage = () => {
       {/* Audio settings */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>오디오 설정</h3>
+
+        {/* Speaker */}
         <div className={styles.field}>
-          <div className={styles.labelRow}>
-            <label className={styles.label}>
-              <span className={styles.labelIcon}>🔊</span>
-              스피커 볼륨
-            </label>
+          <label className={styles.label}>
+            <span className={styles.labelIcon}>🔊</span>
+            출력 장치
+          </label>
+          <select
+            className={styles.deviceSelect}
+            value={effectiveOutput}
+            onChange={(e) => setSelectedOutput(e.target.value)}
+          >
+            {outputs.length > 0 ? (
+              outputs.map((d) => (
+                <option key={d.deviceId} value={d.deviceId}>
+                  {d.label || "기본 스피커"}
+                </option>
+              ))
+            ) : (
+              <option value="">장치를 찾을 수 없음</option>
+            )}
+          </select>
+          <div className={styles.sliderRow}>
+            <span className={styles.sliderLabel}>볼륨</span>
+            <input
+              type="range"
+              className={styles.slider}
+              min={0}
+              max={100}
+              value={speakerVolume}
+              onChange={(e) => setSpeakerVolume(Number(e.target.value))}
+            />
             <span className={styles.volumeValue}>{speakerVolume}%</span>
           </div>
-          <input
-            type="range"
-            className={styles.slider}
-            min={0}
-            max={100}
-            value={speakerVolume}
-            onChange={(e) => setSpeakerVolume(Number(e.target.value))}
-          />
         </div>
+
+        {/* Microphone */}
         <div className={styles.field}>
-          <div className={styles.labelRow}>
-            <label className={styles.label}>
-              <span className={styles.labelIcon}>🎤</span>
-              마이크 볼륨
-            </label>
-            <div className={styles.micLabelRight}>
-              <span
-                className={`${styles.permBadge} ${
-                  micPermission === "granted"
-                    ? styles.permGranted
-                    : micPermission === "denied"
-                      ? styles.permDenied
-                      : styles.permPending
-                }`}
-              >
-                {micPermission === "granted"
-                  ? "✓ 허용됨"
-                  : micPermission === "denied"
-                    ? "✗ 차단됨"
-                    : "대기 중"}
+          <label className={styles.label}>
+            <span className={styles.labelIcon}>🎤</span>
+            입력 장치
+          </label>
+          {micBlocked ? (
+            <div className={styles.permDeniedMsg}>
+              <span>🚫</span>
+              <span>
+                마이크 권한이 차단되었습니다. 브라우저 설정에서 권한을
+                허용해주세요.
               </span>
-              <span className={styles.volumeValue}>{micVolume}%</span>
             </div>
-          </div>
-          <input
-            type="range"
-            disabled={micPermission === "denied"}
-            className={styles.slider}
-            min={0}
-            max={100}
-            value={micVolume}
-            onChange={(e) => setMicVolume(Number(e.target.value))}
-          />
-        </div>
-        <div className={styles.field}>
-          <div className={styles.labelRow}>
-            <label className={styles.label}>마이크 테스트</label>
-            <button
-              className={`${styles.micToggle} ${isMicOn ? styles.micToggleOn : styles.micToggleOff}`}
-              onClick={() => setIsMicOn((v) => !v)}
+          ) : (
+            <select
+              className={`${styles.deviceSelect} ${micPermission !== "granted" ? styles.deviceSelectPending : ""}`}
+              value={effectiveInput}
+              onChange={(e) => setSelectedInput(e.target.value)}
+              disabled={micPermission !== "granted"}
             >
-              {isMicOn ? "🎤 켜짐" : "🔇 꺼짐"}
+              {inputs.length > 0 ? (
+                inputs.map((d) => (
+                  <option key={d.deviceId} value={d.deviceId}>
+                    {d.label || "기본 마이크"}
+                  </option>
+                ))
+              ) : (
+                <option value="">
+                  {micPermission === "granted"
+                    ? "장치를 찾을 수 없음"
+                    : "권한 허용 후 표시됩니다"}
+                </option>
+              )}
+            </select>
+          )}
+          <div className={styles.sliderRow}>
+            <span className={styles.sliderLabel}>볼륨</span>
+            <input
+              type="range"
+              className={styles.slider}
+              min={0}
+              max={100}
+              value={micVolume}
+              onChange={(e) => setMicVolume(Number(e.target.value))}
+              disabled={micBlocked}
+            />
+            <span className={styles.volumeValue}>{micVolume}%</span>
+          </div>
+          <div className={styles.sliderRow}>
+            <span className={styles.sliderLabel}>테스트</span>
+            <button
+              className={`${styles.micToggle} ${
+                !micBlocked && isMicOn
+                  ? styles.micToggleOn
+                  : styles.micToggleOff
+              }`}
+              onClick={() => !micBlocked && setIsMicOn((v) => !v)}
+              disabled={micBlocked}
+            >
+              {micBlocked ? "🚫 차단됨" : isMicOn ? "🎤 켜짐" : "🔇 꺼짐"}
             </button>
           </div>
         </div>

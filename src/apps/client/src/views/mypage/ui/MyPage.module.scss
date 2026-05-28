@@ -200,34 +200,68 @@ $avatar-bg: #5865f2;
   }
 }
 
-// ─── Mic label right group ────────────────────────────────────────────────────
-.micLabelRight {
+// ─── Device select ────────────────────────────────────────────────────────────
+.deviceSelect {
+  width: 100%;
+  padding: $spacing-2 $spacing-8 $spacing-2 $spacing-3;
+  background-color: $bg-tertiary;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $radius-md;
+  color: $text-primary;
+  font-size: $text-sm;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23949ba4' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right $spacing-3 center;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    border-color: $accent;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  option {
+    background-color: $bg-tertiary;
+    color: $text-primary;
+  }
+}
+
+.deviceSelectPending {
+  opacity: 0.6;
+}
+
+// ─── Permission denied message ─────────────────────────────────────────────────
+.permDeniedMsg {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-2 $spacing-3;
+  background-color: rgba($danger, 0.08);
+  border: 1px solid rgba($danger, 0.2);
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  color: $danger;
+  line-height: $leading-normal;
+}
+
+// ─── Slider row ───────────────────────────────────────────────────────────────
+.sliderRow {
   display: flex;
   align-items: center;
   gap: $spacing-2;
 }
 
-.permBadge {
-  font-size: 10px;
-  font-weight: $font-weight-semibold;
-  padding: 2px $spacing-2;
-  border-radius: $radius-full;
-  white-space: nowrap;
-}
-
-.permGranted {
-  background-color: rgba($success, 0.15);
-  color: $success;
-}
-
-.permDenied {
-  background-color: rgba($danger, 0.15);
-  color: $danger;
-}
-
-.permPending {
-  background-color: rgba(255, 255, 255, 0.06);
+.sliderLabel {
+  font-size: $text-xs;
   color: $text-muted;
+  white-space: nowrap;
+  min-width: 28px;
 }
 
 // ─── Volume sliders ───────────────────────────────────────────────────────────
