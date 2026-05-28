@@ -16,8 +16,8 @@ export default async function GoogleCallbackPage({
 
   try {
     await postSocialCallback('google', code)
-    redirect('/')
   } catch {
     redirect('/?error=auth_failed')
   }
+  redirect('/')
 }

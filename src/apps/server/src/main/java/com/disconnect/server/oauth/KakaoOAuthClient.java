@@ -15,6 +15,9 @@ public class KakaoOAuthClient implements OAuthClient {
     @Value("${oauth.kakao.client-id}")
     private String clientId;
 
+    @Value("${oauth.kakao.client-secret:}")
+    private String clientSecret;
+
     @Value("${oauth.kakao.redirect-uri}")
     private String redirectUri;
 
@@ -32,6 +35,9 @@ public class KakaoOAuthClient implements OAuthClient {
         form.add("client_id", clientId);
         form.add("redirect_uri", redirectUri);
         form.add("code", code);
+        if (clientSecret != null && !clientSecret.isBlank()) {
+            form.add("client_secret", clientSecret);
+        }
 
         Map<?, ?> response = restClient.post()
                 .uri("https://kauth.kakao.com/oauth/token")

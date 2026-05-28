@@ -16,8 +16,9 @@ export default async function KakaoCallbackPage({
 
   try {
     await postSocialCallback('kakao', code)
-    redirect('/')
-  } catch {
+  } catch (err) {
+    console.error('[kakao callback error]', err)
     redirect('/?error=auth_failed')
   }
+  redirect('/')
 }
