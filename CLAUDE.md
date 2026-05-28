@@ -21,11 +21,20 @@
 
 ## Branch Rules
 ```
-main          → 배포용 (직접 push 금지)
-develop       → 개발 통합 브랜치
+prod          → 운영 배포용 (직접 push 금지, staging에서만 병합)
+staging       → 배포 전 검증 브랜치 (develop에서만 병합)
+develop       → 개발 통합 브랜치 (서브 브랜치 PR 대상)
 feat/#1/card  → 기능 개발
 fix/#2/login  → 버그 수정
 refactor/#3/my-page → 리팩터링
+```
+
+병합 흐름:
+```
+feat/* | fix/* | refactor/*
+  → PR → develop
+         → PR → staging
+                → PR → prod
 ```
 
 ## Commit Convention
@@ -43,8 +52,9 @@ build: 빌드 시스템
 ## Development Flow
 1. Issue 생성 → `develop`에서 브랜치 생성
 2. 구현 → `git commit` (commitlint 자동 검증, prepare-commit-msg 훅으로 메시지 자동 생성)
-3. PR → `develop` (PR 템플릿 사용)
-4. 배포: `develop` → `main`
+3. PR → `develop` (PR 템플릿 사용, 서브 브랜치는 반드시 `develop`으로만 PR)
+4. 검증: `develop` → `staging` PR
+5. 배포: `staging` → `prod` PR
 
 ## PR 생성 규칙 (Claude 자동화)
 PR 생성 시 **반드시** `.github/pull_request_template.md` 템플릿을 사용해야 함:
@@ -60,6 +70,7 @@ Closes #<이슈번호>
 ## 💬원하는 리뷰 방식(선택)
 ```
 - `## 💡작업 내용`, `## 🔗관련 이슈` 섹션은 필수
+- 서브 브랜치(feat/fix/refactor) PR base는 반드시 `develop`
 - 템플릿 없이 `gh pr create` 실행 시 훅에서 자동 차단됨
 
 ## Push Workflow (Claude 자동화)
