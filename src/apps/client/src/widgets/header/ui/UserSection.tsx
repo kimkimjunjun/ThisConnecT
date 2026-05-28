@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
 import { env } from '@/shared/config'
 import styles from './AppHeader.module.scss'
@@ -12,6 +13,7 @@ type Props = {
 export default function UserSection({ onLoginClick }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   const accessToken = useAuthStore((s) => s.accessToken)
   const nickname = useAuthStore((s) => s.nickname)
@@ -37,6 +39,7 @@ export default function UserSection({ onLoginClick }: Props) {
       })
     } finally {
       clearAuth()
+      router.push('/')
     }
   }
 

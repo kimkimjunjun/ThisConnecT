@@ -27,8 +27,9 @@ export const DashboardLayout = ({ children }: Props) => {
   const activeCategoryId = pathname.match(/^\/channels\/([^/]+)/)?.[1] ?? null
 
   useEffect(() => {
-    if (!initialModalShown && !useAuthStore.getState().accessToken) {
-      initialModalShown = true
+    if (initialModalShown) return
+    initialModalShown = true
+    if (!useAuthStore.getState().accessToken) {
       setIsModalOpen(true)
     }
   }, [])
