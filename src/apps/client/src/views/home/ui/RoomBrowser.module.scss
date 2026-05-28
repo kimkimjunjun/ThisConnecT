@@ -1,0 +1,244 @@
+@use '../../../shared/styles/variables' as *;
+@use '../../../shared/styles/mixins' as *;
+
+$card-bg: #2b2d31;
+$card-hover-bg: #32353b;
+$card-border: #3b3d43;
+$card-full-bg: #1e2023;
+$text-primary: #dbdee1;
+$text-muted: #949ba4;
+$text-full: #5c5f66;
+$search-bg: #1e1f22;
+$search-border: #3b3d43;
+$bar-bg: #3b3d43;
+$bar-fill: #5865f2;
+$bar-full: #f23f42;
+$full-badge-bg: rgba(242, 63, 66, 0.15);
+$full-badge-color: #f23f42;
+
+// ─── Container ────────────────────────────────────────────────────────────────
+.container {
+  @include flex-col;
+  height: 100%;
+  padding: $spacing-6;
+  overflow-y: auto;
+  gap: $spacing-6;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: $radius-full;
+  }
+}
+
+// ─── Search bar ───────────────────────────────────────────────────────────────
+.searchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.searchIcon {
+  position: absolute;
+  left: $spacing-3;
+  color: $text-muted;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  width: 100%;
+  padding: $spacing-3 $spacing-10 $spacing-3 $spacing-10;
+  background-color: $search-bg;
+  border: 1.5px solid $search-border;
+  border-radius: $radius-lg;
+  color: $text-primary;
+  font-size: $text-sm;
+  outline: none;
+  transition: border-color $transition-fast;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  &:focus {
+    border-color: #5865f2;
+  }
+}
+
+.clearBtn {
+  position: absolute;
+  right: $spacing-3;
+  color: $text-muted;
+  font-size: $text-xs;
+  cursor: pointer;
+  background: transparent;
+  padding: 2px $spacing-1;
+  border-radius: $radius-sm;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $text-primary;
+  }
+}
+
+// ─── Meta row ─────────────────────────────────────────────────────────────────
+.meta {
+  @include flex-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.categoryTitle {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  font-size: $text-xl;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+}
+
+.hash {
+  color: $text-muted;
+  font-weight: $font-weight-normal;
+}
+
+.metaCount {
+  font-size: $text-sm;
+  color: $text-muted;
+}
+
+// ─── Grid ─────────────────────────────────────────────────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-3;
+  align-content: start;
+}
+
+// ─── Card ─────────────────────────────────────────────────────────────────────
+.card {
+  @include flex-col;
+  justify-content: space-between;
+  min-height: 120px;
+  padding: $spacing-4;
+  background-color: $card-bg;
+  border: 1px solid $card-border;
+  border-radius: $radius-lg;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color $transition-fast, transform $transition-fast,
+    box-shadow $transition-fast;
+
+  &:hover:not(:disabled) {
+    background-color: $card-hover-bg;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  &.cardFull {
+    background-color: $card-full-bg;
+    cursor: not-allowed;
+    opacity: 0.6;
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+}
+
+.cardTitle {
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  line-height: $leading-tight;
+  @include line-clamp(2);
+
+  .cardFull & {
+    color: $text-full;
+  }
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  margin-top: $spacing-3;
+}
+
+// ─── Participant bar ───────────────────────────────────────────────────────────
+.bar {
+  flex: 1;
+  height: 4px;
+  background-color: $bar-bg;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background-color: $bar-fill;
+  border-radius: $radius-full;
+  transition: width $transition-base;
+}
+
+.barFull {
+  background-color: $bar-full;
+}
+
+// ─── Count text ───────────────────────────────────────────────────────────────
+.countText {
+  font-size: $text-xs;
+  font-weight: $font-weight-medium;
+  color: $text-muted;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.countFull {
+  color: $full-badge-color;
+}
+
+.fullBadge {
+  flex-shrink: 0;
+  padding: 2px $spacing-2;
+  background-color: $full-badge-bg;
+  color: $full-badge-color;
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  border-radius: $radius-full;
+  white-space: nowrap;
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+.empty {
+  @include flex-col-center;
+  gap: $spacing-2;
+  padding: $spacing-16;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.emptyText {
+  font-size: $text-base;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+}
+
+.emptySubtext {
+  font-size: $text-sm;
+  color: $text-muted;
+}

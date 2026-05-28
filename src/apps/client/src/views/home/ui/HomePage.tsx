@@ -1,10 +1,3 @@
-import { AuthModal } from '@/features/auth'
-import styles from './HomePage.module.scss'
-
-export const HomePage = () => {
-  return (
-    <main className={styles.page}>
-      <AuthModal />
-    </main>
-  )
-}
+// Deprecated: layout is now handled by DashboardLayout widget
+// Pages: app/page.tsx and app/channels/[id]/page.tsx
+export {}

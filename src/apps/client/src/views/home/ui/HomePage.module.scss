@@ -1,5 +1,57 @@
 @use '../../../shared/styles/variables' as *;
+@use '../../../shared/styles/mixins' as *;
 
-.page {
-  min-height: 100vh;
+$app-bg: #313338;
+$text-primary: #dbdee1;
+$text-muted: #949ba4;
+
+// ─── App shell ────────────────────────────────────────────────────────────────
+.app {
+  @include flex-col;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: $app-bg;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+// ─── Main content area ────────────────────────────────────────────────────────
+.content {
+  @include flex-col;
+  flex: 1;
+  overflow: hidden;
+  background-color: $app-bg;
+}
+
+// ─── No channel selected ──────────────────────────────────────────────────────
+.noSelection {
+  @include flex-col-center;
+  flex: 1;
+  gap: $spacing-4;
+  text-align: center;
+  padding: $spacing-8;
+}
+
+.noSelectionIcon {
+  font-size: 5rem;
+  color: $text-muted;
+  font-weight: $font-weight-bold;
+  line-height: 1;
+  opacity: 0.3;
+}
+
+.noSelectionTitle {
+  font-size: $text-2xl;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+}
+
+.noSelectionDesc {
+  font-size: $text-sm;
+  color: $text-muted;
+  max-width: 320px;
 }

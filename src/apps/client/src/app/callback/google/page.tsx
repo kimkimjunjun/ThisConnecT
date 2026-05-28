@@ -1,23 +1,41 @@
-import { redirect } from 'next/navigation'
+'use client'
+
+import { Suspense, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { postSocialCallback } from '@/features/auth/api/auth-api'
+import { useAuthStore } from '@/features/auth/store/auth-store'
 
-type SearchParams = Promise<{ code?: string; error?: string }>
+const GoogleCallbackHandler = () => {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const setAuth = useAuthStore((s) => s.setAuth)
 
-export default async function GoogleCallbackPage({
-  searchParams,
-}: {
-  searchParams: SearchParams
-}) {
-  const { code, error } = await searchParams
+  useEffect(() => {
+    const code = searchParams.get('code')
+    const error = searchParams.get('error')
 
-  if (error || !code) {
-    redirect('/?error=auth_cancelled')
-  }
+    if (error || !code) {
+      router.replace('/?error=auth_cancelled')
+      return
+    }
 
-  try {
-    await postSocialCallback('google', code)
-  } catch {
-    redirect('/?error=auth_failed')
-  }
-  redirect('/')
+    postSocialCallback('google', code)
+      .then((data) => {
+        setAuth(data)
+        router.replace('/')
+      })
+      .catch(() => {
+        router.replace('/?error=auth_failed')
+      })
+  }, [searchParams, router, setAuth])
+
+  return null
+}
+
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense>
+      <GoogleCallbackHandler />
+    </Suspense>
+  )
 }

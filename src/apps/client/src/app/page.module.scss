@@ -1,0 +1,33 @@
+@use '../shared/styles/variables' as *;
+@use '../shared/styles/mixins' as *;
+
+$text-primary: #dbdee1;
+$text-muted: #949ba4;
+
+.empty {
+  @include flex-col-center;
+  flex: 1;
+  gap: $spacing-4;
+  text-align: center;
+  padding: $spacing-8;
+}
+
+.icon {
+  font-size: 5rem;
+  color: $text-muted;
+  font-weight: $font-weight-bold;
+  line-height: 1;
+  opacity: 0.3;
+}
+
+.title {
+  font-size: $text-2xl;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+}
+
+.desc {
+  font-size: $text-sm;
+  color: $text-muted;
+  max-width: 320px;
+}
