@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+
+let initialModalShown = false
 import {
   AuthModal,
   useAuthStore,
@@ -23,9 +25,9 @@ export const DashboardLayout = ({ children }: Props) => {
 
   const activeCategoryId = pathname.match(/^\/channels\/([^/]+)/)?.[1] ?? null
 
-  // Open modal on first visit if not logged in
   useEffect(() => {
-    if (!useAuthStore.getState().accessToken) {
+    if (!initialModalShown && !useAuthStore.getState().accessToken) {
+      initialModalShown = true
       setIsModalOpen(true)
     }
   }, [])
