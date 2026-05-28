@@ -24,7 +24,8 @@ const GoogleCallbackHandler = () => {
         setAuth(data)
         const pending = sessionStorage.getItem('auth_pending_route')
         sessionStorage.removeItem('auth_pending_route')
-        router.replace(pending ?? '/')
+        const dest = pending?.startsWith('/') ? pending : '/'
+        router.replace(dest)
       })
       .catch(() => {
         router.replace('/?error=auth_failed')

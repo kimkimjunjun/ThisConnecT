@@ -47,7 +47,7 @@ export const DashboardLayout = ({ children }: Props) => {
   }, [accessToken, pendingRoute, router])
 
   const openModal = useCallback((redirectTo?: string) => {
-    if (redirectTo) {
+    if (typeof redirectTo === 'string') {
       setPendingRoute(redirectTo)
       sessionStorage.setItem('auth_pending_route', redirectTo)
     }
