@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  useState,
-  useEffect,
-  useLayoutEffect,
-  useCallback,
-  type ReactNode,
-} from 'react'
+import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import {
   AuthModal,
@@ -20,24 +14,17 @@ import styles from './DashboardLayout.module.scss'
 
 type Props = { children: ReactNode }
 
-// Avoids the SSR "useLayoutEffect does nothing on the server" warning
-const useIsomorphicLayoutEffect =
-  typeof window !== 'undefined' ? useLayoutEffect : useEffect
-
 export const DashboardLayout = ({ children }: Props) => {
-  const [mounted, setMounted] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const router = useRouter()
   const pathname = usePathname()
   const accessToken = useAuthStore((s) => s.accessToken)
 
-  // Resolve active category from URL (e.g. /channels/2 → "2")
   const activeCategoryId = pathname.match(/^\/channels\/([^/]+)/)?.[1] ?? null
 
-  // useLayoutEffect fires before browser paint → no visible flash
-  useIsomorphicLayoutEffect(() => {
-    setMounted(true)
+  // Open modal on first visit if not logged in
+  useEffect(() => {
     if (!useAuthStore.getState().accessToken) {
       setIsModalOpen(true)
     }
@@ -56,13 +43,12 @@ export const DashboardLayout = ({ children }: Props) => {
     [router],
   )
 
-  // isLoggedIn is only true after hydration to prevent SSR mismatch
-  const isLoggedIn = mounted && !!accessToken
-
   return (
-    <AuthContextProvider value={{ isLoggedIn, openLoginModal: openModal }}>
+    <AuthContextProvider
+      value={{ isLoggedIn: !!accessToken, openLoginModal: openModal }}
+    >
       <div className={styles.app}>
-        <AppHeader isLoggedIn={isLoggedIn} onLoginClick={openModal} />
+        <AppHeader onLoginClick={openModal} />
 
         <div className={styles.body}>
           <Sidebar
