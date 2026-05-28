@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const o=JSON.parse(d);const cmd=o.command||'';if(cmd.includes('--no-verify')){process.stderr.write('⛔ --no-verify 사용 금지: commitlint 훅 우회는 허용되지 않습니다.\\n');process.exit(2);}if(cmd.match(/git push.*--force(?!-with-lease)/)){process.stderr.write('⛔ force push 금지: --force-with-lease 사용을 권장합니다.\\n');process.exit(2);}}catch(e){}});\""
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const o=JSON.parse(d);const cmd=o.tool_input&&o.tool_input.command||'';if(cmd.includes('--no-verify')){process.stderr.write('⛔ --no-verify 사용 금지: commitlint 훅 우회는 허용되지 않습니다.\\n');process.exit(2);}if(cmd.match(/git push.*--force(?!-with-lease)/)){process.stderr.write('⛔ force push 금지: --force-with-lease 사용을 권장합니다.\\n');process.exit(2);}if(cmd.includes('gh pr create')&&!cmd.includes('\\uD83D\\uDCA1\\uc791\\uc5c5 \\ub0b4\\uc6a9')&&!cmd.includes('\\uD83D\\uDD17\\uAD00\\ub828 \\uc774\\uc288')){process.stderr.write('⛔ PR 템플릿 미사용: .github/pull_request_template.md 형식으로 작성하세요.\\n필수 섹션: ## 💡작업 내용, ## 🔗관련 이슈\\n');process.exit(2);}}catch(e){}});\""
           }
         ]
       },
