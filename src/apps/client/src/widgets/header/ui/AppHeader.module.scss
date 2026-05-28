@@ -1,0 +1,185 @@
+@use '../../../shared/styles/variables' as *;
+@use '../../../shared/styles/mixins' as *;
+
+$header-bg: #1a1b1e;
+$header-border: rgba(0, 0, 0, 0.3);
+$text-primary: #dbdee1;
+$text-muted: #949ba4;
+$avatar-bg: #5865f2;
+$dropdown-bg: #111214;
+$dropdown-border: #2e2f34;
+$item-hover-bg: #5865f2;
+$danger-color: #f23f42;
+$danger-hover-bg: #da3c3f;
+
+// ─── Header bar ───────────────────────────────────────────────────────────────
+.header {
+  @include flex-between;
+  align-items: center;
+  height: 48px;
+  padding: 0 $spacing-4;
+  background-color: $header-bg;
+  border-bottom: 1px solid $header-border;
+  flex-shrink: 0;
+  z-index: $z-sticky;
+}
+
+.logo {
+  font-size: $text-base;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+
+// ─── User section (trigger + dropdown wrapper) ────────────────────────────────
+.userSection {
+  position: relative;
+}
+
+// Shown while UserSection dynamic import resolves (prevents layout shift)
+.userSkeleton {
+  width: 120px;
+  height: 28px;
+  border-radius: $radius-md;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-1 $spacing-2;
+  border-radius: $radius-md;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  &:active {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.avatar {
+  @include flex-center;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-full;
+  background-color: $avatar-bg;
+  color: #fff;
+  font-size: $text-xs;
+  font-weight: $font-weight-bold;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.userName {
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  max-width: 120px;
+  @include text-ellipsis;
+}
+
+.role {
+  font-size: $text-xs;
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+.chevron {
+  font-size: $text-xs;
+  color: $text-muted;
+  transition: transform $transition-fast;
+  display: inline-block;
+  user-select: none;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+// ─── Login button (unauthenticated) ───────────────────────────────────────────
+.loginButton {
+  padding: $spacing-1 $spacing-4;
+  border-radius: $radius-md;
+  background-color: #5865f2;
+  color: #fff;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  border: none;
+  transition: background-color $transition-fast, transform $transition-fast;
+
+  &:hover {
+    background-color: #4752c4;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// ─── Dropdown ─────────────────────────────────────────────────────────────────
+.dropdown {
+  position: absolute;
+  top: calc(100% + $spacing-2);
+  right: 0;
+  min-width: 160px;
+  background-color: $dropdown-bg;
+  border: 1px solid $dropdown-border;
+  border-radius: $radius-md;
+  padding: $spacing-1;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: $z-dropdown;
+  animation: dropdown-in 120ms ease forwards;
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: $spacing-2 $spacing-3;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $text-primary;
+  font-size: $text-sm;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    background-color: $item-hover-bg;
+    color: #fff;
+  }
+
+  &.danger {
+    color: $danger-color;
+
+    &:hover {
+      background-color: $danger-hover-bg;
+      color: #fff;
+    }
+  }
+}
+
+.divider {
+  height: 1px;
+  background-color: $dropdown-border;
+  margin: $spacing-1 0;
+}

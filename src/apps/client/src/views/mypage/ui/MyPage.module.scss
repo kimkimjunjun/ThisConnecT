@@ -1,0 +1,387 @@
+@use '../../../shared/styles/variables' as *;
+@use '../../../shared/styles/mixins' as *;
+
+$bg-primary: #313338;
+$bg-secondary: #2b2d31;
+$bg-tertiary: #232428;
+$border-color: rgba(255, 255, 255, 0.06);
+$text-primary: #dbdee1;
+$text-muted: #949ba4;
+$accent: #5865f2;
+$accent-hover: #4752c4;
+$success: #3ba55d;
+$danger: #f23f42;
+$avatar-bg: #5865f2;
+
+// ─── Container ────────────────────────────────────────────────────────────────
+.container {
+  @include flex-col;
+  height: 100%;
+  overflow-y: auto;
+  padding: $spacing-8;
+  gap: $spacing-6;
+  background-color: $bg-primary;
+  max-width: 680px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: $radius-full;
+  }
+}
+
+// ─── Profile header ───────────────────────────────────────────────────────────
+.profileSection {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-6;
+  background-color: $bg-secondary;
+  border-radius: $radius-xl;
+  border: 1px solid $border-color;
+}
+
+.avatarWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar {
+  @include flex-center;
+  width: 72px;
+  height: 72px;
+  border-radius: $radius-full;
+  background-color: $avatar-bg;
+  color: #fff;
+  font-size: $text-2xl;
+  font-weight: $font-weight-bold;
+  user-select: none;
+}
+
+.levelBadge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  padding: 2px $spacing-2;
+  background-color: $accent;
+  color: #fff;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  border-radius: $radius-full;
+  border: 2px solid $bg-secondary;
+  white-space: nowrap;
+}
+
+.profileInfo {
+  @include flex-col;
+  gap: $spacing-1;
+}
+
+.profileName {
+  font-size: $text-xl;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px $spacing-2;
+  background-color: rgba($accent, 0.15);
+  color: $accent;
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
+  border-radius: $radius-full;
+  width: fit-content;
+}
+
+// ─── Sections ─────────────────────────────────────────────────────────────────
+.section {
+  @include flex-col;
+  gap: $spacing-4;
+  padding: $spacing-6;
+  background-color: $bg-secondary;
+  border-radius: $radius-xl;
+  border: 1px solid $border-color;
+}
+
+.sectionTitle {
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: $spacing-2;
+  border-bottom: 1px solid $border-color;
+}
+
+// ─── Fields ───────────────────────────────────────────────────────────────────
+.field {
+  @include flex-col;
+  gap: $spacing-2;
+}
+
+.labelRow {
+  @include flex-between;
+  align-items: center;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  color: $text-primary;
+}
+
+.labelIcon {
+  font-size: $text-base;
+  line-height: 1;
+}
+
+// ─── Nickname input ───────────────────────────────────────────────────────────
+.inputRow {
+  display: flex;
+  gap: $spacing-2;
+}
+
+.input {
+  flex: 1;
+  padding: $spacing-2 $spacing-3;
+  background-color: $bg-tertiary;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $radius-md;
+  color: $text-primary;
+  font-size: $text-sm;
+  outline: none;
+  transition: border-color $transition-fast;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  &:focus {
+    border-color: $accent;
+  }
+}
+
+.saveBtn {
+  flex-shrink: 0;
+  padding: $spacing-2 $spacing-4;
+  border-radius: $radius-md;
+  background-color: $accent;
+  color: #fff;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+  transition: background-color $transition-fast;
+
+  &:hover:not(:disabled) {
+    background-color: $accent-hover;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.saveBtnSuccess {
+  background-color: $success;
+
+  &:hover:not(:disabled) {
+    background-color: #2d9150;
+  }
+}
+
+// ─── Device select ────────────────────────────────────────────────────────────
+.deviceSelect {
+  width: 100%;
+  padding: $spacing-2 $spacing-8 $spacing-2 $spacing-3;
+  background-color: $bg-tertiary;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $radius-md;
+  color: $text-primary;
+  font-size: $text-sm;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23949ba4' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right $spacing-3 center;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    border-color: $accent;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  option {
+    background-color: $bg-tertiary;
+    color: $text-primary;
+  }
+}
+
+.deviceSelectPending {
+  opacity: 0.6;
+}
+
+// ─── Permission denied message ─────────────────────────────────────────────────
+.permDeniedMsg {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-2 $spacing-3;
+  background-color: rgba($danger, 0.08);
+  border: 1px solid rgba($danger, 0.2);
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  color: $danger;
+  line-height: $leading-normal;
+}
+
+// ─── Slider row ───────────────────────────────────────────────────────────────
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+}
+
+.sliderLabel {
+  font-size: $text-xs;
+  color: $text-muted;
+  white-space: nowrap;
+  min-width: 28px;
+}
+
+// ─── Volume sliders ───────────────────────────────────────────────────────────
+.volumeValue {
+  font-size: $text-sm;
+  color: $text-muted;
+  font-weight: $font-weight-medium;
+  min-width: 36px;
+  text-align: right;
+}
+
+.slider {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: $radius-full;
+  outline: none;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: $radius-full;
+    background-color: $accent;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: $radius-full;
+    background-color: $accent;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+}
+
+// ─── Mic toggle ───────────────────────────────────────────────────────────────
+.micToggle {
+  padding: $spacing-1 $spacing-3;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color $transition-fast, color $transition-fast;
+}
+
+.micToggleOn {
+  background-color: rgba($success, 0.12);
+  color: $success;
+  border-color: rgba($success, 0.25);
+
+  &:hover {
+    background-color: rgba($success, 0.22);
+  }
+}
+
+.micToggleOff {
+  background-color: rgba($danger, 0.12);
+  color: $danger;
+  border-color: rgba($danger, 0.25);
+
+  &:hover {
+    background-color: rgba($danger, 0.22);
+  }
+}
+
+// ─── Level card ───────────────────────────────────────────────────────────────
+.levelCard {
+  @include flex-col;
+  gap: $spacing-3;
+  padding: $spacing-4;
+  background-color: $bg-tertiary;
+  border-radius: $radius-lg;
+  border: 1px solid $border-color;
+}
+
+.levelHeader {
+  @include flex-between;
+  align-items: center;
+}
+
+.levelNum {
+  font-size: $text-2xl;
+  font-weight: $font-weight-bold;
+  color: $accent;
+}
+
+.levelXP {
+  font-size: $text-sm;
+  color: $text-muted;
+}
+
+.xpBar {
+  width: 100%;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.xpFill {
+  height: 100%;
+  background-color: $accent;
+  border-radius: $radius-full;
+  transition: width $transition-slow;
+  min-width: 0;
+}
+
+.levelHint {
+  font-size: $text-xs;
+  color: $text-muted;
+  text-align: center;
+}

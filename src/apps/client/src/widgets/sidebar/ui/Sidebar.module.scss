@@ -1,0 +1,112 @@
+@use '../../../shared/styles/variables' as *;
+@use '../../../shared/styles/mixins' as *;
+
+$sidebar-bg: #1e1f22;
+$room-hover-bg: #35373c;
+$room-active-bg: #404249;
+$text-primary: #dbdee1;
+$text-muted: #949ba4;
+$text-active: #f2f3f5;
+$badge-bg: #f23f42;
+
+.sidebar {
+  @include flex-col;
+  width: 240px;
+  flex-shrink: 0;
+  height: 100%;
+  background-color: $sidebar-bg;
+  overflow: hidden;
+}
+
+// ─── Section ──────────────────────────────────────────────────────────────────
+.section {
+  @include flex-col;
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-4 $spacing-2;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: $radius-full;
+  }
+}
+
+.sectionLabel {
+  padding: 0 $spacing-2 $spacing-1;
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// ─── Room list ────────────────────────────────────────────────────────────────
+.roomList {
+  @include flex-col;
+  gap: 2px;
+}
+
+.roomItem {
+  @include flex-between;
+  align-items: center;
+  width: 100%;
+  padding: $spacing-1 $spacing-2;
+  border-radius: $radius-sm;
+  gap: $spacing-2;
+  background: transparent;
+  cursor: pointer;
+  color: $text-muted;
+  text-align: left;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    background-color: $room-hover-bg;
+    color: $text-primary;
+
+    .hash {
+      color: $text-primary;
+    }
+  }
+
+  &.active {
+    background-color: $room-active-bg;
+    color: $text-active;
+
+    .hash {
+      color: $text-active;
+    }
+  }
+}
+
+.hash {
+  font-size: $text-lg;
+  color: $text-muted;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: color $transition-fast;
+}
+
+.roomName {
+  flex: 1;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  @include text-ellipsis;
+}
+
+.badge {
+  flex-shrink: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background-color: $badge-bg;
+  color: #fff;
+  font-size: 11px;
+  font-weight: $font-weight-bold;
+  border-radius: $radius-full;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

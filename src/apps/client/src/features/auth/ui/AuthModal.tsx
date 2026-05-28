@@ -1,17 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { redirectToKakao, redirectToGoogle } from '../lib/oauth'
 import { postGuestLogin } from '../api/auth-api'
+import { useAuthStore } from '../store/auth-store'
 import styles from './AuthModal.module.scss'
 
 type Step = 'auth' | 'nickname'
 
-export const AuthModal = () => {
-  const [isOpen, setIsOpen] = useState(true)
+type Props = {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export const AuthModal = ({ isOpen, onClose }: Props) => {
   const [step, setStep] = useState<Step>('auth')
   const [nickname, setNickname] = useState('')
   const [isPending, setIsPending] = useState(false)
+  const setAuth = useAuthStore((s) => s.setAuth)
+
+  // Reset to initial step whenever the modal is reopened
+  useEffect(() => {
+    if (!isOpen) {
+      setStep('auth')
+      setNickname('')
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -21,8 +35,9 @@ export const AuthModal = () => {
 
     setIsPending(true)
     try {
-      await postGuestLogin(trimmed)
-      setIsOpen(false)
+      const data = await postGuestLogin(trimmed)
+      setAuth(data)
+      onClose()
     } catch {
       // TODO: 에러 토스트 처리
     } finally {
@@ -31,7 +46,7 @@ export const AuthModal = () => {
   }
 
   return (
-    <div className={styles.backdrop} onClick={() => setIsOpen(false)}>
+    <div className={styles.backdrop} onClick={onClose}>
       <div className={styles.modal} key={step} onClick={(e) => e.stopPropagation()}>
         {step === 'auth' ? (
           <>
