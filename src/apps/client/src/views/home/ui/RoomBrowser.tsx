@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuthContext } from '@/features/auth'
 import { type ChatRoom } from '@/mock/channels'
 import styles from './RoomBrowser.module.scss'
@@ -8,14 +9,16 @@ import styles from './RoomBrowser.module.scss'
 export type { ChatRoom }
 
 type Props = {
+  categoryId: string
   categoryName: string
   rooms: ChatRoom[]
 }
 
 const PAGE_SIZE = 8
 
-export const RoomBrowser = ({ categoryName, rooms }: Props) => {
+export const RoomBrowser = ({ categoryId, categoryName, rooms }: Props) => {
   const [query, setQuery] = useState('')
+  const router = useRouter()
   const { isLoggedIn, openLoginModal } = useAuthContext()
 
   const filtered = useMemo(() => {
@@ -58,7 +61,7 @@ export const RoomBrowser = ({ categoryName, rooms }: Props) => {
             const handleClick = () => {
               if (isFull) return
               if (!isLoggedIn) { openLoginModal(); return }
-              // TODO: 채팅방 입장
+              router.push(`/channels/${categoryId}/rooms/${room.id}`)
             }
             return (
               <button

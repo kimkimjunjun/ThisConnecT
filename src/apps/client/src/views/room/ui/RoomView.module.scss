@@ -1,0 +1,460 @@
+@use '../../../shared/styles/variables' as *;
+@use '../../../shared/styles/mixins' as *;
+
+$bg-primary: #313338;
+$bg-secondary: #2b2d31;
+$bg-tertiary: #232428;
+$bg-hover: rgba(255, 255, 255, 0.04);
+$border-color: rgba(255, 255, 255, 0.06);
+$text-primary: #dbdee1;
+$text-muted: #949ba4;
+$accent: #5865f2;
+$accent-hover: #4752c4;
+$speaking-color: #3ba55d;
+$danger: #f23f42;
+$avatar-me-bg: #5865f2;
+$avatar-other-bg: #4e5058;
+
+// ─── Container ────────────────────────────────────────────────────────────────
+.container {
+  @include flex-col;
+  height: 100%;
+  overflow: hidden;
+  background-color: $bg-primary;
+}
+
+// ─── Room Header ──────────────────────────────────────────────────────────────
+.roomHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  padding: 0 $spacing-4;
+  height: 48px;
+  background-color: $bg-primary;
+  border-bottom: 1px solid $border-color;
+  flex-shrink: 0;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  padding: $spacing-1 $spacing-2;
+  border-radius: $radius-sm;
+  color: $text-muted;
+  font-size: $text-sm;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: color $transition-fast, background-color $transition-fast;
+
+  &:hover {
+    color: $text-primary;
+    background-color: $bg-hover;
+  }
+}
+
+.headerDivider {
+  width: 1px;
+  height: 20px;
+  background-color: $border-color;
+  flex-shrink: 0;
+}
+
+.voiceIcon {
+  font-size: $text-base;
+  color: $text-muted;
+  flex-shrink: 0;
+}
+
+.roomTitle {
+  font-size: $text-base;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  flex: 1;
+  @include text-ellipsis;
+}
+
+.participantCount {
+  font-size: $text-sm;
+  color: $text-muted;
+  flex-shrink: 0;
+}
+
+// ─── Participants Section ──────────────────────────────────────────────────────
+.participantsSection {
+  flex-shrink: 0;
+  padding: $spacing-3 $spacing-4;
+  background-color: $bg-secondary;
+  border-bottom: 1px solid $border-color;
+}
+
+.sectionLabel {
+  display: block;
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: $spacing-2;
+}
+
+.participantsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-2;
+}
+
+.participantItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-1 $spacing-2;
+  border-radius: $radius-md;
+  transition: background-color $transition-fast;
+
+  &.participantSpeaking {
+    background-color: rgba($speaking-color, 0.08);
+  }
+}
+
+.participantAvatar {
+  @include flex-center;
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-full;
+  background-color: $avatar-other-bg;
+  color: #fff;
+  font-size: $text-sm;
+  font-weight: $font-weight-bold;
+  flex-shrink: 0;
+  transition: box-shadow $transition-base;
+
+  &.avatarSpeaking {
+    box-shadow: 0 0 0 2.5px $speaking-color;
+    animation: speakingPulse 1.2s ease-in-out infinite;
+  }
+
+  &.avatarMe {
+    background-color: $avatar-me-bg;
+  }
+}
+
+@keyframes speakingPulse {
+  0%, 100% { box-shadow: 0 0 0 2.5px $speaking-color; }
+  50% { box-shadow: 0 0 0 5px rgba($speaking-color, 0.3); }
+}
+
+.micDot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: $radius-full;
+  background-color: $speaking-color;
+  border: 2px solid $bg-secondary;
+}
+
+.mutedDot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: $radius-full;
+  background-color: $danger;
+  border: 2px solid $bg-secondary;
+}
+
+.participantMeta {
+  @include flex-col;
+  gap: 2px;
+  min-width: 0;
+}
+
+.participantName {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  color: $text-primary;
+  white-space: nowrap;
+}
+
+.meBadge {
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  color: $accent;
+  background-color: rgba($accent, 0.15);
+  padding: 1px $spacing-1;
+  border-radius: $radius-full;
+  line-height: 1.4;
+}
+
+.speakingLabel {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  font-size: $text-xs;
+  color: $speaking-color;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+}
+
+.speakingWave {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+
+  span {
+    display: block;
+    width: 3px;
+    border-radius: $radius-full;
+    background-color: $speaking-color;
+    animation: wave 0.8s ease-in-out infinite;
+
+    &:nth-child(1) { animation-delay: 0s; }
+    &:nth-child(2) { animation-delay: 0.15s; }
+    &:nth-child(3) { animation-delay: 0.3s; }
+  }
+}
+
+@keyframes wave {
+  0%, 100% { height: 4px; }
+  50% { height: 12px; }
+}
+
+// ─── Audio Controls ────────────────────────────────────────────────────────────
+.audioControls {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-2 $spacing-4;
+  background-color: $bg-tertiary;
+  border-bottom: 1px solid $border-color;
+  flex-shrink: 0;
+}
+
+.audioBtn {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  padding: $spacing-2 $spacing-3;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color $transition-fast, color $transition-fast,
+    border-color $transition-fast;
+}
+
+.audioBtnIcon {
+  font-size: $text-base;
+  line-height: 1;
+}
+
+.audioBtnOn {
+  background-color: rgba($speaking-color, 0.12);
+  color: $speaking-color;
+  border-color: rgba($speaking-color, 0.25);
+
+  &:hover {
+    background-color: rgba($speaking-color, 0.22);
+  }
+}
+
+.audioBtnOff {
+  background-color: rgba($danger, 0.12);
+  color: $danger;
+  border-color: rgba($danger, 0.25);
+
+  &:hover {
+    background-color: rgba($danger, 0.22);
+  }
+}
+
+.audioBtnLeave {
+  margin-left: auto;
+  background-color: rgba($danger, 0.12);
+  color: $danger;
+  border-color: rgba($danger, 0.25);
+
+  &:hover {
+    background-color: $danger;
+    color: #fff;
+    border-color: $danger;
+  }
+}
+
+// ─── Chat Area ─────────────────────────────────────────────────────────────────
+.chatArea {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-4;
+  @include flex-col;
+  gap: $spacing-1;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: $radius-full;
+  }
+}
+
+.chatWelcome {
+  @include flex-col;
+  align-items: flex-start;
+  gap: $spacing-2;
+  padding: $spacing-6 0;
+  border-bottom: 1px solid $border-color;
+  margin-bottom: $spacing-4;
+  flex-shrink: 0;
+}
+
+.welcomeIcon {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+.welcomeTitle {
+  font-size: $text-xl;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+}
+
+.welcomeSub {
+  font-size: $text-sm;
+  color: $text-muted;
+}
+
+// ─── Messages ─────────────────────────────────────────────────────────────────
+.messageItem {
+  display: flex;
+  gap: $spacing-3;
+  padding: $spacing-1 $spacing-2;
+  border-radius: $radius-sm;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+}
+
+.messageAvatar {
+  @include flex-center;
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-full;
+  background-color: $avatar-other-bg;
+  color: #fff;
+  font-size: $text-sm;
+  font-weight: $font-weight-bold;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.messageAvatarMe {
+  background-color: $avatar-me-bg;
+}
+
+.messageBody {
+  @include flex-col;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.messageHeader {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-2;
+}
+
+.messageSender {
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+}
+
+.messageSenderMe {
+  color: #00aff4;
+}
+
+.messageTime {
+  font-size: $text-xs;
+  color: $text-muted;
+  font-weight: $font-weight-normal;
+}
+
+.messageText {
+  font-size: $text-sm;
+  color: $text-primary;
+  line-height: $leading-normal;
+  word-break: break-word;
+}
+
+// ─── Input Area ───────────────────────────────────────────────────────────────
+.inputArea {
+  flex-shrink: 0;
+  padding: 0 $spacing-4 $spacing-4;
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  background-color: $bg-secondary;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: $radius-lg;
+  padding: 0 $spacing-2 0 $spacing-4;
+  transition: border-color $transition-fast;
+
+  &:focus-within {
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+}
+
+.chatInput {
+  flex: 1;
+  padding: $spacing-3 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: $text-primary;
+  font-size: $text-sm;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+}
+
+.sendButton {
+  flex-shrink: 0;
+  padding: $spacing-2 $spacing-3;
+  border-radius: $radius-md;
+  background-color: $accent;
+  color: #fff;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  border: none;
+  transition: background-color $transition-fast;
+
+  &:hover:not(:disabled) {
+    background-color: $accent-hover;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}

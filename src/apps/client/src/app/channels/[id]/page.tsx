@@ -14,6 +14,7 @@ export default async function ChannelPage({ params }: Props) {
   return (
     <DashboardLayout>
       <RoomBrowser
+        categoryId={id}
         categoryName={category.name}
         rooms={ROOMS_BY_CATEGORY[id] ?? []}
       />
