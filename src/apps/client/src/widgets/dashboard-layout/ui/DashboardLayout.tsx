@@ -40,12 +40,16 @@ export const DashboardLayout = ({ children }: Props) => {
       if (pendingRoute) {
         router.push(pendingRoute)
         setPendingRoute(null)
+        sessionStorage.removeItem('auth_pending_route')
       }
     }
   }, [accessToken, pendingRoute, router])
 
   const openModal = useCallback((redirectTo?: string) => {
-    if (redirectTo) setPendingRoute(redirectTo)
+    if (redirectTo) {
+      setPendingRoute(redirectTo)
+      sessionStorage.setItem('auth_pending_route', redirectTo)
+    }
     setIsModalOpen(true)
   }, [])
   const closeModal = useCallback(() => setIsModalOpen(false), [])

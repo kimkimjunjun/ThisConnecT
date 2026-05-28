@@ -22,7 +22,9 @@ const KakaoCallbackHandler = () => {
     postSocialCallback('kakao', code)
       .then((data) => {
         setAuth(data)
-        router.replace('/')
+        const pending = sessionStorage.getItem('auth_pending_route')
+        sessionStorage.removeItem('auth_pending_route')
+        router.replace(pending ?? '/')
       })
       .catch(() => {
         router.replace('/?error=auth_failed')
