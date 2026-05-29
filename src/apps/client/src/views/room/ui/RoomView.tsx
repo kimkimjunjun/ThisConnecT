@@ -5,26 +5,11 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth";
 import { useMemberInfo } from "@/features/member";
 import { useAudioStore } from "@/features/audio";
+import { useRoom } from "@/features/chat";
 import { type ChannelRoom } from "@/features/channel";
 import { EditRoomModal } from "./EditRoomModal";
 import styles from "./RoomView.module.scss";
 
-type Participant = {
-  id: string;
-  nickname: string;
-  isMe: boolean;
-};
-
-type ChatMessage = {
-  id: string;
-  senderId: string;
-  senderName: string;
-  senderLevel: number;
-  text: string;
-  time: string;
-};
-
-// 레벨 구간별 tier 클래스 반환
 const getLevelTierClass = (level: number): string => {
   if (level >= 50) return styles.tierLegend;
   if (level >= 30) return styles.tierPlatinum;
@@ -34,78 +19,11 @@ const getLevelTierClass = (level: number): string => {
   return styles.tierNovice;
 };
 
-const NICKNAME_POOL = [
-  "하늘별",
-  "바람소리",
-  "달빛강물",
-  "별빛구름",
-  "초록나무",
-  "파란하늘",
-  "노란해살",
-  "빨간꽃잎",
-  "보라비",
-  "하얀눈",
-];
-
-// 모의 참가자 레벨 (티어 다양성 확인용)
-const MOCK_LEVELS = [3, 7, 12, 25, 35, 52, 8, 15, 22, 41];
-
-const INITIAL_MESSAGES: ChatMessage[] = [
-  {
-    id: "im1",
-    senderId: "p0",
-    senderName: "하늘별",
-    senderLevel: MOCK_LEVELS[3],
-    text: "안녕하세요! 처음 들어왔어요 😊",
-    time: "오후 2:31",
-  },
-  {
-    id: "im2",
-    senderId: "p1",
-    senderName: "바람소리",
-    senderLevel: MOCK_LEVELS[1],
-    text: "어서 오세요~",
-    time: "오후 2:32",
-  },
-  {
-    id: "im3",
-    senderId: "p0",
-    senderName: "하늘별",
-    senderLevel: MOCK_LEVELS[0],
-    text: "오늘 날씨가 정말 좋네요",
-    time: "오후 2:33",
-  },
-  {
-    id: "im4",
-    senderId: "p2",
-    senderName: "달빛강물",
-    senderLevel: MOCK_LEVELS[2],
-    text: "그러게요 ㅋㅋ 드라이브 가고 싶다",
-    time: "오후 2:35",
-  },
-  {
-    id: "im5",
-    senderId: "p1",
-    senderName: "바람소리",
-    senderLevel: MOCK_LEVELS[1],
-    text: "저도요! 누가 태워줘요",
-    time: "오후 2:36",
-  },
-];
-
-const buildParticipants = (
-  room: ChannelRoom,
-  myNickname: string | null,
-): Participant[] => {
-  const count = Math.max(1, room.currentCount);
-  const list: Participant[] = [
-    { id: "me", nickname: myNickname ?? "나", isMe: true },
-  ];
-  for (let i = 0; i < Math.min(count - 1, NICKNAME_POOL.length); i++) {
-    list.push({ id: `p${i}`, nickname: NICKNAME_POOL[i], isMe: false });
-  }
-  return list;
-};
+const formatTime = (timestamp: string): string =>
+  new Date(timestamp).toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 type Props = {
   room: ChannelRoom;
@@ -117,7 +35,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const nickname = useAuthStore((s) => s.nickname);
   const storedLevel = useAuthStore((s) => s.level);
   const accessToken = useAuthStore((s) => s.accessToken);
-  useMemberInfo(); // 마운트 시 API 호출 → 스토어 level 동기화
+  useMemberInfo();
 
   const [currentRoom, setCurrentRoom] = useState(room);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -129,33 +47,19 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const setIsSpeakerOn = useAudioStore((s) => s.setIsSpeakerOn);
   const setMicVolume = useAudioStore((s) => s.setMicVolume);
   const setSpeakerVolume = useAudioStore((s) => s.setSpeakerVolume);
-  const [speakingIds, setSpeakingIds] = useState<Set<string>>(new Set());
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
+
   const [inputText, setInputText] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
 
-  const participants = useMemo(
-    () => buildParticipants(currentRoom, nickname),
-    [currentRoom, nickname],
-  );
-  const others = useMemo(
-    () => participants.filter((p) => !p.isMe),
-    [participants],
+  const { messages, participants, connected, sendMessage } = useRoom(
+    currentRoom.id.toString(),
+    accessToken,
   );
 
-  useEffect(() => {
-    if (others.length === 0) return;
-    const interval = setInterval(() => {
-      const target = others[Math.floor(Math.random() * others.length)];
-      setSpeakingIds((prev) => {
-        const next = new Set(prev);
-        if (next.has(target.id)) next.delete(target.id);
-        else next.add(target.id);
-        return next;
-      });
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [others]);
+  const displayParticipants = useMemo(
+    () => participants.map((p) => ({ ...p, isMe: p.nickname === nickname })),
+    [participants, nickname],
+  );
 
   useEffect(() => {
     if (chatRef.current) {
@@ -165,24 +69,10 @@ export const RoomView = ({ room, categoryId }: Props) => {
 
   const handleSend = useCallback(() => {
     const text = inputText.trim();
-    if (!text) return;
-    const timeStr = new Date().toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `m-${Date.now()}`,
-        senderId: "me",
-        senderName: nickname ?? "나",
-        senderLevel: storedLevel,
-        text,
-        time: timeStr,
-      },
-    ]);
+    if (!text || !connected) return;
+    sendMessage(text);
     setInputText("");
-  }, [inputText, nickname, storedLevel]);
+  }, [inputText, connected, sendMessage]);
 
   return (
     <div className={styles.container}>
@@ -209,52 +99,34 @@ export const RoomView = ({ room, categoryId }: Props) => {
           )}
         </div>
         <span className={styles.participantCount}>
-          {currentRoom.currentCount}/{currentRoom.maxCount}명
+          {displayParticipants.length}/{currentRoom.maxCount}명
         </span>
       </div>
 
       {/* Participants */}
       <div className={styles.participantsSection}>
         <span className={styles.sectionLabel}>
-          참여자 · {participants.length}명
+          참여자 · {displayParticipants.length}명
         </span>
         <div className={styles.participantsList}>
-          {participants.map((p) => {
-            const speaking = speakingIds.has(p.id);
-            return (
+          {displayParticipants.map((p) => (
+            <div key={p.sessionId} className={styles.participantItem}>
               <div
-                key={p.id}
-                className={`${styles.participantItem} ${speaking ? styles.participantSpeaking : ""}`}
+                className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}
               >
-                <div
-                  className={`${styles.participantAvatar} ${speaking ? styles.avatarSpeaking : ""} ${p.isMe ? styles.avatarMe : ""}`}
-                >
-                  {p.nickname[0].toUpperCase()}
-                  {p.isMe && (
-                    <span
-                      className={isMicOn ? styles.micDot : styles.mutedDot}
-                    />
-                  )}
-                </div>
-                <div className={styles.participantMeta}>
-                  <span className={styles.participantName}>
-                    {p.nickname}
-                    {p.isMe && <span className={styles.meBadge}>나</span>}
-                  </span>
-                  {speaking && (
-                    <span className={styles.speakingLabel}>
-                      <span className={styles.speakingWave}>
-                        <span />
-                        <span />
-                        <span />
-                      </span>
-                      말하는 중
-                    </span>
-                  )}
-                </div>
+                {p.nickname[0].toUpperCase()}
+                {p.isMe && (
+                  <span className={isMicOn ? styles.micDot : styles.mutedDot} />
+                )}
               </div>
-            );
-          })}
+              <div className={styles.participantMeta}>
+                <span className={styles.participantName}>
+                  {p.nickname}
+                  {p.isMe && <span className={styles.meBadge}>나</span>}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -278,6 +150,9 @@ export const RoomView = ({ room, categoryId }: Props) => {
           iconOn={<SpeakerOnIcon />}
           iconOff={<SpeakerOffIcon />}
         />
+        {!connected && (
+          <span className={styles.connectingBadge}>연결 중…</span>
+        )}
         <button
           className={styles.leaveBtn}
           onClick={() => router.push(`/channels/${categoryId}`)}
@@ -296,30 +171,41 @@ export const RoomView = ({ room, categoryId }: Props) => {
           </h3>
           <p className={styles.welcomeSub}>이 채널의 시작점입니다.</p>
         </div>
-        {messages.map((msg) => {
-          const isMe = msg.senderId === "me";
+        {messages.map((msg, i) => {
+          if (msg.type === "JOIN" || msg.type === "LEAVE") {
+            return (
+              <div key={i} className={styles.systemMessage}>
+                {msg.sender}님이 {msg.type === "JOIN" ? "입장" : "퇴장"}했습니다.
+              </div>
+            );
+          }
+          const isMe = msg.sender === nickname;
           return (
-            <div key={msg.id} className={styles.messageItem}>
+            <div key={i} className={styles.messageItem}>
               <div
                 className={`${styles.messageAvatar} ${isMe ? styles.messageAvatarMe : ""}`}
               >
-                {msg.senderName[0].toUpperCase()}
+                {msg.sender[0].toUpperCase()}
               </div>
               <div className={styles.messageBody}>
                 <div className={styles.messageHeader}>
                   <span
                     className={`${styles.messageSender} ${isMe ? styles.messageSenderMe : ""}`}
                   >
-                    {msg.senderName}
+                    {msg.sender}
                   </span>
-                  <span
-                    className={`${styles.levelBadge} ${getLevelTierClass(msg.senderLevel)}`}
-                  >
-                    Lv.{msg.senderLevel}
+                  {isMe && (
+                    <span
+                      className={`${styles.levelBadge} ${getLevelTierClass(storedLevel)}`}
+                    >
+                      Lv.{storedLevel}
+                    </span>
+                  )}
+                  <span className={styles.messageTime}>
+                    {formatTime(msg.timestamp)}
                   </span>
-                  <span className={styles.messageTime}>{msg.time}</span>
                 </div>
-                <p className={styles.messageText}>{msg.text}</p>
+                <p className={styles.messageText}>{msg.content}</p>
               </div>
             </div>
           );
@@ -331,7 +217,11 @@ export const RoomView = ({ room, categoryId }: Props) => {
         <div className={styles.inputRow}>
           <input
             className={styles.chatInput}
-            placeholder={`#${currentRoom.title} 에 메시지 보내기`}
+            placeholder={
+              connected
+                ? `#${currentRoom.title} 에 메시지 보내기`
+                : "연결 중..."
+            }
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => {
@@ -340,11 +230,12 @@ export const RoomView = ({ room, categoryId }: Props) => {
                 handleSend();
               }
             }}
+            disabled={!connected}
           />
           <button
             className={styles.sendButton}
             onClick={handleSend}
-            disabled={!inputText.trim()}
+            disabled={!inputText.trim() || !connected}
           >
             전송
           </button>

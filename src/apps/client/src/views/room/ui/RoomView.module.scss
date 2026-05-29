@@ -563,6 +563,25 @@ $avatar-other-bg: #4e5058;
   100% { background-position: 200% 50%; }
 }
 
+.systemMessage {
+  padding: $spacing-1 $spacing-2;
+  font-size: $text-xs;
+  color: $text-muted;
+  text-align: center;
+}
+
+.connectingBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px $spacing-2;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: $font-weight-medium;
+  color: #f0b232;
+  background-color: rgba(240, 178, 50, 0.12);
+  border: 1px solid rgba(240, 178, 50, 0.3);
+}
+
 .messageTime {
   font-size: $text-xs;
   color: $text-muted;
