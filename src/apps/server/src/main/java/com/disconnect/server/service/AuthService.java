@@ -47,6 +47,7 @@ public class AuthService {
                                 .build()
                 ));
 
+        member.gainDailyLoginXp(10);
         String accessToken = jwtProvider.generateAccessToken(member.getId().toString(), member.getRole().name());
         String refreshToken = jwtProvider.generateRefreshToken(member.getId().toString());
         member.updateRefreshToken(refreshToken);

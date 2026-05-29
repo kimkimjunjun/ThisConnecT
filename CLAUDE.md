@@ -21,12 +21,14 @@
 
 ## Branch Rules
 ```
-prod          → 운영 배포용 (직접 push 금지, staging에서만 병합)
-staging       → 배포 전 검증 브랜치 (develop에서만 병합)
-develop       → 개발 통합 브랜치 (서브 브랜치 PR 대상)
-feat/#1/card  → 기능 개발
-fix/#2/login  → 버그 수정
-refactor/#3/my-page → 리팩터링
+prod                    → 운영 배포용 (직접 push 금지, staging에서만 병합)
+staging                 → 배포 전 검증 브랜치 (develop에서만 병합)
+develop                 → 개발 통합 브랜치 (서브 브랜치 PR 대상)
+feat/#1/fe/card         → 프론트엔드 기능 개발
+feat/#2/be/auth-api     → 백엔드 기능 개발
+fix/#3/fe/login         → 프론트엔드 버그 수정
+fix/#4/be/token         → 백엔드 버그 수정
+refactor/#5/my-page     → FE/BE 구분 없는 리팩터링
 ```
 
 병합 흐름:
@@ -36,6 +38,18 @@ feat/* | fix/* | refactor/*
          → PR → staging
                 → PR → prod
 ```
+
+## 브랜치별 코드 수정 범위 (IMPORTANT)
+
+현재 브랜치명을 확인하여 수정 가능한 코드 범위를 제한한다:
+
+- 브랜치명에 `/be/` 포함 → `src/apps/server/` 하위 파일만 수정
+- 브랜치명에 `/fe/` 포함 → `src/apps/client/` 하위 파일만 수정
+- `/be/` 또는 `/fe/` 없음 → 제한 없음 (양쪽 모두 수정 가능)
+
+예시:
+- `feat/#10/be/mypage-api` → 서버 코드만 수정, 클라이언트 코드 수정 금지
+- `feat/#11/fe/mypage-ui` → 클라이언트 코드만 수정, 서버 코드 수정 금지
 
 ## Commit Convention
 ```
@@ -85,8 +99,6 @@ PR 생성 시 **반드시** `.github/pull_request_template.md` 템플릿을 사�
 
 ## 🔗관련 이슈
 Closes #<이슈번호>
-
-## 💬원하는 리뷰 방식(선택)
 ```
 - `## 💡작업 내용`, `## 🔗관련 이슈` 섹션은 필수
 - 서브 브랜치(feat/fix/refactor) PR base는 반드시 `develop`

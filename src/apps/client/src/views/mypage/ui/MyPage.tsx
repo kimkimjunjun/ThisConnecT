@@ -53,7 +53,7 @@ const useAudioDevices = (micPermission: MicPermission) => {
   return { outputs, inputs };
 };
 
-const XP_PER_LEVEL = 100;
+const XP_BASE = 100;
 
 export const MyPage = () => {
   const nickname = useAuthStore((s) => s.nickname);
@@ -79,7 +79,7 @@ export const MyPage = () => {
 
   const avatarChar = nickname ? nickname[0].toUpperCase() : "?";
   const currentXP = 0;
-  const requiredXP = (level + 1) * XP_PER_LEVEL;
+  const requiredXP = XP_BASE * Math.pow(2, level);
   const xpPercent = Math.min((currentXP / requiredXP) * 100, 100);
 
   const handleSaveNickname = async () => {
