@@ -99,8 +99,6 @@ PR 생성 시 **반드시** `.github/pull_request_template.md` 템플릿을 사�
 
 ## 🔗관련 이슈
 Closes #<이슈번호>
-
-## 💬원하는 리뷰 방식(선택)
 ```
 - `## 💡작업 내용`, `## 🔗관련 이슈` 섹션은 필수
 - 서브 브랜치(feat/fix/refactor) PR base는 반드시 `develop`
