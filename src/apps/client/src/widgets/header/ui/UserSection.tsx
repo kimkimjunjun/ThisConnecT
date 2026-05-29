@@ -2,8 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/features/auth'
-import { env } from '@/shared/config'
+import { useAuthStore, logout } from '@/features/auth'
 import styles from './AppHeader.module.scss'
 
 type Props = {
@@ -33,10 +32,7 @@ export default function UserSection({ onLoginClick }: Props) {
   const handleLogout = async () => {
     setOpen(false)
     try {
-      await fetch(`${env.API_BASE_URL}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      })
+      await logout()
     } finally {
       clearAuth()
       router.push('/')

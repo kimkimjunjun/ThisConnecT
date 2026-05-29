@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/features/auth";
+import { useMemberInfo, patchNickname } from "@/features/member";
 import styles from "./MyPage.module.scss";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 type MicPermission = "unknown" | "granted" | "denied" | "prompt";
 
 const useMicPermission = (): MicPermission => {
@@ -53,15 +55,21 @@ const useAudioDevices = (micPermission: MicPermission) => {
   return { outputs, inputs };
 };
 
-const XP_BASE = 100;
-
+// ─── Component ────────────────────────────────────────────────────────────────
 export const MyPage = () => {
   const nickname = useAuthStore((s) => s.nickname);
   const role = useAuthStore((s) => s.role);
-  const level = useAuthStore((s) => s.level);
   const updateNickname = useAuthStore((s) => s.updateNickname);
 
-  const [nicknameInput, setNicknameInput] = useState(nickname ?? "");
+  const memberInfo = useMemberInfo();
+
+  const level = memberInfo?.level ?? 0;
+  const currentXP = memberInfo?.xp ?? 0;
+  const requiredXP = memberInfo?.requiredXp ?? 100;
+  const xpPercent = Math.min((currentXP / requiredXP) * 100, 100);
+
+  // null = 사용자가 아직 편집하지 않은 상태 → API 값을 그대로 표시
+  const [nicknameInput, setNicknameInput] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [micVolume, setMicVolume] = useState(50);
@@ -69,6 +77,13 @@ export const MyPage = () => {
   const [isMicOn, setIsMicOn] = useState(true);
   const [selectedOutput, setSelectedOutput] = useState("");
   const [selectedInput, setSelectedInput] = useState("");
+
+  const initialNickname = memberInfo
+    ? (memberInfo.username ?? memberInfo.nickname)
+    : (nickname ?? "");
+
+  // 사용자가 입력한 값이 있으면 그것을, 없으면 API에서 받은 초기값 사용
+  const nicknameValue = nicknameInput ?? initialNickname;
 
   const micPermission = useMicPermission();
   const { outputs, inputs } = useAudioDevices(micPermission);
@@ -78,19 +93,18 @@ export const MyPage = () => {
   const effectiveInput = selectedInput || inputs[0]?.deviceId || "";
 
   const avatarChar = nickname ? nickname[0].toUpperCase() : "?";
-  const currentXP = 0;
-  const requiredXP = XP_BASE * Math.pow(2, level);
-  const xpPercent = Math.min((currentXP / requiredXP) * 100, 100);
 
   const handleSaveNickname = async () => {
-    const trimmed = nicknameInput.trim();
+    const trimmed = nicknameValue.trim();
     if (!trimmed || isSaving) return;
     setIsSaving(true);
     try {
-      // TODO: 백엔드 API 연동
+      await patchNickname(trimmed);
       updateNickname(trimmed);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
+    } catch {
+      // fetchAPI가 에러 시 ApiError를 throw — 저장 실패 처리
     } finally {
       setIsSaving(false);
     }
@@ -120,7 +134,7 @@ export const MyPage = () => {
           <div className={styles.inputRow}>
             <input
               className={styles.input}
-              value={nicknameInput}
+              value={nicknameValue}
               onChange={(e) => {
                 setNicknameInput(e.target.value);
                 setSaveSuccess(false);
@@ -134,8 +148,8 @@ export const MyPage = () => {
               onClick={handleSaveNickname}
               disabled={
                 isSaving ||
-                !nicknameInput.trim() ||
-                nicknameInput.trim() === nickname
+                !nicknameValue.trim() ||
+                nicknameValue.trim() === initialNickname
               }
             >
               {saveSuccess ? "저장됨 ✓" : isSaving ? "저장 중..." : "저장"}
@@ -263,7 +277,7 @@ export const MyPage = () => {
             <div className={styles.xpFill} style={{ width: `${xpPercent}%` }} />
           </div>
           <p className={styles.levelHint}>
-            채팅방 활동을 통해 경험치를 획득할 수 있어요
+            매일 로그인하면 경험치를 획득할 수 있어요
           </p>
         </div>
       </section>

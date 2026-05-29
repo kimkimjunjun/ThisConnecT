@@ -389,6 +389,73 @@ $avatar-other-bg: #4e5058;
   color: #00aff4;
 }
 
+// ─── Level Badge ──────────────────────────────────────────────────────────────
+.levelBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+// Lv.0–4 : 입문 — 회색
+.tierNovice {
+  background: rgba(107, 114, 128, 0.15);
+  color: #9ca3af;
+  border: 1px solid rgba(107, 114, 128, 0.25);
+}
+
+// Lv.5–9 : 브론즈 — 황동
+.tierBronze {
+  background: rgba(180, 83, 9, 0.15);
+  color: #d97706;
+  border: 1px solid rgba(180, 83, 9, 0.35);
+}
+
+// Lv.10–19 : 실버 — 은빛 은은한 글로우
+.tierSilver {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  box-shadow: 0 0 6px rgba(148, 163, 184, 0.2);
+}
+
+// Lv.20–29 : 골드 — 황금 글로우
+.tierGold {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+}
+
+// Lv.30–49 : 플래티넘 — 시안 빛 광채
+.tierPlatinum {
+  background: rgba(34, 211, 238, 0.12);
+  color: #22d3ee;
+  border: 1px solid rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.35);
+}
+
+// Lv.50+ : 레전드 — 슬라이딩 그라디언트
+.tierLegend {
+  background: linear-gradient(90deg, #a855f7, #6366f1, #a855f7);
+  background-size: 200% 100%;
+  color: #fff;
+  border: none;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
+  animation: legendSlide 2s linear infinite;
+}
+
+@keyframes legendSlide {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
 .messageTime {
   font-size: $text-xs;
   color: $text-muted;
