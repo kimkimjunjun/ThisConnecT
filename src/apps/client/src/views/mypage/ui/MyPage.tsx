@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuthStore, useMemberInfo } from "@/features/auth";
-import { fetchAPI } from "@/shared/api";
-import { END_POINT } from "@/shared/api/endpoint";
+import { useAuthStore } from "@/features/auth";
+import { useMemberInfo, patchNickname } from "@/features/member";
 import styles from "./MyPage.module.scss";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -100,10 +99,7 @@ export const MyPage = () => {
     if (!trimmed || isSaving) return;
     setIsSaving(true);
     try {
-      await fetchAPI(END_POINT.MEMBER.UPDATE_NICKNAME, {
-        method: "PATCH",
-        body: JSON.stringify({ nickname: trimmed }),
-      });
+      await patchNickname(trimmed);
       updateNickname(trimmed);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);

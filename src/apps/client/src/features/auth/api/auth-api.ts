@@ -22,3 +22,9 @@ export const postGuestLogin = (nickname: string) =>
     body: JSON.stringify({ nickname }),
     credentials: 'include',
   })
+
+export const logout = () =>
+  fetchAPI<void>(END_POINT.AUTH.LOGOUT, {
+    method: 'POST',
+    credentials: 'include',
+  })

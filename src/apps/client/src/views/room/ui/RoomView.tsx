@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore, useMemberInfo } from "@/features/auth";
+import { useAuthStore } from "@/features/auth";
+import { useMemberInfo } from "@/features/member";
 import { type ChatRoom } from "@/mock/channels";
 import styles from "./RoomView.module.scss";
 
