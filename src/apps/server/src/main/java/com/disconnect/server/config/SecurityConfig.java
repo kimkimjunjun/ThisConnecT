@@ -31,7 +31,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/health", "/h2-console/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/**", "/api/health", "/h2-console/**",
+                                "/swagger-ui/**", "/v3/api-docs/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
