@@ -12,13 +12,25 @@ type Props = {
   rooms: Room[]
   activeRoomId: string | null
   onSelectRoom: (id: string) => void
+  onAddChannel?: () => void
 }
 
-export const Sidebar = ({ rooms, activeRoomId, onSelectRoom }: Props) => {
+export const Sidebar = ({ rooms, activeRoomId, onSelectRoom, onAddChannel }: Props) => {
   return (
     <nav className={styles.sidebar}>
       <div className={styles.section}>
-        <span className={styles.sectionLabel}>채팅방</span>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionLabel}>채팅방</span>
+          {onAddChannel && (
+            <button
+              className={styles.addChannelBtn}
+              onClick={onAddChannel}
+              title="채널 추가"
+            >
+              +
+            </button>
+          )}
+        </div>
         <ul className={styles.roomList}>
           {rooms.map((room) => (
             <li key={room.id}>

@@ -34,13 +34,40 @@ $badge-bg: #f23f42;
   }
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 $spacing-2 $spacing-2;
+}
+
 .sectionLabel {
-  padding: 0 $spacing-2 $spacing-1;
-  font-size: $text-xs;
+  font-size: $text-sm;
   font-weight: $font-weight-semibold;
   color: $text-muted;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.addChannelBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: $radius-sm;
+  background: transparent;
+  border: none;
+  color: $text-muted;
+  font-size: $text-xl;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    background-color: $room-hover-bg;
+    color: $text-primary;
+  }
 }
 
 // ─── Room list ────────────────────────────────────────────────────────────────

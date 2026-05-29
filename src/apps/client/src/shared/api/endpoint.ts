@@ -11,4 +11,8 @@ export const END_POINT = {
     MY_INFO: '/api/members/me',
     UPDATE_NICKNAME: '/api/members/me/nickname',
   },
+  CHANNEL: {
+    LIST: '/api/channels',
+    ROOMS: (channelId: number | string) => `/api/channels/${channelId}/rooms`,
+  },
 } as const

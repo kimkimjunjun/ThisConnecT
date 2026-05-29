@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth";
 import { useMemberInfo } from "@/features/member";
-import { type ChatRoom } from "@/mock/channels";
+import { type ChannelRoom } from "@/features/channel";
 import styles from "./RoomView.module.scss";
 
 type Participant = {
@@ -92,7 +92,7 @@ const INITIAL_MESSAGES: ChatMessage[] = [
 ];
 
 const buildParticipants = (
-  room: ChatRoom,
+  room: ChannelRoom,
   myNickname: string | null,
 ): Participant[] => {
   const count = Math.max(1, room.currentCount);
@@ -106,7 +106,7 @@ const buildParticipants = (
 };
 
 type Props = {
-  room: ChatRoom;
+  room: ChannelRoom;
   categoryId: string;
 };
 

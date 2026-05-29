@@ -11,19 +11,23 @@ import {
   AuthContextProvider,
 } from '@/features/auth'
 import { AppHeader } from '@/widgets/header'
-import { Sidebar } from '@/widgets/sidebar'
-import { CATEGORIES } from '@/mock/channels'
+import { Sidebar, CreateChannelModal } from '@/widgets/sidebar'
+import { useChannels } from '@/features/channel'
 import styles from './DashboardLayout.module.scss'
 
 type Props = { children: ReactNode }
 
 export const DashboardLayout = ({ children }: Props) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false)
   const [pendingRoute, setPendingRoute] = useState<string | null>(null)
 
   const router = useRouter()
   const pathname = usePathname()
   const accessToken = useAuthStore((s) => s.accessToken)
+
+  const { channels, refresh: refreshChannels } = useChannels()
+  const sidebarRooms = channels.map((c) => ({ id: c.id.toString(), name: c.name }))
 
   const activeCategoryId = pathname.match(/^\/channels\/([^/]+)/)?.[1] ?? null
 
@@ -45,7 +49,6 @@ export const DashboardLayout = ({ children }: Props) => {
       .catch(() => {})
   }, [])
 
-  // Auto-close modal on login, then navigate to pending route if any
   useEffect(() => {
     if (accessToken) {
       setIsModalOpen(false)
@@ -71,6 +74,11 @@ export const DashboardLayout = ({ children }: Props) => {
     [router],
   )
 
+  const handleAddChannel = useCallback(() => {
+    if (!accessToken) { openModal(); return }
+    setIsChannelModalOpen(true)
+  }, [accessToken, openModal])
+
   return (
     <AuthContextProvider
       value={{ isLoggedIn: !!accessToken, openLoginModal: openModal }}
@@ -80,15 +88,23 @@ export const DashboardLayout = ({ children }: Props) => {
 
         <div className={styles.body}>
           <Sidebar
-            rooms={CATEGORIES}
+            rooms={sidebarRooms}
             activeRoomId={activeCategoryId}
             onSelectRoom={handleSelectCategory}
+            onAddChannel={handleAddChannel}
           />
 
           <main className={styles.content}>{children}</main>
         </div>
 
         <AuthModal isOpen={isModalOpen} onClose={closeModal} />
+
+        {isChannelModalOpen && (
+          <CreateChannelModal
+            onClose={() => setIsChannelModalOpen(false)}
+            onCreated={refreshChannels}
+          />
+        )}
       </div>
     </AuthContextProvider>
   )
