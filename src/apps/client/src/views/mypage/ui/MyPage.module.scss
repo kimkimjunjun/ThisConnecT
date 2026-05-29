@@ -338,6 +338,86 @@ $avatar-bg: #5865f2;
   }
 }
 
+// ─── Setting row (label + toggle) ─────────────────────────────────────────────
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-4;
+  padding: $spacing-2 0;
+}
+
+.settingInfo {
+  @include flex-col;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settingLabel {
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  color: $text-primary;
+}
+
+.settingDesc {
+  font-size: $text-xs;
+  color: $text-muted;
+  line-height: $leading-normal;
+}
+
+.settingToggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 22px;
+  border-radius: $radius-full;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &.settingToggleOn {
+    background-color: $success;
+  }
+}
+
+.settingToggleKnob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: $radius-full;
+  background-color: #fff;
+  transition: transform $transition-fast;
+
+  .settingToggleOn & {
+    transform: translateX(18px);
+  }
+}
+
+// ─── Mic level indicator ──────────────────────────────────────────────────────
+.micLevelTrack {
+  flex: 1;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.micLevelBar {
+  height: 100%;
+  border-radius: $radius-full;
+  background: linear-gradient(to right, #3ba55d 0%, #f0b232 60%, #f23f42 100%);
+  transition: width 60ms ease-out;
+  min-width: 0;
+}
+
 // ─── Level card ───────────────────────────────────────────────────────────────
 .levelCard {
   @include flex-col;

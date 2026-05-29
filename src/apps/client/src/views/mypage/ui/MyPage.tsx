@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "@/features/auth";
 import { useMemberInfo, patchNickname } from "@/features/member";
+import { useAudioStore } from "@/features/audio";
 import styles from "./MyPage.module.scss";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -55,6 +56,56 @@ const useAudioDevices = (micPermission: MicPermission) => {
   return { outputs, inputs };
 };
 
+const useMicLevel = (enabled: boolean, noiseSuppression: boolean): number => {
+  const [level, setLevel] = useState(0)
+  const rafRef = useRef(0)
+
+  useEffect(() => {
+    if (!enabled) return
+
+    let cancelled = false
+    let stream: MediaStream | null = null
+    let ctx: AudioContext | null = null
+
+    navigator.mediaDevices
+      .getUserMedia({
+        audio: {
+          noiseSuppression,
+          echoCancellation: noiseSuppression,
+          autoGainControl: false,
+        },
+        video: false,
+      })
+      .then((s) => {
+        if (cancelled) { s.getTracks().forEach((t) => t.stop()); return }
+        stream = s
+        ctx = new AudioContext()
+        const analyser = ctx.createAnalyser()
+        analyser.fftSize = 256
+        ctx.createMediaStreamSource(stream).connect(analyser)
+        const data = new Uint8Array(analyser.frequencyBinCount)
+        const tick = () => {
+          if (cancelled) return
+          analyser.getByteFrequencyData(data)
+          const avg = data.reduce((sum, v) => sum + v, 0) / data.length
+          setLevel(Math.round((avg / 255) * 100))
+          rafRef.current = requestAnimationFrame(tick)
+        }
+        rafRef.current = requestAnimationFrame(tick)
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(rafRef.current)
+      stream?.getTracks().forEach((t) => t.stop())
+      ctx?.close()
+    }
+  }, [enabled, noiseSuppression])
+
+  return enabled ? level : 0
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export const MyPage = () => {
   const nickname = useAuthStore((s) => s.nickname);
@@ -72,8 +123,12 @@ export const MyPage = () => {
   const [nicknameInput, setNicknameInput] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [micVolume, setMicVolume] = useState(50);
-  const [speakerVolume, setSpeakerVolume] = useState(80);
+  const micVolume = useAudioStore((s) => s.micVolume);
+  const speakerVolume = useAudioStore((s) => s.speakerVolume);
+  const noiseSuppression = useAudioStore((s) => s.noiseSuppression);
+  const setMicVolume = useAudioStore((s) => s.setMicVolume);
+  const setSpeakerVolume = useAudioStore((s) => s.setSpeakerVolume);
+  const setNoiseSuppression = useAudioStore((s) => s.setNoiseSuppression);
   const [isMicOn, setIsMicOn] = useState(true);
   const [selectedOutput, setSelectedOutput] = useState("");
   const [selectedInput, setSelectedInput] = useState("");
@@ -88,6 +143,7 @@ export const MyPage = () => {
   const micPermission = useMicPermission();
   const { outputs, inputs } = useAudioDevices(micPermission);
   const micBlocked = micPermission === "denied";
+  const micLevel = useMicLevel(isMicOn && micPermission === "granted" && !micBlocked, noiseSuppression);
 
   const effectiveOutput = selectedOutput || outputs[0]?.deviceId || "";
   const effectiveInput = selectedInput || inputs[0]?.deviceId || "";
@@ -258,6 +314,34 @@ export const MyPage = () => {
               disabled={micBlocked}
             >
               {micBlocked ? "🚫 차단됨" : isMicOn ? "🎤 켜짐" : "🔇 꺼짐"}
+            </button>
+          </div>
+          {isMicOn && micPermission === "granted" && !micBlocked && (
+            <div className={styles.sliderRow}>
+              <span className={styles.sliderLabel}>입력</span>
+              <div className={styles.micLevelTrack}>
+                <div
+                  className={styles.micLevelBar}
+                  style={{ width: `${micLevel}%` }}
+                />
+              </div>
+              <span className={styles.volumeValue}>{micLevel}%</span>
+            </div>
+          )}
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <span className={styles.settingLabel}>주변음 제거</span>
+              <span className={styles.settingDesc}>
+                마이크 가까이 말소리만 전달, 멀리 있는 소리 차단
+              </span>
+            </div>
+            <button
+              className={`${styles.settingToggle} ${noiseSuppression ? styles.settingToggleOn : ""}`}
+              onClick={() => setNoiseSuppression(!noiseSuppression)}
+              disabled={micBlocked}
+              aria-pressed={noiseSuppression}
+            >
+              <span className={styles.settingToggleKnob} />
             </button>
           </div>
         </div>

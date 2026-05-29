@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthContext } from '@/features/auth'
+import { useAuthContext, useAuthStore } from '@/features/auth'
 import { type ChannelRoom } from '@/features/channel'
 import { CreateRoomModal } from './CreateRoomModal'
 import styles from './RoomBrowser.module.scss'
@@ -21,6 +21,8 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated }: 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const router = useRouter()
   const { isLoggedIn, openLoginModal } = useAuthContext()
+  const role = useAuthStore((s) => s.role)
+  const canManage = role === 'USER' || role === 'ADMIN'
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -53,9 +55,11 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated }: 
           <div className={styles.emptyChannel}>
             <span className={styles.emptyChannelIcon}>💬</span>
             <p className={styles.emptyChannelText}>해당 채널에서 채팅방을 만들어보세요</p>
-            <button className={styles.addRoomBtn} onClick={handleAddRoom}>
-              채팅방 추가
-            </button>
+            {canManage && (
+              <button className={styles.addRoomBtn} onClick={handleAddRoom}>
+                채팅방 추가
+              </button>
+            )}
           </div>
         </>
       ) : (
@@ -81,9 +85,11 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated }: 
                 <span className={styles.hash}>#</span>
                 {categoryName}
               </h2>
-              <button className={styles.addRoomBtn} onClick={handleAddRoom}>
-                채팅방 추가
-              </button>
+              {canManage && (
+                <button className={styles.addRoomBtn} onClick={handleAddRoom}>
+                  채팅방 추가
+                </button>
+              )}
             </div>
             <span className={styles.metaCount}>{filtered.length}개의 채팅방</span>
           </div>
