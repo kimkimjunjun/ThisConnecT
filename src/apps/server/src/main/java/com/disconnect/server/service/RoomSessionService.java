@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+
 @Service
 public class RoomSessionService {
 
@@ -46,5 +47,15 @@ public class RoomSessionService {
     public int getCount(Long roomId) {
         Map<String, String> participants = roomParticipants.get(roomId);
         return participants == null ? 0 : participants.size();
+    }
+
+    public record ParticipantDetail(String sessionId, String nickname) {}
+
+    public List<ParticipantDetail> getParticipantDetails(Long roomId) {
+        Map<String, String> participants = roomParticipants.get(roomId);
+        if (participants == null) return List.of();
+        return participants.entrySet().stream()
+                .map(e -> new ParticipantDetail(e.getKey(), e.getValue()))
+                .toList();
     }
 }

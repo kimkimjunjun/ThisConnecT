@@ -1,8 +1,10 @@
 package com.disconnect.server.controller;
 
 import com.disconnect.server.dto.request.ChatRequest;
+import com.disconnect.server.dto.request.VoiceSignalRequest;
 import com.disconnect.server.dto.response.ChatMessageResponse;
 import com.disconnect.server.dto.response.ParticipantListResponse;
+import com.disconnect.server.dto.response.VoiceSignalResponse;
 import com.disconnect.server.repository.ChatRoomRepository;
 import com.disconnect.server.repository.MemberRepository;
 import com.disconnect.server.service.RoomSessionService;
@@ -44,7 +46,7 @@ public class ChatController {
         chatRoomRepository.findById(roomId).ifPresent(room -> room.updateCurrentCount(1));
 
         broadcastParticipants(roomId);
-        broadcastSystemMessage(roomId, "JOIN", nickname, nickname + "님이 입장했습니다.");
+        broadcastMessage(roomId, "JOIN", nickname, nickname + "님이 입장했습니다.", sessionId);
     }
 
     @MessageMapping("/rooms/{roomId}/chat")
@@ -54,7 +56,26 @@ public class ChatController {
         String nickname = resolveNickname(principal);
         messagingTemplate.convertAndSend(
                 "/sub/rooms/" + roomId + "/chat",
-                new ChatMessageResponse("CHAT", roomId, nickname, request.content(), now())
+                new ChatMessageResponse("CHAT", roomId, nickname, request.content(), now(), null)
+        );
+    }
+
+    // ─── WebRTC 시그널링 ─────────────────────────────────────────────────────────
+    // 클라이언트가 Offer/Answer/ICE_CANDIDATE를 보내면 방 전체에 중계
+    // 수신 측은 targetSessionId가 자신의 sessionId와 일치하는 메시지만 처리
+    @MessageMapping("/rooms/{roomId}/voice/signal")
+    public void voiceSignal(@DestinationVariable Long roomId,
+                            @Payload VoiceSignalRequest request,
+                            SimpMessageHeaderAccessor headerAccessor) {
+        String senderSessionId = headerAccessor.getSessionId();
+        messagingTemplate.convertAndSend(
+                "/sub/rooms/" + roomId + "/voice",
+                new VoiceSignalResponse(
+                        request.type(),
+                        senderSessionId,
+                        request.targetSessionId(),
+                        request.data()
+                )
         );
     }
 
@@ -70,21 +91,24 @@ public class ChatController {
 
         chatRoomRepository.findById(roomId).ifPresent(room -> room.updateCurrentCount(-1));
         broadcastParticipants(roomId);
-        broadcastSystemMessage(roomId, "LEAVE", nickname, nickname + "님이 퇴장했습니다.");
+        broadcastMessage(roomId, "LEAVE", nickname, nickname + "님이 퇴장했습니다.", sessionId);
     }
 
     private void broadcastParticipants(Long roomId) {
-        List<String> participants = roomSessionService.getParticipants(roomId);
+        List<ParticipantListResponse.Participant> participants =
+                roomSessionService.getParticipantDetails(roomId).stream()
+                        .map(d -> new ParticipantListResponse.Participant(d.sessionId(), d.nickname()))
+                        .toList();
         messagingTemplate.convertAndSend(
                 "/sub/rooms/" + roomId + "/participants",
                 new ParticipantListResponse(roomId, participants.size(), participants)
         );
     }
 
-    private void broadcastSystemMessage(Long roomId, String type, String sender, String content) {
+    private void broadcastMessage(Long roomId, String type, String sender, String content, String sessionId) {
         messagingTemplate.convertAndSend(
                 "/sub/rooms/" + roomId + "/chat",
-                new ChatMessageResponse(type, roomId, sender, content, now())
+                new ChatMessageResponse(type, roomId, sender, content, now(), sessionId)
         );
     }
 

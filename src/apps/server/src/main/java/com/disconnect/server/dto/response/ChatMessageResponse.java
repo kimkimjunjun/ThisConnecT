@@ -5,5 +5,6 @@ public record ChatMessageResponse(
         Long roomId,
         String sender,
         String content,
-        String timestamp
+        String timestamp,
+        String sessionId  // JOIN/LEAVE 시에만 세팅, 채팅 메시지는 null
 ) {}

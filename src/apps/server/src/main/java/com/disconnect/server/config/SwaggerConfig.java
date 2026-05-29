@@ -58,6 +58,7 @@ public class SwaggerConfig {
                                 |---|---|---|
                                 | `/pub/rooms/{roomId}/enter` | 채팅방 입장 | 없음 |
                                 | `/pub/rooms/{roomId}/chat` | 채팅 메시지 전송 | `{ "content": "메시지" }` |
+                                | `/pub/rooms/{roomId}/voice/signal` | WebRTC 시그널링 전송 | `VoiceSignalRequest` |
 
                                 ---
 
@@ -70,7 +71,8 @@ public class SwaggerConfig {
                                   "roomId": 1,
                                   "sender": "닉네임",
                                   "content": "메시지 내용",
-                                  "timestamp": "2024-01-01T12:00:00"
+                                  "timestamp": "2024-01-01T12:00:00",
+                                  "sessionId": "세션ID (JOIN/LEAVE 시에만 설정)"
                                 }
                                 ```
 
@@ -78,10 +80,47 @@ public class SwaggerConfig {
                                 ```json
                                 {
                                   "roomId": 1,
-                                  "count": 3,
-                                  "participants": ["닉네임1", "닉네임2", "닉네임3"]
+                                  "count": 2,
+                                  "participants": [
+                                    { "sessionId": "abc123", "nickname": "닉네임1" },
+                                    { "sessionId": "def456", "nickname": "닉네임2" }
+                                  ]
                                 }
                                 ```
+
+                                ---
+
+                                ## WebRTC 음성채팅 (시그널링)
+
+                                실제 오디오 스트림은 브라우저 간 P2P로 전송됩니다.
+                                서버는 시그널링 메시지(Offer/Answer/ICE Candidate)만 중계합니다.
+
+                                **음성채팅 흐름**
+                                1. 입장 시 참여자 목록(`sessionId` 포함)을 수신
+                                2. 기존 참여자 각각에게 `OFFER` 전송 (`/pub/rooms/{roomId}/voice/signal`)
+                                3. 상대방은 `/sub/rooms/{roomId}/voice`에서 수신 후 `targetSessionId`가 자신의 것이면 `ANSWER` 반환
+                                4. `ICE_CANDIDATE` 교환으로 P2P 연결 완성
+                                5. 이후 오디오 스트림은 WebRTC로 직접 전송
+
+                                **VoiceSignalRequest** (클라이언트 → 서버)
+                                ```json
+                                {
+                                  "type": "OFFER | ANSWER | ICE_CANDIDATE",
+                                  "targetSessionId": "상대방 sessionId",
+                                  "data": { "sdp": "..." }
+                                }
+                                ```
+
+                                **VoiceSignalResponse** (서버 → 클라이언트, `/sub/rooms/{roomId}/voice`)
+                                ```json
+                                {
+                                  "type": "OFFER | ANSWER | ICE_CANDIDATE",
+                                  "senderSessionId": "보낸 사람 sessionId",
+                                  "targetSessionId": "받는 사람 sessionId",
+                                  "data": { "sdp": "..." }
+                                }
+                                ```
+                                > 클라이언트는 `targetSessionId === 내 sessionId`인 메시지만 처리합니다.
                                 """))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_SCHEME))
                 .components(new Components()

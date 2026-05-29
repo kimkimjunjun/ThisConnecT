@@ -5,5 +5,7 @@ import java.util.List;
 public record ParticipantListResponse(
         Long roomId,
         int count,
-        List<String> participants
-) {}
+        List<Participant> participants
+) {
+    public record Participant(String sessionId, String nickname) {}
+}
