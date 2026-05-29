@@ -1,5 +1,5 @@
-@use '../../../shared/styles/variables' as *;
-@use '../../../shared/styles/mixins' as *;
+@use "../../../shared/styles/variables" as *;
+@use "../../../shared/styles/mixins" as *;
 
 $bg-primary: #313338;
 $bg-secondary: #2b2d31;
@@ -307,35 +307,84 @@ $avatar-bg: #5865f2;
   }
 }
 
-// ─── Mic toggle ───────────────────────────────────────────────────────────────
-.micToggle {
-  padding: $spacing-1 $spacing-3;
-  border-radius: $radius-md;
+// ─── Setting row (label + toggle) ─────────────────────────────────────────────
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-4;
+  padding: $spacing-2 0;
+}
+
+.settingInfo {
+  @include flex-col;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settingLabel {
   font-size: $text-sm;
   font-weight: $font-weight-medium;
+  color: $text-primary;
+}
+
+.settingDesc {
+  font-size: $text-xs;
+  color: $text-muted;
+  line-height: $leading-normal;
+}
+
+.settingToggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 22px;
+  border-radius: $radius-full;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.12);
   cursor: pointer;
-  border: 1px solid transparent;
-  transition: background-color $transition-fast, color $transition-fast;
-}
+  transition: background-color $transition-fast;
 
-.micToggleOn {
-  background-color: rgba($success, 0.12);
-  color: $success;
-  border-color: rgba($success, 0.25);
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 
-  &:hover {
-    background-color: rgba($success, 0.22);
+  &.settingToggleOn {
+    background-color: $success;
   }
 }
 
-.micToggleOff {
-  background-color: rgba($danger, 0.12);
-  color: $danger;
-  border-color: rgba($danger, 0.25);
+.settingToggleKnob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: $radius-full;
+  background-color: #fff;
+  transition: transform $transition-fast;
 
-  &:hover {
-    background-color: rgba($danger, 0.22);
+  .settingToggleOn & {
+    transform: translateX(18px);
   }
+}
+
+// ─── Mic level indicator ──────────────────────────────────────────────────────
+.micLevelTrack {
+  flex: 1;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.micLevelBar {
+  height: 100%;
+  border-radius: $radius-full;
+  background: linear-gradient(to right, #3ba55d 0%, #f0b232 60%, #f23f42 100%);
+  transition: width 60ms ease-out;
+  min-width: 0;
 }
 
 // ─── Level card ───────────────────────────────────────────────────────────────
@@ -380,8 +429,28 @@ $avatar-bg: #5865f2;
   min-width: 0;
 }
 
+.levelCardDisabled {
+  pointer-events: none;
+  user-select: none;
+
+  .levelHeader,
+  .xpBar {
+    opacity: 0.35;
+    filter: grayscale(0.5);
+  }
+}
+
 .levelHint {
   font-size: $text-xs;
   color: $text-muted;
   text-align: center;
+}
+
+.levelGuestHint {
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  color: #fff;
+  text-align: center;
+  filter: none;
+  opacity: 0.8;
 }

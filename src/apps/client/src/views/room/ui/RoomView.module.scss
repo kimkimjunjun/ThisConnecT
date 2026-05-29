@@ -67,12 +67,39 @@ $avatar-other-bg: #4e5058;
   flex-shrink: 0;
 }
 
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  flex: 1;
+  min-width: 0;
+}
+
 .roomTitle {
   font-size: $text-base;
   font-weight: $font-weight-semibold;
   color: $text-primary;
-  flex: 1;
   @include text-ellipsis;
+}
+
+.editRoomBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  transition: color $transition-fast, background-color $transition-fast;
+
+  &:hover {
+    color: $text-primary;
+    background-color: $bg-hover;
+  }
 }
 
 .participantCount {
@@ -239,26 +266,22 @@ $avatar-other-bg: #4e5058;
   flex-shrink: 0;
 }
 
-.audioBtn {
-  display: flex;
-  align-items: center;
-  gap: $spacing-1;
-  padding: $spacing-2 $spacing-3;
+.audioControl {
+  position: relative;
+}
+
+.audioIconBtn {
+  @include flex-center;
+  width: 36px;
+  height: 36px;
   border-radius: $radius-md;
-  font-size: $text-sm;
-  font-weight: $font-weight-medium;
-  cursor: pointer;
   border: 1px solid transparent;
+  cursor: pointer;
   transition: background-color $transition-fast, color $transition-fast,
     border-color $transition-fast;
 }
 
-.audioBtnIcon {
-  font-size: $text-base;
-  line-height: 1;
-}
-
-.audioBtnOn {
+.audioIconOn {
   background-color: rgba($speaking-color, 0.12);
   color: $speaking-color;
   border-color: rgba($speaking-color, 0.25);
@@ -268,7 +291,7 @@ $avatar-other-bg: #4e5058;
   }
 }
 
-.audioBtnOff {
+.audioIconOff {
   background-color: rgba($danger, 0.12);
   color: $danger;
   border-color: rgba($danger, 0.25);
@@ -278,11 +301,95 @@ $avatar-other-bg: #4e5058;
   }
 }
 
-.audioBtnLeave {
+.audioDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 10;
+  @include flex-col;
+  gap: $spacing-2;
+  min-width: 168px;
+  padding: $spacing-3;
+  background-color: $bg-secondary;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.dropdownLabel {
+  font-size: $text-xs;
+  font-weight: $font-weight-semibold;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dropdownRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-3;
+}
+
+.dropdownRowLabel {
+  font-size: $text-sm;
+  color: $text-primary;
+  white-space: nowrap;
+}
+
+.toggleSwitch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: $radius-full;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color $transition-fast;
+
+  &.toggleOn {
+    background-color: $speaking-color;
+  }
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: $radius-full;
+  background-color: #fff;
+  transition: transform $transition-fast;
+
+  .toggleOn & {
+    transform: translateX(16px);
+  }
+}
+
+.volumeSlider {
+  flex: 1;
+  height: 4px;
+  accent-color: $accent;
+  cursor: pointer;
+}
+
+.leaveBtn {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  padding: $spacing-2 $spacing-3;
   margin-left: auto;
+  border-radius: $radius-md;
   background-color: rgba($danger, 0.12);
   color: $danger;
-  border-color: rgba($danger, 0.25);
+  border: 1px solid rgba($danger, 0.25);
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: background-color $transition-fast, color $transition-fast,
+    border-color $transition-fast;
 
   &:hover {
     background-color: $danger;

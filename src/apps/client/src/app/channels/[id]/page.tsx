@@ -1,27 +1,14 @@
-import { notFound } from 'next/navigation'
 import { DashboardLayout } from '@/widgets/dashboard-layout'
-import { RoomBrowser } from '@/views/home/ui/RoomBrowser'
-import { CATEGORIES, ROOMS_BY_CATEGORY } from '@/mock/channels'
+import { ChannelView } from '@/views/channel'
 
 type Props = { params: Promise<{ id: string }> }
 
 export default async function ChannelPage({ params }: Props) {
   const { id } = await params
-  const category = CATEGORIES.find((c) => c.id === id)
-
-  if (!category) notFound()
 
   return (
     <DashboardLayout>
-      <RoomBrowser
-        categoryId={id}
-        categoryName={category.name}
-        rooms={ROOMS_BY_CATEGORY[id] ?? []}
-      />
+      <ChannelView channelId={id} />
     </DashboardLayout>
   )
-}
-
-export function generateStaticParams() {
-  return CATEGORIES.map((c) => ({ id: c.id }))
 }

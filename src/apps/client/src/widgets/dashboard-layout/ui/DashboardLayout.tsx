@@ -1,75 +1,93 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback, type ReactNode } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-
-let initialModalShown = false
-let permissionRequested = false
 import {
-  AuthModal,
-  useAuthStore,
-  AuthContextProvider,
-} from '@/features/auth'
-import { AppHeader } from '@/widgets/header'
-import { Sidebar } from '@/widgets/sidebar'
-import { CATEGORIES } from '@/mock/channels'
-import styles from './DashboardLayout.module.scss'
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type ReactNode,
+} from "react";
+import { useRouter, usePathname } from "next/navigation";
 
-type Props = { children: ReactNode }
+let initialModalShown = false;
+let permissionRequested = false;
+import { AuthModal, useAuthStore, AuthContextProvider } from "@/features/auth";
+import { AppHeader } from "@/widgets/header";
+import { Sidebar, CreateChannelModal } from "@/widgets/sidebar";
+import { useChannels } from "@/features/channel";
+import styles from "./DashboardLayout.module.scss";
+
+type Props = { children: ReactNode };
 
 export const DashboardLayout = ({ children }: Props) => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [pendingRoute, setPendingRoute] = useState<string | null>(null)
+  const [modalRequested, setModalRequested] = useState(() => {
+    if (initialModalShown) return false;
+    initialModalShown = true;
+    return !useAuthStore.getState().accessToken;
+  });
+  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
+  const pendingRouteRef = useRef<string | null>(null);
 
-  const router = useRouter()
-  const pathname = usePathname()
-  const accessToken = useAuthStore((s) => s.accessToken)
+  const router = useRouter();
+  const pathname = usePathname();
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const role = useAuthStore((s) => s.role);
+  const canManage = role === "USER" || role === "ADMIN";
 
-  const activeCategoryId = pathname.match(/^\/channels\/([^/]+)/)?.[1] ?? null
+  const isModalOpen = modalRequested && !accessToken;
+
+  const { channels, refresh: refreshChannels } = useChannels();
+  const sidebarRooms = channels.map((c) => ({
+    id: c.id.toString(),
+    name: c.name,
+  }));
+
+  const activeCategoryId = pathname.match(/^\/channels\/([^/]+)/)?.[1] ?? null;
 
   useEffect(() => {
-    if (initialModalShown) return
-    initialModalShown = true
-    if (!useAuthStore.getState().accessToken) {
-      setIsModalOpen(true)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (permissionRequested) return
-    permissionRequested = true
-    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) return
+    if (permissionRequested) return;
+    permissionRequested = true;
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.mediaDevices?.getUserMedia
+    )
+      return;
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => stream.getTracks().forEach((t) => t.stop()))
-      .catch(() => {})
-  }, [])
+      .catch(() => {});
+  }, []);
 
-  // Auto-close modal on login, then navigate to pending route if any
+  // After login, navigate to the pending route if one was set
   useEffect(() => {
-    if (accessToken) {
-      setIsModalOpen(false)
-      if (pendingRoute) {
-        router.push(pendingRoute)
-        setPendingRoute(null)
-        sessionStorage.removeItem('auth_pending_route')
-      }
-    }
-  }, [accessToken, pendingRoute, router])
+    if (!accessToken || !pendingRouteRef.current) return;
+    const dest = pendingRouteRef.current;
+    pendingRouteRef.current = null;
+    sessionStorage.removeItem("auth_pending_route");
+    router.push(dest);
+  }, [accessToken, router]);
 
   const openModal = useCallback((redirectTo?: string) => {
-    if (typeof redirectTo === 'string') {
-      setPendingRoute(redirectTo)
-      sessionStorage.setItem('auth_pending_route', redirectTo)
+    if (typeof redirectTo === "string") {
+      pendingRouteRef.current = redirectTo;
+      sessionStorage.setItem("auth_pending_route", redirectTo);
     }
-    setIsModalOpen(true)
-  }, [])
-  const closeModal = useCallback(() => setIsModalOpen(false), [])
+    setModalRequested(true);
+  }, []);
+  const closeModal = useCallback(() => setModalRequested(false), []);
 
   const handleSelectCategory = useCallback(
     (id: string) => router.push(`/channels/${id}`),
     [router],
-  )
+  );
+
+  const handleAddChannel = useCallback(() => {
+    if (!accessToken) {
+      openModal();
+      return;
+    }
+    setIsChannelModalOpen(true);
+  }, [accessToken, openModal]);
 
   return (
     <AuthContextProvider
@@ -80,16 +98,24 @@ export const DashboardLayout = ({ children }: Props) => {
 
         <div className={styles.body}>
           <Sidebar
-            rooms={CATEGORIES}
+            rooms={sidebarRooms}
             activeRoomId={activeCategoryId}
             onSelectRoom={handleSelectCategory}
+            onAddChannel={canManage ? handleAddChannel : undefined}
           />
 
           <main className={styles.content}>{children}</main>
         </div>
 
         <AuthModal isOpen={isModalOpen} onClose={closeModal} />
+
+        {isChannelModalOpen && (
+          <CreateChannelModal
+            onClose={() => setIsChannelModalOpen(false)}
+            onCreated={refreshChannels}
+          />
+        )}
       </div>
     </AuthContextProvider>
-  )
-}
+  );
+};
