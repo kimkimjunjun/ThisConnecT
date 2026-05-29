@@ -121,10 +121,12 @@ export const RoomView = ({ room, categoryId }: Props) => {
 
   const [currentRoom, setCurrentRoom] = useState(room);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  const isMicOn = useAudioStore((s) => s.isMicOn);
+  const isSpeakerOn = useAudioStore((s) => s.isSpeakerOn);
   const micVolume = useAudioStore((s) => s.micVolume);
   const speakerVolume = useAudioStore((s) => s.speakerVolume);
+  const setIsMicOn = useAudioStore((s) => s.setIsMicOn);
+  const setIsSpeakerOn = useAudioStore((s) => s.setIsSpeakerOn);
   const setMicVolume = useAudioStore((s) => s.setMicVolume);
   const setSpeakerVolume = useAudioStore((s) => s.setSpeakerVolume);
   const [speakingIds, setSpeakingIds] = useState<Set<string>>(new Set());
@@ -262,7 +264,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
           label="마이크"
           isOn={isMicOn}
           volume={micVolume}
-          onToggle={() => setIsMicOn((v) => !v)}
+          onToggle={() => setIsMicOn(!isMicOn)}
           onVolumeChange={setMicVolume}
           iconOn={<MicOnIcon />}
           iconOff={<MicOffIcon />}
@@ -271,7 +273,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
           label="스피커"
           isOn={isSpeakerOn}
           volume={speakerVolume}
-          onToggle={() => setIsSpeakerOn((v) => !v)}
+          onToggle={() => setIsSpeakerOn(!isSpeakerOn)}
           onVolumeChange={setSpeakerVolume}
           iconOn={<SpeakerOnIcon />}
           iconOff={<SpeakerOffIcon />}

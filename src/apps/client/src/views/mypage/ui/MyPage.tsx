@@ -123,13 +123,16 @@ export const MyPage = () => {
   const [nicknameInput, setNicknameInput] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const isMicOn = useAudioStore((s) => s.isMicOn);
+  const isSpeakerOn = useAudioStore((s) => s.isSpeakerOn);
   const micVolume = useAudioStore((s) => s.micVolume);
   const speakerVolume = useAudioStore((s) => s.speakerVolume);
   const noiseSuppression = useAudioStore((s) => s.noiseSuppression);
+  const setIsMicOn = useAudioStore((s) => s.setIsMicOn);
+  const setIsSpeakerOn = useAudioStore((s) => s.setIsSpeakerOn);
   const setMicVolume = useAudioStore((s) => s.setMicVolume);
   const setSpeakerVolume = useAudioStore((s) => s.setSpeakerVolume);
   const setNoiseSuppression = useAudioStore((s) => s.setNoiseSuppression);
-  const [isMicOn, setIsMicOn] = useState(true);
   const [selectedOutput, setSelectedOutput] = useState("");
   const [selectedInput, setSelectedInput] = useState("");
 
@@ -251,6 +254,19 @@ export const MyPage = () => {
             />
             <span className={styles.volumeValue}>{speakerVolume}%</span>
           </div>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <span className={styles.settingLabel}>스피커</span>
+              <span className={styles.settingDesc}>스피커를 켜거나 끕니다</span>
+            </div>
+            <button
+              className={`${styles.settingToggle} ${isSpeakerOn ? styles.settingToggleOn : ""}`}
+              onClick={() => setIsSpeakerOn(!isSpeakerOn)}
+              aria-pressed={isSpeakerOn}
+            >
+              <span className={styles.settingToggleKnob} />
+            </button>
+          </div>
         </div>
 
         {/* Microphone */}
@@ -302,18 +318,18 @@ export const MyPage = () => {
             />
             <span className={styles.volumeValue}>{micVolume}%</span>
           </div>
-          <div className={styles.sliderRow}>
-            <span className={styles.sliderLabel}>테스트</span>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <span className={styles.settingLabel}>마이크</span>
+              <span className={styles.settingDesc}>마이크를 켜거나 끕니다</span>
+            </div>
             <button
-              className={`${styles.micToggle} ${
-                !micBlocked && isMicOn
-                  ? styles.micToggleOn
-                  : styles.micToggleOff
-              }`}
-              onClick={() => !micBlocked && setIsMicOn((v) => !v)}
+              className={`${styles.settingToggle} ${isMicOn && !micBlocked ? styles.settingToggleOn : ""}`}
+              onClick={() => !micBlocked && setIsMicOn(!isMicOn)}
               disabled={micBlocked}
+              aria-pressed={isMicOn}
             >
-              {micBlocked ? "🚫 차단됨" : isMicOn ? "🎤 켜짐" : "🔇 꺼짐"}
+              <span className={styles.settingToggleKnob} />
             </button>
           </div>
           {isMicOn && micPermission === "granted" && !micBlocked && (

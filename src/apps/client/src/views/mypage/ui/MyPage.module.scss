@@ -307,36 +307,6 @@ $avatar-bg: #5865f2;
   }
 }
 
-// ─── Mic toggle ───────────────────────────────────────────────────────────────
-.micToggle {
-  padding: $spacing-1 $spacing-3;
-  border-radius: $radius-md;
-  font-size: $text-sm;
-  font-weight: $font-weight-medium;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: background-color $transition-fast, color $transition-fast;
-}
-
-.micToggleOn {
-  background-color: rgba($success, 0.12);
-  color: $success;
-  border-color: rgba($success, 0.25);
-
-  &:hover {
-    background-color: rgba($success, 0.22);
-  }
-}
-
-.micToggleOff {
-  background-color: rgba($danger, 0.12);
-  color: $danger;
-  border-color: rgba($danger, 0.25);
-
-  &:hover {
-    background-color: rgba($danger, 0.22);
-  }
-}
 
 // ─── Setting row (label + toggle) ─────────────────────────────────────────────
 .settingRow {
