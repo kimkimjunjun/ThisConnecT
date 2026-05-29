@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useAuthStore, useMemberInfo } from "@/features/auth";
-import { env } from "@/shared/config";
+import { fetchAPI } from "@/shared/api";
+import { END_POINT } from "@/shared/api/endpoint";
 import styles from "./MyPage.module.scss";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -57,7 +58,6 @@ const useAudioDevices = (micPermission: MicPermission) => {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export const MyPage = () => {
-  const accessToken = useAuthStore((s) => s.accessToken);
   const nickname = useAuthStore((s) => s.nickname);
   const role = useAuthStore((s) => s.role);
   const updateNickname = useAuthStore((s) => s.updateNickname);
@@ -97,21 +97,18 @@ export const MyPage = () => {
 
   const handleSaveNickname = async () => {
     const trimmed = nicknameValue.trim();
-    if (!trimmed || isSaving || !accessToken) return;
+    if (!trimmed || isSaving) return;
     setIsSaving(true);
     try {
-      const res = await fetch(`${env.API_BASE_URL}/api/members/me/nickname`, {
+      await fetchAPI(END_POINT.MEMBER.UPDATE_NICKNAME, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
         body: JSON.stringify({ nickname: trimmed }),
       });
-      if (!res.ok) throw new Error("nickname update failed");
       updateNickname(trimmed);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
+    } catch {
+      // fetchAPI가 에러 시 ApiError를 throw — 저장 실패 처리
     } finally {
       setIsSaving(false);
     }

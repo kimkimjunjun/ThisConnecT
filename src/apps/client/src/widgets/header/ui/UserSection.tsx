@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/features/auth'
 import { env } from '@/shared/config'
+import { END_POINT } from '@/shared/api/endpoint'
 import styles from './AppHeader.module.scss'
 
 type Props = {
@@ -33,7 +34,7 @@ export default function UserSection({ onLoginClick }: Props) {
   const handleLogout = async () => {
     setOpen(false)
     try {
-      await fetch(`${env.API_BASE_URL}/api/auth/logout`, {
+      await fetch(`${env.API_BASE_URL}${END_POINT.AUTH.LOGOUT}`, {
         method: 'POST',
         credentials: 'include',
       })

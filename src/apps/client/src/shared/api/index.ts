@@ -1,4 +1,6 @@
 export { fetchAPI, ApiError } from './base'
+export { END_POINT } from './endpoint'
+export type { AuthProvider } from './endpoint'
 export { getQueryClient } from './query-client'
 export { createQuery } from './create-query'
 export type { QueryOverrides } from './create-query'

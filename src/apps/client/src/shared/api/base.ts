@@ -1,4 +1,5 @@
 import { env } from '@/shared/config'
+import { END_POINT } from './endpoint'
 
 export class ApiError extends Error {
   constructor(
@@ -29,7 +30,7 @@ const tryRefresh = (): Promise<string | null> => {
   isRefreshing = true
   pendingRefresh = (async () => {
     try {
-      const res = await fetch(`${env.API_BASE_URL}/api/auth/refresh`, {
+      const res = await fetch(`${env.API_BASE_URL}${END_POINT.AUTH.REFRESH}`, {
         method: 'POST',
         credentials: 'include',
       })
@@ -90,6 +91,10 @@ export const fetchAPI = async <T>(
 
   if (!res.ok) {
     throw new ApiError(res.status, `${res.status} ${res.statusText}`)
+  }
+
+  if (res.status === 204 || res.headers.get('content-length') === '0') {
+    return undefined as T
   }
 
   return res.json() as Promise<T>

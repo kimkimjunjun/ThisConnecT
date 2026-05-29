@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/auth-store'
-import { env } from '@/shared/config'
+import { fetchAPI } from '@/shared/api'
+import { END_POINT } from '@/shared/api/endpoint'
 
 export type MemberInfo = {
   username: string | null
@@ -19,12 +20,8 @@ export const useMemberInfo = () => {
 
   useEffect(() => {
     if (!accessToken) return
-    fetch(`${env.API_BASE_URL}/api/members/me`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json: MemberInfo | null) => {
-        if (!json) return
+    fetchAPI<MemberInfo>(END_POINT.MEMBER.MY_INFO)
+      .then((json) => {
         setData(json)
         if (json.level !== null) updateLevel(json.level)
       })
