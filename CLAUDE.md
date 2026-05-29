@@ -19,6 +19,49 @@
 - 컴포넌트는 default export
 - 훅은 named export
 
+### API 연동 규칙 (IMPORTANT)
+
+모든 API 호출은 컴포넌트 내부에 직접 작성하지 않고 반드시 `features/` 하위 폴더에 분리한다.
+
+**폴더 구조:**
+```
+features/<domain>/
+├── api/
+│   └── <domain>-api.ts     # fetchAPI 호출 함수만 정의 (순수 함수)
+├── hooks/
+│   └── use<Domain>.ts      # API를 감싸는 React 훅 (상태, 사이드이펙트 포함)
+└── index.ts                # 외부 공개 인터페이스 (barrel export)
+```
+
+**작성 규칙:**
+- `api/*.ts`: `fetchAPI`를 호출하는 순수 함수만 작성. React 의존성 없음
+- `hooks/*.ts`: `api/` 함수를 사용하는 훅만 작성. 상태(`useState`), 사이드이펙트(`useEffect`) 포함 가능
+- 컴포넌트에서는 `features/<domain>` barrel export를 통해서만 import
+- 컴포넌트 내부에서 `fetchAPI`, `fetch`, `END_POINT`, `env` 직접 사용 금지
+
+**예시:**
+```ts
+// features/member/api/member-api.ts
+export const getMemberInfo = () => fetchAPI<MemberInfo>(END_POINT.MEMBER.MY_INFO)
+export const patchNickname = (nickname: string) =>
+  fetchAPI<MemberInfo>(END_POINT.MEMBER.UPDATE_NICKNAME, { method: 'PATCH', body: JSON.stringify({ nickname }) })
+
+// features/member/hooks/useMemberInfo.ts
+export const useMemberInfo = () => {
+  const [data, setData] = useState<MemberInfo | null>(null)
+  useEffect(() => { getMemberInfo().then(setData).catch(() => {}) }, [])
+  return data
+}
+
+// features/member/index.ts
+export { getMemberInfo, patchNickname } from './api/member-api'
+export { useMemberInfo } from './hooks/useMemberInfo'
+export type { MemberInfo } from './api/member-api'
+
+// 컴포넌트에서 사용
+import { useMemberInfo, patchNickname } from '@/features/member'
+```
+
 ## Branch Rules
 ```
 prod                    → 운영 배포용 (직접 push 금지, staging에서만 병합)
