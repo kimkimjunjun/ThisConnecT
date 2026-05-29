@@ -37,6 +37,9 @@ public class SecurityConfig {
                                 "/api/auth/**", "/api/health", "/h2-console/**",
                                 "/swagger-ui/**", "/v3/api-docs/**"
                         ).permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                "/api/channels", "/api/channels/*/rooms"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))

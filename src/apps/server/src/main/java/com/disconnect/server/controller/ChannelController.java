@@ -38,7 +38,7 @@ public class ChannelController {
         return ResponseEntity.ok(channelService.getChannels());
     }
 
-    @Operation(summary = "채널 생성 (ADMIN 전용)", description = "새 채널을 생성합니다. ADMIN 권한 필요.")
+    @Operation(summary = "채널 생성 (USER 이상)", description = "새 채널을 생성합니다. USER 이상 권한 필요.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "생성 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 실패"),
@@ -46,7 +46,7 @@ public class ChannelController {
             @ApiResponse(responseCode = "403", description = "권한 없음")
     })
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ChannelResponse> createChannel(@Valid @RequestBody CreateChannelRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(channelService.createChannel(request));
     }
@@ -76,7 +76,7 @@ public class ChannelController {
         return ResponseEntity.ok(channelService.getRooms(channelId));
     }
 
-    @Operation(summary = "채팅방 생성 (ADMIN 전용)", description = "채널에 새 채팅방을 생성합니다. ADMIN 권한 필요.")
+    @Operation(summary = "채팅방 생성 (USER 이상)", description = "채널에 새 채팅방을 생성합니다. USER 이상 권한 필요.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "생성 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 실패"),
@@ -85,7 +85,7 @@ public class ChannelController {
             @ApiResponse(responseCode = "404", description = "채널 없음")
     })
     @PostMapping("/{channelId}/rooms")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ChatRoomResponse> createRoom(
             @PathVariable Long channelId,
             @Valid @RequestBody CreateChatRoomRequest request
