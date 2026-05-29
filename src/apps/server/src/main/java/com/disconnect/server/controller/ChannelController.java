@@ -94,7 +94,7 @@ public class ChannelController {
         return ResponseEntity.status(HttpStatus.CREATED).body(channelService.createRoom(channelId, request));
     }
 
-    @Operation(summary = "채팅방 수정 (ADMIN 전용)", description = "채팅방 제목과 최대 인원을 수정합니다. ADMIN 권한 필요.")
+    @Operation(summary = "채팅방 수정 (USER 이상)", description = "채팅방 제목과 최대 인원을 수정합니다. USER 이상 권한 필요.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 실패 또는 채널 불일치"),
@@ -103,7 +103,7 @@ public class ChannelController {
             @ApiResponse(responseCode = "404", description = "채팅방 없음")
     })
     @PatchMapping("/{channelId}/rooms/{roomId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ChatRoomResponse> updateRoom(
             @PathVariable Long channelId,
             @PathVariable Long roomId,
