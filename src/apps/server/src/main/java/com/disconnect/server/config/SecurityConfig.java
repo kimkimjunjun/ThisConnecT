@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**", "/api/health", "/h2-console/**",
-                                "/swagger-ui/**", "/v3/api-docs/**"
+                                "/swagger-ui/**", "/v3/api-docs/**", "/ws/**"
                         ).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET,
                                 "/api/channels", "/api/channels/*/rooms"
