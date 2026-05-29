@@ -1,39 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuthStore } from "@/features/auth";
+import { useAuthStore, useMemberInfo } from "@/features/auth";
 import { env } from "@/shared/config";
 import styles from "./MyPage.module.scss";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type MicPermission = "unknown" | "granted" | "denied" | "prompt";
-
-type MemberInfo = {
-  username: string | null;
-  provider: string;
-  nickname: string;
-  role: string;
-  level: number | null;
-  xp: number | null;
-  requiredXp: number | null;
-};
-
-// ─── Hooks ────────────────────────────────────────────────────────────────────
-const useMemberInfo = (accessToken: string | null) => {
-  const [data, setData] = useState<MemberInfo | null>(null);
-
-  useEffect(() => {
-    if (!accessToken) return;
-    fetch(`${env.API_BASE_URL}/api/members/me`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => json && setData(json))
-      .catch(() => {});
-  }, [accessToken]);
-
-  return data;
-};
 
 const useMicPermission = (): MicPermission => {
   const [state, setState] = useState<MicPermission>("unknown");
@@ -89,7 +62,7 @@ export const MyPage = () => {
   const role = useAuthStore((s) => s.role);
   const updateNickname = useAuthStore((s) => s.updateNickname);
 
-  const memberInfo = useMemberInfo(accessToken);
+  const memberInfo = useMemberInfo();
 
   const level = memberInfo?.level ?? 0;
   const currentXP = memberInfo?.xp ?? 0;
@@ -124,10 +97,18 @@ export const MyPage = () => {
 
   const handleSaveNickname = async () => {
     const trimmed = nicknameValue.trim();
-    if (!trimmed || isSaving) return;
+    if (!trimmed || isSaving || !accessToken) return;
     setIsSaving(true);
     try {
-      // TODO: PATCH /api/members/me/nickname 연동
+      const res = await fetch(`${env.API_BASE_URL}/api/members/me/nickname`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ nickname: trimmed }),
+      });
+      if (!res.ok) throw new Error("nickname update failed");
       updateNickname(trimmed);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
