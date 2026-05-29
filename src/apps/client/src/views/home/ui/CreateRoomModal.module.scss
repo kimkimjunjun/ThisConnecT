@@ -6,9 +6,19 @@
   to   { opacity: 1; }
 }
 
+@keyframes backdrop-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
 @keyframes modal-in {
   from { opacity: 0; transform: scale(0.94) translateY(8px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes modal-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.94) translateY(8px); }
 }
 
 .backdrop {
@@ -20,6 +30,10 @@
   -webkit-backdrop-filter: blur(4px);
   z-index: $z-modal;
   animation: backdrop-in 200ms ease forwards;
+
+  &.backdropClosing {
+    animation: backdrop-out 200ms ease forwards;
+  }
 }
 
 .modal {
@@ -33,6 +47,10 @@
   border-radius: $radius-2xl;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
   animation: modal-in 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  &.modalClosing {
+    animation: modal-out 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
 }
 
 .title {

@@ -1,26 +1,31 @@
-'use client'
+"use client";
 
-import styles from './Sidebar.module.scss'
+import styles from "./Sidebar.module.scss";
 
 type Room = {
-  id: string
-  name: string
-  unread?: number
-}
+  id: string;
+  name: string;
+  unread?: number;
+};
 
 type Props = {
-  rooms: Room[]
-  activeRoomId: string | null
-  onSelectRoom: (id: string) => void
-  onAddChannel?: () => void
-}
+  rooms: Room[];
+  activeRoomId: string | null;
+  onSelectRoom: (id: string) => void;
+  onAddChannel?: () => void;
+};
 
-export const Sidebar = ({ rooms, activeRoomId, onSelectRoom, onAddChannel }: Props) => {
+export const Sidebar = ({
+  rooms,
+  activeRoomId,
+  onSelectRoom,
+  onAddChannel,
+}: Props) => {
   return (
     <nav className={styles.sidebar}>
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionLabel}>채팅방</span>
+          <span className={styles.sectionLabel}>채널</span>
           {onAddChannel && (
             <button
               className={styles.addChannelBtn}
@@ -35,7 +40,7 @@ export const Sidebar = ({ rooms, activeRoomId, onSelectRoom, onAddChannel }: Pro
           {rooms.map((room) => (
             <li key={room.id}>
               <button
-                className={`${styles.roomItem} ${activeRoomId === room.id ? styles.active : ''}`}
+                className={`${styles.roomItem} ${activeRoomId === room.id ? styles.active : ""}`}
                 onClick={() => onSelectRoom(room.id)}
               >
                 <span className={styles.hash}>#</span>
@@ -49,5 +54,5 @@ export const Sidebar = ({ rooms, activeRoomId, onSelectRoom, onAddChannel }: Pro
         </ul>
       </div>
     </nav>
-  )
-}
+  );
+};

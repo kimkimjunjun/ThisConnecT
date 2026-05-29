@@ -17,17 +17,28 @@ export const AuthModal = ({ isOpen, onClose }: Props) => {
   const [step, setStep] = useState<Step>('auth')
   const [nickname, setNickname] = useState('')
   const [isPending, setIsPending] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   const setAuth = useAuthStore((s) => s.setAuth)
 
-  // Reset to initial step whenever the modal is reopened
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      setIsClosing(false)
+    } else {
       setStep('auth')
       setNickname('')
     }
   }, [isOpen])
 
-  if (!isOpen) return null
+  const handleClose = () => {
+    if (isClosing) return
+    setIsClosing(true)
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 200)
+  }
+
+  if (!isOpen && !isClosing) return null
 
   const handleSubmitNickname = async () => {
     const trimmed = nickname.trim()
@@ -46,8 +57,15 @@ export const AuthModal = ({ isOpen, onClose }: Props) => {
   }
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
-      <div className={styles.modal} key={step} onClick={(e) => e.stopPropagation()}>
+    <div
+      className={`${styles.backdrop} ${isClosing ? styles.backdropClosing : ''}`}
+      onClick={handleClose}
+    >
+      <div
+        className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`}
+        key={step}
+        onClick={(e) => e.stopPropagation()}
+      >
         {step === 'auth' ? (
           <>
             <div className={styles.header}>

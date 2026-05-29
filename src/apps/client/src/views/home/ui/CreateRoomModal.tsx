@@ -15,9 +15,16 @@ export const CreateRoomModal = ({ channelId, onClose, onCreated }: Props) => {
   const [title, setTitle] = useState('')
   const [maxCount, setMaxCount] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   const router = useRouter()
 
   const isValid = title.trim().length > 0 && parseInt(maxCount, 10) >= 1
+
+  const handleClose = () => {
+    if (isClosing) return
+    setIsClosing(true)
+    setTimeout(onClose, 200)
+  }
 
   const handleSubmit = async () => {
     if (!isValid) return
@@ -33,12 +40,19 @@ export const CreateRoomModal = ({ channelId, onClose, onCreated }: Props) => {
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && isValid && !isLoading) handleSubmit()
-    if (e.key === 'Escape') onClose()
+    if (e.key === 'Escape') handleClose()
   }
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyDown}>
+    <div
+      className={`${styles.backdrop} ${isClosing ? styles.backdropClosing : ''}`}
+      onClick={handleClose}
+    >
+      <div
+        className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={handleKeyDown}
+      >
         <h3 className={styles.title}>채팅방 만들기</h3>
 
         <div className={styles.fields}>
@@ -68,7 +82,7 @@ export const CreateRoomModal = ({ channelId, onClose, onCreated }: Props) => {
         </div>
 
         <div className={styles.actions}>
-          <button className={styles.cancelBtn} onClick={onClose} disabled={isLoading}>
+          <button className={styles.cancelBtn} onClick={handleClose} disabled={isLoading}>
             닫기
           </button>
           <button

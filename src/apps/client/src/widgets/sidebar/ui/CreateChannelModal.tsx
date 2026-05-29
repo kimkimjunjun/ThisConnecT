@@ -12,8 +12,15 @@ type Props = {
 export const CreateChannelModal = ({ onClose, onCreated }: Props) => {
   const [name, setName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
 
   const isValid = name.trim().length > 0
+
+  const handleClose = () => {
+    if (isClosing) return
+    setIsClosing(true)
+    setTimeout(onClose, 200)
+  }
 
   const handleSubmit = async () => {
     if (!isValid) return
@@ -29,13 +36,16 @@ export const CreateChannelModal = ({ onClose, onCreated }: Props) => {
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && isValid && !isLoading) handleSubmit()
-    if (e.key === 'Escape') onClose()
+    if (e.key === 'Escape') handleClose()
   }
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
+    <div
+      className={`${styles.backdrop} ${isClosing ? styles.backdropClosing : ''}`}
+      onClick={handleClose}
+    >
       <div
-        className={styles.modal}
+        className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
@@ -55,7 +65,7 @@ export const CreateChannelModal = ({ onClose, onCreated }: Props) => {
         </label>
 
         <div className={styles.actions}>
-          <button className={styles.cancelBtn} onClick={onClose} disabled={isLoading}>
+          <button className={styles.cancelBtn} onClick={handleClose} disabled={isLoading}>
             닫기
           </button>
           <button
