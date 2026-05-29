@@ -1,18 +1,18 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 type AudioState = {
-  isMicOn: boolean
-  isSpeakerOn: boolean
-  micVolume: number
-  speakerVolume: number
-  noiseSuppression: boolean
-  setIsMicOn: (v: boolean) => void
-  setIsSpeakerOn: (v: boolean) => void
-  setMicVolume: (v: number) => void
-  setSpeakerVolume: (v: number) => void
-  setNoiseSuppression: (v: boolean) => void
-}
+  isMicOn: boolean;
+  isSpeakerOn: boolean;
+  micVolume: number;
+  speakerVolume: number;
+  noiseSuppression: boolean;
+  setIsMicOn: (v: boolean) => void;
+  setIsSpeakerOn: (v: boolean) => void;
+  setMicVolume: (v: number) => void;
+  setSpeakerVolume: (v: number) => void;
+  setNoiseSuppression: (v: boolean) => void;
+};
 
 export const useAudioStore = create<AudioState>()(
   persist(
@@ -28,6 +28,6 @@ export const useAudioStore = create<AudioState>()(
       setSpeakerVolume: (speakerVolume) => set({ speakerVolume }),
       setNoiseSuppression: (noiseSuppression) => set({ noiseSuppression }),
     }),
-    { name: 'audio' },
+    { name: "audio" },
   ),
-)
+);
