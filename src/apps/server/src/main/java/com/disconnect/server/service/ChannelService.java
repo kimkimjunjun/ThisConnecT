@@ -4,6 +4,7 @@ import com.disconnect.server.domain.channel.Channel;
 import com.disconnect.server.domain.chatroom.ChatRoom;
 import com.disconnect.server.dto.request.CreateChannelRequest;
 import com.disconnect.server.dto.request.CreateChatRoomRequest;
+import com.disconnect.server.dto.request.UpdateChatRoomRequest;
 import com.disconnect.server.dto.response.ChannelResponse;
 import com.disconnect.server.dto.response.ChatRoomResponse;
 import com.disconnect.server.repository.ChannelRepository;
@@ -65,6 +66,16 @@ public class ChannelService {
                 .maxCount(request.maxCount())
                 .build();
         return ChatRoomResponse.from(chatRoomRepository.save(room));
+    }
+
+    public ChatRoomResponse updateRoom(Long channelId, Long roomId, UpdateChatRoomRequest request) {
+        ChatRoom room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다"));
+        if (!room.getChannel().getId().equals(channelId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "해당 채널에 속하지 않는 채팅방입니다");
+        }
+        room.update(request.title(), request.maxCount());
+        return ChatRoomResponse.from(room);
     }
 
     public void deleteRoom(Long channelId, Long roomId) {

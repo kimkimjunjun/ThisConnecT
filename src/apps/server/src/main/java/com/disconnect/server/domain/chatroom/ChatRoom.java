@@ -51,6 +51,11 @@ public class ChatRoom {
         this.currentCount = 0;
     }
 
+    public void update(String title, int maxCount) {
+        this.title = title;
+        this.maxCount = maxCount;
+    }
+
     public void updateCurrentCount(int delta) {
         this.currentCount = Math.max(0, this.currentCount + delta);
     }

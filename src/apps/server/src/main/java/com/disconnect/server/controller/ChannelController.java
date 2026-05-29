@@ -2,6 +2,7 @@ package com.disconnect.server.controller;
 
 import com.disconnect.server.dto.request.CreateChannelRequest;
 import com.disconnect.server.dto.request.CreateChatRoomRequest;
+import com.disconnect.server.dto.request.UpdateChatRoomRequest;
 import com.disconnect.server.dto.response.ChannelResponse;
 import com.disconnect.server.dto.response.ChatRoomResponse;
 import com.disconnect.server.service.ChannelService;
@@ -91,6 +92,24 @@ public class ChannelController {
             @Valid @RequestBody CreateChatRoomRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(channelService.createRoom(channelId, request));
+    }
+
+    @Operation(summary = "채팅방 수정 (ADMIN 전용)", description = "채팅방 제목과 최대 인원을 수정합니다. ADMIN 권한 필요.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "400", description = "유효성 실패 또는 채널 불일치"),
+            @ApiResponse(responseCode = "401", description = "인증 필요"),
+            @ApiResponse(responseCode = "403", description = "권한 없음"),
+            @ApiResponse(responseCode = "404", description = "채팅방 없음")
+    })
+    @PatchMapping("/{channelId}/rooms/{roomId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ChatRoomResponse> updateRoom(
+            @PathVariable Long channelId,
+            @PathVariable Long roomId,
+            @Valid @RequestBody UpdateChatRoomRequest request
+    ) {
+        return ResponseEntity.ok(channelService.updateRoom(channelId, roomId, request));
     }
 
     @Operation(summary = "채팅방 삭제 (ADMIN 전용)", description = "채팅방을 삭제합니다. ADMIN 권한 필요.")
