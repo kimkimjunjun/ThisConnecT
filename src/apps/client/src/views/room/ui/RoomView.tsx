@@ -51,10 +51,17 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const [inputText, setInputText] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
 
-  const { messages, participants, connected, sendMessage } = useRoom(
+  const { messages, participants, connected, sendMessage, isDuplicate } = useRoom(
     currentRoom.id.toString(),
     accessToken,
+    nickname,
   );
+
+  useEffect(() => {
+    if (isDuplicate) {
+      router.replace(`/channels/${categoryId}`)
+    }
+  }, [isDuplicate, router, categoryId]);
 
   const displayParticipants = useMemo(
     () => participants.map((p) => ({ ...p, isMe: p.nickname === nickname })),
