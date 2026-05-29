@@ -33,3 +33,15 @@ export const createRoom = (channelId: number | string, body: CreateRoomBody) =>
     method: 'POST',
     body: JSON.stringify(body),
   })
+
+type UpdateRoomBody = { title?: string; maxCount?: number }
+
+export const updateRoom = (
+  channelId: number | string,
+  roomId: number | string,
+  body: UpdateRoomBody,
+) =>
+  fetchAPI<ChannelRoom>(END_POINT.CHANNEL.ROOM(channelId, roomId), {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })

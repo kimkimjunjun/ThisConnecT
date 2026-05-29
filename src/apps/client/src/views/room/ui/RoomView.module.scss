@@ -67,12 +67,39 @@ $avatar-other-bg: #4e5058;
   flex-shrink: 0;
 }
 
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  flex: 1;
+  min-width: 0;
+}
+
 .roomTitle {
   font-size: $text-base;
   font-weight: $font-weight-semibold;
   color: $text-primary;
-  flex: 1;
   @include text-ellipsis;
+}
+
+.editRoomBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  transition: color $transition-fast, background-color $transition-fast;
+
+  &:hover {
+    color: $text-primary;
+    background-color: $bg-hover;
+  }
 }
 
 .participantCount {

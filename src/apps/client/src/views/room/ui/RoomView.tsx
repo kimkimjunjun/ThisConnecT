@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth";
 import { useMemberInfo } from "@/features/member";
 import { type ChannelRoom } from "@/features/channel";
+import { EditRoomModal } from "./EditRoomModal";
 import styles from "./RoomView.module.scss";
 
 type Participant = {
@@ -114,8 +115,11 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const router = useRouter();
   const nickname = useAuthStore((s) => s.nickname);
   const storedLevel = useAuthStore((s) => s.level);
+  const accessToken = useAuthStore((s) => s.accessToken);
   useMemberInfo(); // 마운트 시 API 호출 → 스토어 level 동기화
 
+  const [currentRoom, setCurrentRoom] = useState(room);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [speakingIds, setSpeakingIds] = useState<Set<string>>(new Set());
@@ -124,8 +128,8 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const chatRef = useRef<HTMLDivElement>(null);
 
   const participants = useMemo(
-    () => buildParticipants(room, nickname),
-    [room, nickname],
+    () => buildParticipants(currentRoom, nickname),
+    [currentRoom, nickname],
   );
   const others = useMemo(
     () => participants.filter((p) => !p.isMe),
@@ -185,9 +189,20 @@ export const RoomView = ({ room, categoryId }: Props) => {
         </button>
         <span className={styles.headerDivider} />
         <span className={styles.voiceIcon}>🔊</span>
-        <span className={styles.roomTitle}>{room.title}</span>
+        <div className={styles.titleGroup}>
+          <span className={styles.roomTitle}>{currentRoom.title}</span>
+          {accessToken && (
+            <button
+              className={styles.editRoomBtn}
+              onClick={() => setIsEditModalOpen(true)}
+              title="채팅방 수정"
+            >
+              <PencilIcon />
+            </button>
+          )}
+        </div>
         <span className={styles.participantCount}>
-          {room.currentCount}/{room.maxCount}명
+          {currentRoom.currentCount}/{currentRoom.maxCount}명
         </span>
       </div>
 
@@ -268,7 +283,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
         <div className={styles.chatWelcome}>
           <span className={styles.welcomeIcon}>🔊</span>
           <h3 className={styles.welcomeTitle}>
-            {room.title} 채널에 오신 것을 환영합니다!
+            {currentRoom.title} 채널에 오신 것을 환영합니다!
           </h3>
           <p className={styles.welcomeSub}>이 채널의 시작점입니다.</p>
         </div>
@@ -307,7 +322,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
         <div className={styles.inputRow}>
           <input
             className={styles.chatInput}
-            placeholder={`#${room.title} 에 메시지 보내기`}
+            placeholder={`#${currentRoom.title} 에 메시지 보내기`}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => {
@@ -326,6 +341,35 @@ export const RoomView = ({ room, categoryId }: Props) => {
           </button>
         </div>
       </div>
+
+      {isEditModalOpen && (
+        <EditRoomModal
+          room={currentRoom}
+          channelId={categoryId}
+          onClose={() => setIsEditModalOpen(false)}
+          onUpdated={(updated) => {
+            setCurrentRoom(updated);
+            setIsEditModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };
+
+const PencilIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </svg>
+);

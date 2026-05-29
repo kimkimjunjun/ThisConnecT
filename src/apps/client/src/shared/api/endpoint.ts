@@ -14,5 +14,7 @@ export const END_POINT = {
   CHANNEL: {
     LIST: '/api/channels',
     ROOMS: (channelId: number | string) => `/api/channels/${channelId}/rooms`,
+    ROOM: (channelId: number | string, roomId: number | string) =>
+      `/api/channels/${channelId}/rooms/${roomId}`,
   },
 } as const
