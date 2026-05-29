@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -40,6 +41,14 @@ public class Member {
 
     private String refreshToken;
 
+    @Column(nullable = false)
+    private int level = 0;
+
+    @Column(nullable = false)
+    private int xp = 0;
+
+    private LocalDate lastLoginDate;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -58,5 +67,26 @@ public class Member {
 
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    // 하루 한 번 로그인 시 XP 부여, 레벨업 처리
+    public void gainDailyLoginXp(int xpGain) {
+        LocalDate today = LocalDate.now();
+        if (today.equals(lastLoginDate)) return;
+        lastLoginDate = today;
+        xp += xpGain;
+        // 레벨업: 요구 XP = 100 * 2^level (100, 200, 400, 800...)
+        while (xp >= requiredXp()) {
+            xp -= requiredXp();
+            level++;
+        }
+    }
+
+    public int requiredXp() {
+        return 100 * (1 << level);
     }
 }
