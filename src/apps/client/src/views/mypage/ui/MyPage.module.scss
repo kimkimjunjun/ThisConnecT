@@ -1,5 +1,5 @@
-@use '../../../shared/styles/variables' as *;
-@use '../../../shared/styles/mixins' as *;
+@use "../../../shared/styles/variables" as *;
+@use "../../../shared/styles/mixins" as *;
 
 $bg-primary: #313338;
 $bg-secondary: #2b2d31;
@@ -307,7 +307,6 @@ $avatar-bg: #5865f2;
   }
 }
 
-
 // ─── Setting row (label + toggle) ─────────────────────────────────────────────
 .settingRow {
   display: flex;
@@ -430,8 +429,28 @@ $avatar-bg: #5865f2;
   min-width: 0;
 }
 
+.levelCardDisabled {
+  pointer-events: none;
+  user-select: none;
+
+  .levelHeader,
+  .xpBar {
+    opacity: 0.35;
+    filter: grayscale(0.5);
+  }
+}
+
 .levelHint {
   font-size: $text-xs;
   color: $text-muted;
   text-align: center;
+}
+
+.levelGuestHint {
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  color: #fff;
+  text-align: center;
+  filter: none;
+  opacity: 0.8;
 }

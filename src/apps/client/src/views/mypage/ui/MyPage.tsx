@@ -366,7 +366,7 @@ export const MyPage = () => {
       {/* Level section */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>레벨 정보</h3>
-        <div className={styles.levelCard}>
+        <div className={`${styles.levelCard} ${role !== "USER" && role !== "ADMIN" ? styles.levelCardDisabled : ""}`}>
           <div className={styles.levelHeader}>
             <span className={styles.levelNum}>Lv.{level}</span>
             <span className={styles.levelXP}>
@@ -376,8 +376,10 @@ export const MyPage = () => {
           <div className={styles.xpBar}>
             <div className={styles.xpFill} style={{ width: `${xpPercent}%` }} />
           </div>
-          <p className={styles.levelHint}>
-            매일 로그인하면 경험치를 획득할 수 있어요
+          <p className={role !== "USER" && role !== "ADMIN" ? styles.levelGuestHint : styles.levelHint}>
+            {role !== "USER" && role !== "ADMIN"
+              ? "비회원은 레벨을 올릴 수 없어요"
+              : "매일 로그인하면 경험치를 획득할 수 있어요"}
           </p>
         </div>
       </section>
