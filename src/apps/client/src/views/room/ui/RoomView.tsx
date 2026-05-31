@@ -161,6 +161,10 @@ export const RoomView = ({ room, categoryId }: Props) => {
                 <span className={styles.participantName}>
                   {p.nickname}
                   {p.isMe && <span className={styles.meBadge}>나</span>}
+                  {p.isOwner && <span className={styles.ownerBadge}>방장</span>}
+                </span>
+                <span className={`${styles.levelBadge} ${getLevelTierClass(p.level)}`}>
+                  Lv.{p.level}
                 </span>
               </div>
             </div>

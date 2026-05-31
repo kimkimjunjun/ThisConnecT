@@ -221,6 +221,17 @@ $avatar-other-bg: #4e5058;
   line-height: 1.4;
 }
 
+.ownerBadge {
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 1px $spacing-1;
+  border-radius: $radius-full;
+  line-height: 1.4;
+}
+
 .speakingLabel {
   display: flex;
   align-items: center;

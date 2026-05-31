@@ -13,6 +13,8 @@ export type ChatMessageResponse = {
 export type ParticipantInfo = {
   sessionId: string
   nickname: string
+  level: number
+  isOwner: boolean
 }
 
 export type ParticipantListResponse = {
