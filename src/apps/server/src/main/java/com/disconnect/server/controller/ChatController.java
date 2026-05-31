@@ -71,8 +71,11 @@ public class ChatController {
             chatRoomRepository.findById(roomId).ifPresent(room -> room.updateCurrentCount(1));
             broadcastParticipants(roomId);
             broadcastMessage(roomId, "JOIN", nickname, nickname + "님이 입장했습니다.", sessionId);
+        } else {
+            // 어드민: 인원수·입장 메시지 없음, 단 본인이 현재 참여자 목록을 받을 수 있도록 브로드캐스트
+            // (어드민은 목록에 포함되지 않으므로 다른 유저에게는 변화 없음)
+            broadcastParticipants(roomId);
         }
-        // 어드민: 인원수 미포함, 참여자 목록 미노출, 입장 메시지 없음
     }
 
     @MessageMapping("/rooms/{roomId}/chat")
