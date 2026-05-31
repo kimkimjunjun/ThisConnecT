@@ -72,9 +72,16 @@ public class ChatController {
             broadcastParticipants(roomId);
             broadcastMessage(roomId, "JOIN", nickname, nickname + "님이 입장했습니다.", sessionId);
         } else {
-            // 어드민: 인원수·입장 메시지 없음, 단 본인이 현재 참여자 목록을 받을 수 있도록 브로드캐스트
-            // (어드민은 목록에 포함되지 않으므로 다른 유저에게는 변화 없음)
-            broadcastParticipants(roomId);
+            // 어드민: 인원수·입장 메시지 없음
+            // broadcast 타이밍 경쟁 조건을 우회해 참여자 목록을 어드민에게 직접 전송
+            List<ParticipantListResponse.Participant> participants =
+                    roomSessionService.getParticipantDetails(roomId).stream()
+                            .map(d -> new ParticipantListResponse.Participant(d.sessionId(), d.nickname(), d.level(), d.isOwner()))
+                            .toList();
+            messagingTemplate.convertAndSendToUser(
+                    principal.getName(), "/queue/participants-snapshot",
+                    new ParticipantListResponse(roomId, participants.size(), participants)
+            );
         }
     }
 

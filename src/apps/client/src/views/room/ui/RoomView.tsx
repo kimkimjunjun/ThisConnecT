@@ -50,7 +50,6 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const nickname = useAuthStore((s) => s.nickname);
   const storedLevel = useAuthStore((s) => s.level);
   const accessToken = useAuthStore((s) => s.accessToken);
-  const myRole = useAuthStore((s) => s.role);
   useMemberInfo();
 
   const [currentRoom, setCurrentRoom] = useState(room);
@@ -102,20 +101,10 @@ export const RoomView = ({ room, categoryId }: Props) => {
     }
   }, [isRoomFull, router, categoryId]);
 
-  const displayParticipants = useMemo(() => {
-    const list = participants.map((p) => ({ ...p, isMe: p.nickname === nickname }));
-    // 어드민은 서버 참여자 목록에서 제외되므로 본인을 직접 추가
-    if (myRole === "ADMIN" && nickname) {
-      list.unshift({
-        sessionId: "admin-self",
-        nickname,
-        level: storedLevel,
-        isOwner: false,
-        isMe: true,
-      });
-    }
-    return list;
-  }, [participants, nickname, myRole, storedLevel]);
+  const displayParticipants = useMemo(
+    () => participants.map((p) => ({ ...p, isMe: p.nickname === nickname })),
+    [participants, nickname],
+  );
 
   const levelByNickname = useMemo(
     () => new Map(participants.map((p) => [p.nickname, p.level])),

@@ -115,6 +115,12 @@ export const useRoom = (
           if (data.type === 'ROOM_FULL') setIsRoomFull(true)
         })
 
+        // 어드민 전용: broadcast 타이밍 문제를 우회해 참여자 목록을 직접 수신
+        client.subscribe(`/user/queue/participants-snapshot`, (frame) => {
+          const data: { participants: ParticipantInfo[] } = JSON.parse(frame.body)
+          setParticipants(data.participants)
+        })
+
         client.publish({ destination: `/pub/rooms/${roomId}/enter` })
       }
 
