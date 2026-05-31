@@ -13,6 +13,7 @@ export const END_POINT = {
   },
   CHANNEL: {
     LIST: '/api/channels',
+    DETAIL: (channelId: number | string) => `/api/channels/${channelId}`,
     ROOMS: (channelId: number | string) => `/api/channels/${channelId}/rooms`,
     ROOM: (channelId: number | string, roomId: number | string) =>
       `/api/channels/${channelId}/rooms/${roomId}`,

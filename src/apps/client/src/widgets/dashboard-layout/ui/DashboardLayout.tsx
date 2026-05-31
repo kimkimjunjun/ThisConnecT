@@ -14,7 +14,7 @@ let permissionRequested = false;
 import { AuthModal, useAuthStore, AuthContextProvider } from "@/features/auth";
 import { AppHeader } from "@/widgets/header";
 import { Sidebar, CreateChannelModal } from "@/widgets/sidebar";
-import { useChannels } from "@/features/channel";
+import { useChannels, deleteChannel } from "@/features/channel";
 import styles from "./DashboardLayout.module.scss";
 
 type Props = { children: ReactNode };
@@ -89,6 +89,15 @@ export const DashboardLayout = ({ children }: Props) => {
     setIsChannelModalOpen(true);
   }, [accessToken, openModal]);
 
+  const handleDeleteChannel = useCallback(
+    async (channelId: string) => {
+      await deleteChannel(channelId);
+      refreshChannels();
+      if (activeCategoryId === channelId) router.push("/");
+    },
+    [refreshChannels, activeCategoryId, router],
+  );
+
   return (
     <AuthContextProvider
       value={{ isLoggedIn: !!accessToken, openLoginModal: openModal }}
@@ -102,6 +111,7 @@ export const DashboardLayout = ({ children }: Props) => {
             activeRoomId={activeCategoryId}
             onSelectRoom={handleSelectCategory}
             onAddChannel={canManage ? handleAddChannel : undefined}
+            onDeleteChannel={role === "ADMIN" ? handleDeleteChannel : undefined}
           />
 
           <main className={styles.content}>{children}</main>

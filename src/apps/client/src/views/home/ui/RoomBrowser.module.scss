@@ -125,8 +125,42 @@ $full-badge-color: #f23f42;
   align-content: start;
 }
 
+// ─── Card wrapper ─────────────────────────────────────────────────────────────
+.cardWrap {
+  position: relative;
+
+  &:hover .cardDeleteBtn {
+    opacity: 1;
+  }
+}
+
+.cardDeleteBtn {
+  position: absolute;
+  top: $spacing-2;
+  right: $spacing-2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: $radius-sm;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: #949ba4;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity $transition-fast, background-color $transition-fast, color $transition-fast;
+  z-index: 1;
+
+  &:hover {
+    background-color: rgba(242, 63, 66, 0.85);
+    color: #fff;
+  }
+}
+
 // ─── Card ─────────────────────────────────────────────────────────────────────
 .card {
+  width: 100%;
   @include flex-col;
   justify-content: space-between;
   min-height: 120px;
@@ -350,6 +384,42 @@ $full-badge-color: #f23f42;
   font-size: $text-sm;
   color: $text-muted;
   line-height: $leading-relaxed;
+}
+
+.fullModalActions {
+  display: flex;
+  gap: $spacing-3;
+  margin-top: $spacing-2;
+}
+
+.fullModalCancelBtn {
+  padding: $spacing-2 $spacing-4;
+  border-radius: $radius-lg;
+  background: transparent;
+  border: 1.5px solid #3b3d43;
+  color: $text-muted;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: border-color $transition-fast, color $transition-fast;
+
+  &:hover:not(:disabled) { border-color: #5c5f66; color: $text-primary; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.fullModalDeleteBtn {
+  padding: $spacing-2 $spacing-4;
+  border-radius: $radius-lg;
+  background-color: #f23f42;
+  border: none;
+  color: #fff;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  transition: filter $transition-fast;
+
+  &:hover:not(:disabled) { filter: brightness(1.1); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 .fullModalBtn {
