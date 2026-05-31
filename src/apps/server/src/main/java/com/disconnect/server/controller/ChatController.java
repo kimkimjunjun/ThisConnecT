@@ -80,9 +80,10 @@ public class ChatController {
                      @Payload ChatRequest request,
                      Principal principal) {
         String nickname = resolveNickname(principal);
+        boolean isAdmin = "ADMIN".equals(resolveRole(principal));
         messagingTemplate.convertAndSend(
                 "/sub/rooms/" + roomId + "/chat",
-                new ChatMessageResponse("CHAT", roomId, nickname, request.content(), now(), null)
+                new ChatMessageResponse("CHAT", roomId, nickname, request.content(), now(), null, isAdmin)
         );
     }
 
@@ -139,7 +140,7 @@ public class ChatController {
     private void broadcastMessage(Long roomId, String type, String sender, String content, String sessionId) {
         messagingTemplate.convertAndSend(
                 "/sub/rooms/" + roomId + "/chat",
-                new ChatMessageResponse(type, roomId, sender, content, now(), sessionId)
+                new ChatMessageResponse(type, roomId, sender, content, now(), sessionId, false)
         );
     }
 
