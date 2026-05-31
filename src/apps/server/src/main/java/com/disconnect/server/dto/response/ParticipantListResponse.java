@@ -7,5 +7,5 @@ public record ParticipantListResponse(
         int count,
         List<Participant> participants
 ) {
-    public record Participant(String sessionId, String nickname, int level) {}
+    public record Participant(String sessionId, String nickname, int level, boolean isOwner) {}
 }

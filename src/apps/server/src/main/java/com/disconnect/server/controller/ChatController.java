@@ -99,7 +99,7 @@ public class ChatController {
     private void broadcastParticipants(Long roomId) {
         List<ParticipantListResponse.Participant> participants =
                 roomSessionService.getParticipantDetails(roomId).stream()
-                        .map(d -> new ParticipantListResponse.Participant(d.sessionId(), d.nickname(), d.level()))
+                        .map(d -> new ParticipantListResponse.Participant(d.sessionId(), d.nickname(), d.level(), d.isOwner()))
                         .toList();
         messagingTemplate.convertAndSend(
                 "/sub/rooms/" + roomId + "/participants",
