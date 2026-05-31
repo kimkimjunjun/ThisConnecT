@@ -50,7 +50,6 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const nickname = useAuthStore((s) => s.nickname);
   const storedLevel = useAuthStore((s) => s.level);
   const accessToken = useAuthStore((s) => s.accessToken);
-  const myRole = useAuthStore((s) => s.role);
   useMemberInfo();
 
   const [currentRoom, setCurrentRoom] = useState(room);
@@ -239,7 +238,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
             );
           }
           const isMe = msg.sender === nickname;
-          const isAdminSender = isMe && myRole === "ADMIN";
+          const isAdminSender = !!msg.isAdmin;
           const senderLevel = isMe
             ? storedLevel
             : (levelByNickname.get(msg.sender) ?? 0);

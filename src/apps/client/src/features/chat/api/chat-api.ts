@@ -8,6 +8,7 @@ export type ChatMessageResponse = {
   content: string
   timestamp: string
   sessionId?: string
+  isAdmin?: boolean
 }
 
 export type ParticipantInfo = {
