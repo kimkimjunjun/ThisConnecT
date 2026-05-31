@@ -3,7 +3,8 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthContext, useAuthStore } from '@/features/auth'
-import { type ChannelRoom } from '@/features/channel'
+import { type ChannelRoom, getChannelRooms } from '@/features/channel'
+import { SearchIcon, RefreshIcon } from '@/shared/assets/icons'
 import { CreateRoomModal } from './CreateRoomModal'
 import styles from './RoomBrowser.module.scss'
 
@@ -12,13 +13,16 @@ type Props = {
   categoryName: string
   rooms: ChannelRoom[]
   onRoomCreated?: () => void
+  onRefresh?: () => void
+  isRefreshing?: boolean
 }
 
 const PAGE_SIZE = 8
 
-export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated }: Props) => {
+export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, onRefresh, isRefreshing = false }: Props) => {
   const [query, setQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isFullModalOpen, setIsFullModalOpen] = useState(false)
   const router = useRouter()
   const { isLoggedIn, openLoginModal } = useAuthContext()
   const role = useAuthStore((s) => s.role)
@@ -40,6 +44,30 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated }: 
   const handleCreated = useCallback(() => {
     onRoomCreated?.()
   }, [onRoomCreated])
+
+  if (isRefreshing) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.searchWrap}>
+          <SearchIcon className={styles.searchIcon} />
+          <div className={styles.skeletonSearch} />
+        </div>
+        <div className={styles.meta}>
+          <div className={styles.metaLeft}>
+            <h2 className={styles.categoryTitle}>
+              <span className={styles.hash}>#</span>
+              {categoryName}
+            </h2>
+          </div>
+        </div>
+        <div className={styles.grid}>
+          {Array.from({ length: rooms.length || 4 }).map((_, i) => (
+            <div key={i} className={styles.skeletonCard} />
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.container}>
@@ -90,6 +118,14 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated }: 
                   채팅방 추가
                 </button>
               )}
+              <button
+                className={styles.refreshBtn}
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                title="새로고침"
+              >
+                <RefreshIcon />
+              </button>
             </div>
             <span className={styles.metaCount}>{filtered.length}개의 채팅방</span>
           </div>
@@ -98,10 +134,20 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated }: 
             <div className={styles.grid}>
               {filtered.map((room) => {
                 const isFull = room.currentCount >= room.maxCount
-                const handleClick = () => {
+                const handleClick = async () => {
                   if (isFull) return
                   const dest = `/channels/${categoryId}/rooms/${room.id}`
                   if (!isLoggedIn) { openLoginModal(dest); return }
+                  try {
+                    const latest = await getChannelRooms(categoryId)
+                    const fresh = latest.find((r) => r.id === room.id)
+                    if (fresh && fresh.currentCount >= fresh.maxCount) {
+                      setIsFullModalOpen(true)
+                      return
+                    }
+                  } catch {
+                    // API 실패 시 그냥 진입 (BE 게이트가 최종 방어)
+                  }
                   router.push(dest)
                 }
                 return (
@@ -145,6 +191,21 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated }: 
           onCreated={handleCreated}
         />
       )}
+
+      {isFullModalOpen && (
+        <div className={styles.fullModalBackdrop} onClick={() => setIsFullModalOpen(false)}>
+          <div className={styles.fullModal} onClick={(e) => e.stopPropagation()}>
+            <span className={styles.fullModalIcon}>🚫</span>
+            <h3 className={styles.fullModalTitle}>채팅방이 꽉 찼습니다</h3>
+            <p className={styles.fullModalDesc}>
+              현재 채팅방의 인원이 가득 찼어요.<br />잠시 후 다시 시도해주세요.
+            </p>
+            <button className={styles.fullModalBtn} onClick={() => setIsFullModalOpen(false)}>
+              확인
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -170,21 +231,3 @@ const ParticipantBar = ({
     </div>
   )
 }
-
-const SearchIcon = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-  </svg>
-)

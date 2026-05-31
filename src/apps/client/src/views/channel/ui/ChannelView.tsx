@@ -7,7 +7,7 @@ type Props = { channelId: string }
 
 export const ChannelView = ({ channelId }: Props) => {
   const { channels } = useChannels()
-  const { rooms, refresh } = useChannelRooms(channelId)
+  const { rooms, refresh, isPending } = useChannelRooms(channelId)
 
   const channel = channels.find((c) => c.id.toString() === channelId)
   const channelName = channel?.name ?? ''
@@ -18,6 +18,8 @@ export const ChannelView = ({ channelId }: Props) => {
       categoryName={channelName}
       rooms={rooms}
       onRoomCreated={refresh}
+      onRefresh={refresh}
+      isRefreshing={isPending}
     />
   )
 }

@@ -1,30 +1,30 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth";
 import { useMemberInfo } from "@/features/member";
 import { useAudioStore } from "@/features/audio";
+import { useRoom, useVoiceChat } from "@/features/chat";
 import { type ChannelRoom } from "@/features/channel";
+import {
+  PencilIcon,
+  MicOnIcon,
+  MicOffIcon,
+  SpeakerOnIcon,
+  SpeakerOffIcon,
+  PhoneOffIcon,
+} from "@/shared/assets/icons";
 import { EditRoomModal } from "./EditRoomModal";
 import styles from "./RoomView.module.scss";
 
-type Participant = {
-  id: string;
-  nickname: string;
-  isMe: boolean;
-};
-
-type ChatMessage = {
-  id: string;
-  senderId: string;
-  senderName: string;
-  senderLevel: number;
-  text: string;
-  time: string;
-};
-
-// 레벨 구간별 tier 클래스 반환
 const getLevelTierClass = (level: number): string => {
   if (level >= 50) return styles.tierLegend;
   if (level >= 30) return styles.tierPlatinum;
@@ -34,78 +34,11 @@ const getLevelTierClass = (level: number): string => {
   return styles.tierNovice;
 };
 
-const NICKNAME_POOL = [
-  "하늘별",
-  "바람소리",
-  "달빛강물",
-  "별빛구름",
-  "초록나무",
-  "파란하늘",
-  "노란해살",
-  "빨간꽃잎",
-  "보라비",
-  "하얀눈",
-];
-
-// 모의 참가자 레벨 (티어 다양성 확인용)
-const MOCK_LEVELS = [3, 7, 12, 25, 35, 52, 8, 15, 22, 41];
-
-const INITIAL_MESSAGES: ChatMessage[] = [
-  {
-    id: "im1",
-    senderId: "p0",
-    senderName: "하늘별",
-    senderLevel: MOCK_LEVELS[3],
-    text: "안녕하세요! 처음 들어왔어요 😊",
-    time: "오후 2:31",
-  },
-  {
-    id: "im2",
-    senderId: "p1",
-    senderName: "바람소리",
-    senderLevel: MOCK_LEVELS[1],
-    text: "어서 오세요~",
-    time: "오후 2:32",
-  },
-  {
-    id: "im3",
-    senderId: "p0",
-    senderName: "하늘별",
-    senderLevel: MOCK_LEVELS[0],
-    text: "오늘 날씨가 정말 좋네요",
-    time: "오후 2:33",
-  },
-  {
-    id: "im4",
-    senderId: "p2",
-    senderName: "달빛강물",
-    senderLevel: MOCK_LEVELS[2],
-    text: "그러게요 ㅋㅋ 드라이브 가고 싶다",
-    time: "오후 2:35",
-  },
-  {
-    id: "im5",
-    senderId: "p1",
-    senderName: "바람소리",
-    senderLevel: MOCK_LEVELS[1],
-    text: "저도요! 누가 태워줘요",
-    time: "오후 2:36",
-  },
-];
-
-const buildParticipants = (
-  room: ChannelRoom,
-  myNickname: string | null,
-): Participant[] => {
-  const count = Math.max(1, room.currentCount);
-  const list: Participant[] = [
-    { id: "me", nickname: myNickname ?? "나", isMe: true },
-  ];
-  for (let i = 0; i < Math.min(count - 1, NICKNAME_POOL.length); i++) {
-    list.push({ id: `p${i}`, nickname: NICKNAME_POOL[i], isMe: false });
-  }
-  return list;
-};
+const formatTime = (timestamp: string): string =>
+  new Date(timestamp).toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 type Props = {
   room: ChannelRoom;
@@ -117,7 +50,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const nickname = useAuthStore((s) => s.nickname);
   const storedLevel = useAuthStore((s) => s.level);
   const accessToken = useAuthStore((s) => s.accessToken);
-  useMemberInfo(); // 마운트 시 API 호출 → 스토어 level 동기화
+  useMemberInfo();
 
   const [currentRoom, setCurrentRoom] = useState(room);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -129,33 +62,59 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const setIsSpeakerOn = useAudioStore((s) => s.setIsSpeakerOn);
   const setMicVolume = useAudioStore((s) => s.setMicVolume);
   const setSpeakerVolume = useAudioStore((s) => s.setSpeakerVolume);
-  const [speakingIds, setSpeakingIds] = useState<Set<string>>(new Set());
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
+
   const [inputText, setInputText] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
+  const isComposingRef = useRef(false);
 
-  const participants = useMemo(
-    () => buildParticipants(currentRoom, nickname),
-    [currentRoom, nickname],
+  const {
+    messages,
+    participants,
+    connected,
+    sendMessage,
+    isDuplicate,
+    isRoomFull,
+    mySessionId,
+    sendVoiceSignal,
+    setVoiceSignalCallback,
+  } = useRoom(currentRoom.id.toString(), accessToken, nickname);
+
+  useVoiceChat({
+    mySessionId,
+    participants,
+    sendVoiceSignal,
+    setVoiceSignalCallback,
+    isMicOn,
+    isSpeakerOn,
+    speakerVolume,
+  });
+
+  useEffect(() => {
+    if (isDuplicate) {
+      router.replace(`/channels/${categoryId}`);
+    }
+  }, [isDuplicate, router, categoryId]);
+
+  useEffect(() => {
+    if (isRoomFull) {
+      router.replace(`/channels/${categoryId}`);
+    }
+  }, [isRoomFull, router, categoryId]);
+
+  const displayParticipants = useMemo(
+    () => participants.map((p) => ({ ...p, isMe: p.nickname === nickname })),
+    [participants, nickname],
   );
-  const others = useMemo(
-    () => participants.filter((p) => !p.isMe),
+
+  const levelByNickname = useMemo(
+    () => new Map(participants.map((p) => [p.nickname, p.level])),
     [participants],
   );
 
-  useEffect(() => {
-    if (others.length === 0) return;
-    const interval = setInterval(() => {
-      const target = others[Math.floor(Math.random() * others.length)];
-      setSpeakingIds((prev) => {
-        const next = new Set(prev);
-        if (next.has(target.id)) next.delete(target.id);
-        else next.add(target.id);
-        return next;
-      });
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [others]);
+  const amIOwner = useMemo(
+    () => displayParticipants.some((p) => p.isMe && p.isOwner),
+    [displayParticipants],
+  );
 
   useEffect(() => {
     if (chatRef.current) {
@@ -165,24 +124,10 @@ export const RoomView = ({ room, categoryId }: Props) => {
 
   const handleSend = useCallback(() => {
     const text = inputText.trim();
-    if (!text) return;
-    const timeStr = new Date().toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `m-${Date.now()}`,
-        senderId: "me",
-        senderName: nickname ?? "나",
-        senderLevel: storedLevel,
-        text,
-        time: timeStr,
-      },
-    ]);
+    if (!text || !connected) return;
+    sendMessage(text);
     setInputText("");
-  }, [inputText, nickname, storedLevel]);
+  }, [inputText, connected, sendMessage]);
 
   return (
     <div className={styles.container}>
@@ -198,7 +143,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
         <span className={styles.voiceIcon}>🔊</span>
         <div className={styles.titleGroup}>
           <span className={styles.roomTitle}>{currentRoom.title}</span>
-          {accessToken && (
+          {amIOwner && (
             <button
               className={styles.editRoomBtn}
               onClick={() => setIsEditModalOpen(true)}
@@ -209,52 +154,38 @@ export const RoomView = ({ room, categoryId }: Props) => {
           )}
         </div>
         <span className={styles.participantCount}>
-          {currentRoom.currentCount}/{currentRoom.maxCount}명
+          {displayParticipants.length}/{currentRoom.maxCount}명
         </span>
       </div>
 
       {/* Participants */}
       <div className={styles.participantsSection}>
         <span className={styles.sectionLabel}>
-          참여자 · {participants.length}명
+          참여자 · {displayParticipants.length}명
         </span>
         <div className={styles.participantsList}>
-          {participants.map((p) => {
-            const speaking = speakingIds.has(p.id);
-            return (
+          {displayParticipants.map((p) => (
+            <div key={p.sessionId} className={styles.participantItem}>
               <div
-                key={p.id}
-                className={`${styles.participantItem} ${speaking ? styles.participantSpeaking : ""}`}
+                className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}
               >
-                <div
-                  className={`${styles.participantAvatar} ${speaking ? styles.avatarSpeaking : ""} ${p.isMe ? styles.avatarMe : ""}`}
-                >
-                  {p.nickname[0].toUpperCase()}
-                  {p.isMe && (
-                    <span
-                      className={isMicOn ? styles.micDot : styles.mutedDot}
-                    />
-                  )}
-                </div>
-                <div className={styles.participantMeta}>
-                  <span className={styles.participantName}>
-                    {p.nickname}
-                    {p.isMe && <span className={styles.meBadge}>나</span>}
-                  </span>
-                  {speaking && (
-                    <span className={styles.speakingLabel}>
-                      <span className={styles.speakingWave}>
-                        <span />
-                        <span />
-                        <span />
-                      </span>
-                      말하는 중
-                    </span>
-                  )}
-                </div>
+                {p.nickname[0].toUpperCase()}
+                {p.isMe && (
+                  <span className={isMicOn ? styles.micDot : styles.mutedDot} />
+                )}
               </div>
-            );
-          })}
+              <div className={styles.participantMeta}>
+                <span className={styles.participantName}>
+                  {p.nickname}
+                  {p.isMe && <span className={styles.meBadge}>나</span>}
+                  {p.isOwner && <span className={styles.ownerBadge}>방장</span>}
+                </span>
+                <span className={`${styles.levelBadge} ${getLevelTierClass(p.level)}`}>
+                  Lv.{p.level}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -278,6 +209,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
           iconOn={<SpeakerOnIcon />}
           iconOff={<SpeakerOffIcon />}
         />
+        {!connected && <span className={styles.connectingBadge}>연결 중…</span>}
         <button
           className={styles.leaveBtn}
           onClick={() => router.push(`/channels/${categoryId}`)}
@@ -292,34 +224,47 @@ export const RoomView = ({ room, categoryId }: Props) => {
         <div className={styles.chatWelcome}>
           <span className={styles.welcomeIcon}>🔊</span>
           <h3 className={styles.welcomeTitle}>
-            {currentRoom.title} 채널에 오신 것을 환영합니다!
+            {currentRoom.title} 채팅방에 오신 것을 환영합니다!
           </h3>
-          <p className={styles.welcomeSub}>이 채널의 시작점입니다.</p>
+          <p className={styles.welcomeSub}>이 채팅방의 시작점입니다.</p>
         </div>
-        {messages.map((msg) => {
-          const isMe = msg.senderId === "me";
+        {messages.map((msg, i) => {
+          if (msg.type === "JOIN" || msg.type === "LEAVE") {
+            return (
+              <div key={i} className={styles.systemMessage}>
+                {msg.sender}님이 {msg.type === "JOIN" ? "입장" : "퇴장"}
+                했습니다.
+              </div>
+            );
+          }
+          const isMe = msg.sender === nickname;
+          const senderLevel = isMe
+            ? storedLevel
+            : (levelByNickname.get(msg.sender) ?? 0);
           return (
-            <div key={msg.id} className={styles.messageItem}>
+            <div key={i} className={styles.messageItem}>
               <div
                 className={`${styles.messageAvatar} ${isMe ? styles.messageAvatarMe : ""}`}
               >
-                {msg.senderName[0].toUpperCase()}
+                {msg.sender[0].toUpperCase()}
               </div>
               <div className={styles.messageBody}>
                 <div className={styles.messageHeader}>
                   <span
                     className={`${styles.messageSender} ${isMe ? styles.messageSenderMe : ""}`}
                   >
-                    {msg.senderName}
+                    {msg.sender}
                   </span>
                   <span
-                    className={`${styles.levelBadge} ${getLevelTierClass(msg.senderLevel)}`}
+                    className={`${styles.levelBadge} ${getLevelTierClass(senderLevel)}`}
                   >
-                    Lv.{msg.senderLevel}
+                    Lv.{senderLevel}
                   </span>
-                  <span className={styles.messageTime}>{msg.time}</span>
+                  <span className={styles.messageTime}>
+                    {formatTime(msg.timestamp)}
+                  </span>
                 </div>
-                <p className={styles.messageText}>{msg.text}</p>
+                <p className={styles.messageText}>{msg.content}</p>
               </div>
             </div>
           );
@@ -331,20 +276,27 @@ export const RoomView = ({ room, categoryId }: Props) => {
         <div className={styles.inputRow}>
           <input
             className={styles.chatInput}
-            placeholder={`#${currentRoom.title} 에 메시지 보내기`}
+            placeholder={
+              connected
+                ? `#${currentRoom.title} 에 메시지 보내기`
+                : "연결 중..."
+            }
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
+            onCompositionStart={() => { isComposingRef.current = true }}
+            onCompositionEnd={() => { isComposingRef.current = false }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              if (e.key === "Enter" && !e.shiftKey && !isComposingRef.current) {
                 e.preventDefault();
                 handleSend();
               }
             }}
+            disabled={!connected}
           />
           <button
             className={styles.sendButton}
             onClick={handleSend}
-            disabled={!inputText.trim()}
+            disabled={!inputText.trim() || !connected}
           >
             전송
           </button>
@@ -366,22 +318,6 @@ export const RoomView = ({ room, categoryId }: Props) => {
   );
 };
 
-const PencilIcon = () => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-  </svg>
-);
 
 type AudioControlProps = {
   label: string;
@@ -429,7 +365,9 @@ const AudioControl = ({
         <div className={styles.audioDropdown}>
           <span className={styles.dropdownLabel}>{label}</span>
           <div className={styles.dropdownRow}>
-            <span className={styles.dropdownRowLabel}>{isOn ? "켜짐" : "꺼짐"}</span>
+            <span className={styles.dropdownRowLabel}>
+              {isOn ? "켜짐" : "꺼짐"}
+            </span>
             <button
               className={`${styles.toggleSwitch} ${isOn ? styles.toggleOn : ""}`}
               onClick={onToggle}
@@ -457,44 +395,3 @@ const AudioControl = ({
   );
 };
 
-const MicOnIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-    <line x1="12" y1="19" x2="12" y2="23" />
-    <line x1="8" y1="23" x2="16" y2="23" />
-  </svg>
-);
-
-const MicOffIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <line x1="1" y1="1" x2="23" y2="23" />
-    <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
-    <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" />
-    <line x1="12" y1="19" x2="12" y2="23" />
-    <line x1="8" y1="23" x2="16" y2="23" />
-  </svg>
-);
-
-const SpeakerOnIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-  </svg>
-);
-
-const SpeakerOffIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-    <line x1="23" y1="9" x2="17" y2="15" />
-    <line x1="17" y1="9" x2="23" y2="15" />
-  </svg>
-);
-
-const PhoneOffIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 2 2 0 0 1-.45-2.11 12.84 12.84 0 0 0 .7-2.81 2 2 0 0 1-.45-2.11z" />
-    <line x1="23" y1="1" x2="1" y2="23" />
-  </svg>
-);
