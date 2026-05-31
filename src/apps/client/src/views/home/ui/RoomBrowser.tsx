@@ -3,8 +3,8 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthContext, useAuthStore } from '@/features/auth'
-import { type ChannelRoom, getChannelRooms } from '@/features/channel'
-import { SearchIcon, RefreshIcon } from '@/shared/assets/icons'
+import { type ChannelRoom, getChannelRooms, deleteRoom } from '@/features/channel'
+import { SearchIcon, RefreshIcon, TrashIcon } from '@/shared/assets/icons'
 import { CreateRoomModal } from './CreateRoomModal'
 import styles from './RoomBrowser.module.scss'
 
@@ -13,20 +13,24 @@ type Props = {
   categoryName: string
   rooms: ChannelRoom[]
   onRoomCreated?: () => void
+  onRoomDeleted?: () => void
   onRefresh?: () => void
   isRefreshing?: boolean
 }
 
 const PAGE_SIZE = 8
 
-export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, onRefresh, isRefreshing = false }: Props) => {
+export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, onRoomDeleted, onRefresh, isRefreshing = false }: Props) => {
   const [query, setQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isFullModalOpen, setIsFullModalOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<ChannelRoom | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
   const { isLoggedIn, openLoginModal } = useAuthContext()
   const role = useAuthStore((s) => s.role)
   const canManage = role === 'USER' || role === 'ADMIN'
+  const isAdmin = role === 'ADMIN'
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -44,6 +48,18 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
   const handleCreated = useCallback(() => {
     onRoomCreated?.()
   }, [onRoomCreated])
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteTarget) return
+    setIsDeleting(true)
+    try {
+      await deleteRoom(categoryId, deleteTarget.id)
+      onRoomDeleted?.()
+    } finally {
+      setIsDeleting(false)
+      setDeleteTarget(null)
+    }
+  }, [deleteTarget, categoryId, onRoomDeleted])
 
   if (isRefreshing) {
     return (
@@ -151,26 +167,36 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
                   router.push(dest)
                 }
                 return (
-                  <button
-                    key={room.id}
-                    className={`${styles.card} ${isFull ? styles.cardFull : ''}`}
-                    onClick={handleClick}
-                    disabled={isFull}
-                  >
-                    <span className={styles.cardTitle}>{room.title}</span>
-                    <div className={styles.cardFooter}>
-                      <ParticipantBar
-                        current={room.currentCount}
-                        max={room.maxCount}
-                      />
-                      <span
-                        className={`${styles.countText} ${isFull ? styles.countFull : ''}`}
+                  <div key={room.id} className={styles.cardWrap}>
+                    <button
+                      className={`${styles.card} ${isFull ? styles.cardFull : ''}`}
+                      onClick={handleClick}
+                      disabled={isFull}
+                    >
+                      <span className={styles.cardTitle}>{room.title}</span>
+                      <div className={styles.cardFooter}>
+                        <ParticipantBar
+                          current={room.currentCount}
+                          max={room.maxCount}
+                        />
+                        <span
+                          className={`${styles.countText} ${isFull ? styles.countFull : ''}`}
+                        >
+                          {room.currentCount}/{room.maxCount}
+                        </span>
+                        {isFull && <span className={styles.fullBadge}>꽉 참</span>}
+                      </div>
+                    </button>
+                    {isAdmin && (
+                      <button
+                        className={styles.cardDeleteBtn}
+                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(room) }}
+                        title="채팅방 삭제"
                       >
-                        {room.currentCount}/{room.maxCount}
-                      </span>
-                      {isFull && <span className={styles.fullBadge}>꽉 참</span>}
-                    </div>
-                  </button>
+                        <TrashIcon />
+                      </button>
+                    )}
+                  </div>
                 )
               })}
             </div>
@@ -203,6 +229,34 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
             <button className={styles.fullModalBtn} onClick={() => setIsFullModalOpen(false)}>
               확인
             </button>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className={styles.fullModalBackdrop} onClick={() => setDeleteTarget(null)}>
+          <div className={styles.fullModal} onClick={(e) => e.stopPropagation()}>
+            <span className={styles.fullModalIcon}>🗑️</span>
+            <h3 className={styles.fullModalTitle}>채팅방을 삭제할까요?</h3>
+            <p className={styles.fullModalDesc}>
+              <strong>{deleteTarget.title}</strong> 채팅방이 삭제됩니다.<br />이 작업은 되돌릴 수 없습니다.
+            </p>
+            <div className={styles.fullModalActions}>
+              <button
+                className={styles.fullModalCancelBtn}
+                onClick={() => setDeleteTarget(null)}
+                disabled={isDeleting}
+              >
+                취소
+              </button>
+              <button
+                className={styles.fullModalDeleteBtn}
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? '삭제 중...' : '삭제'}
+              </button>
+            </div>
           </div>
         </div>
       )}

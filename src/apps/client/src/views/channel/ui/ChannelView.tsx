@@ -18,6 +18,7 @@ export const ChannelView = ({ channelId }: Props) => {
       categoryName={channelName}
       rooms={rooms}
       onRoomCreated={refresh}
+      onRoomDeleted={refresh}
       onRefresh={refresh}
       isRefreshing={isPending}
     />

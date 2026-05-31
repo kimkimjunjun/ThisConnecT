@@ -45,3 +45,9 @@ export const updateRoom = (
     method: 'PATCH',
     body: JSON.stringify(body),
   })
+
+export const deleteChannel = (channelId: number | string) =>
+  fetchAPI<void>(END_POINT.CHANNEL.DETAIL(channelId), { method: 'DELETE' })
+
+export const deleteRoom = (channelId: number | string, roomId: number | string) =>
+  fetchAPI<void>(END_POINT.CHANNEL.ROOM(channelId, roomId), { method: 'DELETE' })
