@@ -10,18 +10,17 @@ public class RoomSessionService {
 
     // sessionId → RoomSession
     private final Map<String, RoomSession> sessionStore = new ConcurrentHashMap<>();
-    // roomId → { sessionId → ParticipantData } (LinkedHashMap: 삽입 순서 유지 → 첫 번째 항목이 방장)
+    // roomId → { sessionId → ParticipantData } (LinkedHashMap: 삽입 순서 유지 → 첫 번째 일반 유저가 방장)
     private final Map<Long, Map<String, ParticipantData>> roomParticipants = new ConcurrentHashMap<>();
 
-    public record RoomSession(Long roomId, String nickname, int level) {}
-    public record ParticipantData(String nickname, int level) {}
+    public record RoomSession(Long roomId, String nickname, int level, boolean isAdmin) {}
+    public record ParticipantData(String nickname, int level, boolean isAdmin) {}
     public record ParticipantDetail(String sessionId, String nickname, int level, boolean isOwner) {}
 
-    public synchronized void join(String sessionId, Long roomId, String nickname, int level) {
-        sessionStore.put(sessionId, new RoomSession(roomId, nickname, level));
-        // LinkedHashMap으로 삽입 순서 보장 (첫 번째 = 방장)
+    public synchronized void join(String sessionId, Long roomId, String nickname, int level, boolean isAdmin) {
+        sessionStore.put(sessionId, new RoomSession(roomId, nickname, level, isAdmin));
         roomParticipants.computeIfAbsent(roomId, k -> new LinkedHashMap<>())
-                .put(sessionId, new ParticipantData(nickname, level));
+                .put(sessionId, new ParticipantData(nickname, level, isAdmin));
     }
 
     public synchronized RoomSession leave(String sessionId) {
@@ -41,26 +40,37 @@ public class RoomSessionService {
     public synchronized List<String> getParticipants(Long roomId) {
         Map<String, ParticipantData> participants = roomParticipants.get(roomId);
         if (participants == null) return List.of();
-        return participants.values().stream().map(ParticipantData::nickname).toList();
+        return participants.values().stream()
+                .filter(p -> !p.isAdmin())
+                .map(ParticipantData::nickname)
+                .toList();
     }
 
+    // 어드민 제외한 실제 인원 수
     public synchronized int getCount(Long roomId) {
         Map<String, ParticipantData> participants = roomParticipants.get(roomId);
-        return participants == null ? 0 : participants.size();
+        if (participants == null) return 0;
+        return (int) participants.values().stream().filter(p -> !p.isAdmin()).count();
     }
 
-    // 첫 번째 항목(삽입 순서 기준) = 방장
+    // 첫 번째 일반 유저(어드민 제외) = 방장
     public synchronized String getOwnerSessionId(Long roomId) {
         Map<String, ParticipantData> participants = roomParticipants.get(roomId);
-        if (participants == null || participants.isEmpty()) return null;
-        return participants.keySet().iterator().next();
+        if (participants == null) return null;
+        return participants.entrySet().stream()
+                .filter(e -> !e.getValue().isAdmin())
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
     }
 
+    // 어드민 제외한 참여자만 반환
     public synchronized List<ParticipantDetail> getParticipantDetails(Long roomId) {
         Map<String, ParticipantData> participants = roomParticipants.get(roomId);
         if (participants == null) return List.of();
-        String ownerSessionId = participants.keySet().iterator().next();
+        String ownerSessionId = getOwnerSessionId(roomId);
         return participants.entrySet().stream()
+                .filter(e -> !e.getValue().isAdmin())
                 .map(e -> new ParticipantDetail(
                         e.getKey(),
                         e.getValue().nickname(),
