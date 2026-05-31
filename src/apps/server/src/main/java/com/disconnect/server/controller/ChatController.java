@@ -43,28 +43,36 @@ public class ChatController {
                       Principal principal) {
         String sessionId = headerAccessor.getSessionId();
         String nickname = resolveNickname(principal);
+        String role = resolveRole(principal);
+        boolean isAdmin = "ADMIN".equals(role);
 
-        // 정원 초과 시 입장 거부
-        boolean isFull = chatRoomRepository.findById(roomId)
-                .map(room -> roomSessionService.getCount(roomId) >= room.getMaxCount())
-                .orElse(false);
+        // 일반 유저만 정원 초과 체크 (어드민은 항상 입장 허용)
+        if (!isAdmin) {
+            boolean isFull = chatRoomRepository.findById(roomId)
+                    .map(room -> roomSessionService.getCount(roomId) >= room.getMaxCount())
+                    .orElse(false);
 
-        if (isFull) {
-            if (principal != null) {
-                messagingTemplate.convertAndSendToUser(
-                        principal.getName(), "/queue/room-error",
-                        Map.of("type", "ROOM_FULL", "roomId", roomId)
-                );
+            if (isFull) {
+                if (principal != null) {
+                    messagingTemplate.convertAndSendToUser(
+                            principal.getName(), "/queue/room-error",
+                            Map.of("type", "ROOM_FULL", "roomId", roomId)
+                    );
+                }
+                return;
             }
-            return;
         }
 
         int level = resolveLevel(principal);
-        roomSessionService.join(sessionId, roomId, nickname, level);
-        chatRoomRepository.findById(roomId).ifPresent(room -> room.updateCurrentCount(1));
+        roomSessionService.join(sessionId, roomId, nickname, level, isAdmin);
 
-        broadcastParticipants(roomId);
-        broadcastMessage(roomId, "JOIN", nickname, nickname + "님이 입장했습니다.", sessionId);
+        if (!isAdmin) {
+            // 일반 유저: 인원수 증가 + 입장 메시지 브로드캐스트
+            chatRoomRepository.findById(roomId).ifPresent(room -> room.updateCurrentCount(1));
+            broadcastParticipants(roomId);
+            broadcastMessage(roomId, "JOIN", nickname, nickname + "님이 입장했습니다.", sessionId);
+        }
+        // 어드민: 인원수 미포함, 참여자 목록 미노출, 입장 메시지 없음
     }
 
     @MessageMapping("/rooms/{roomId}/chat")
@@ -106,10 +114,15 @@ public class ChatController {
 
         Long roomId = session.roomId();
         String nickname = session.nickname();
+        boolean isAdmin = session.isAdmin();
 
-        chatRoomRepository.findById(roomId).ifPresent(room -> room.updateCurrentCount(-1));
-        broadcastParticipants(roomId);
-        broadcastMessage(roomId, "LEAVE", nickname, nickname + "님이 퇴장했습니다.", sessionId);
+        if (!isAdmin) {
+            // 일반 유저: 인원수 감소 + 퇴장 메시지 브로드캐스트
+            chatRoomRepository.findById(roomId).ifPresent(room -> room.updateCurrentCount(-1));
+            broadcastParticipants(roomId);
+            broadcastMessage(roomId, "LEAVE", nickname, nickname + "님이 퇴장했습니다.", sessionId);
+        }
+        // 어드민: 조용히 퇴장 (인원수·참여자 목록 변화 없음)
     }
 
     private void broadcastParticipants(Long roomId) {
@@ -128,6 +141,15 @@ public class ChatController {
                 "/sub/rooms/" + roomId + "/chat",
                 new ChatMessageResponse(type, roomId, sender, content, now(), sessionId)
         );
+    }
+
+    private String resolveRole(Principal principal) {
+        if (principal == null) return "GUEST";
+        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) principal;
+        return auth.getAuthorities().stream()
+                .findFirst()
+                .map(a -> a.getAuthority().replace("ROLE_", ""))
+                .orElse("GUEST");
     }
 
     private int resolveLevel(Principal principal) {
