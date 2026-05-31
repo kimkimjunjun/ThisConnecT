@@ -65,6 +65,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
 
   const [inputText, setInputText] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
+  const isComposingRef = useRef(false);
 
   const { messages, participants, connected, sendMessage, isDuplicate } =
     useRoom(currentRoom.id.toString(), accessToken, nickname);
@@ -242,8 +243,10 @@ export const RoomView = ({ room, categoryId }: Props) => {
             }
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
+            onCompositionStart={() => { isComposingRef.current = true }}
+            onCompositionEnd={() => { isComposingRef.current = false }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              if (e.key === "Enter" && !e.shiftKey && !isComposingRef.current) {
                 e.preventDefault();
                 handleSend();
               }
