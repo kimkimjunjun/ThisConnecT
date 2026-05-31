@@ -22,6 +22,7 @@ const PAGE_SIZE = 8
 export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, onRefresh, isRefreshing = false }: Props) => {
   const [query, setQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isFullModalOpen, setIsFullModalOpen] = useState(false)
   const router = useRouter()
   const { isLoggedIn, openLoginModal } = useAuthContext()
   const role = useAuthStore((s) => s.role)
@@ -140,7 +141,10 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
                   try {
                     const latest = await getChannelRooms(categoryId)
                     const fresh = latest.find((r) => r.id === room.id)
-                    if (fresh && fresh.currentCount >= fresh.maxCount) return
+                    if (fresh && fresh.currentCount >= fresh.maxCount) {
+                      setIsFullModalOpen(true)
+                      return
+                    }
                   } catch {
                     // API 실패 시 그냥 진입 (BE 게이트가 최종 방어)
                   }
@@ -186,6 +190,21 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
           onClose={() => setIsModalOpen(false)}
           onCreated={handleCreated}
         />
+      )}
+
+      {isFullModalOpen && (
+        <div className={styles.fullModalBackdrop} onClick={() => setIsFullModalOpen(false)}>
+          <div className={styles.fullModal} onClick={(e) => e.stopPropagation()}>
+            <span className={styles.fullModalIcon}>🚫</span>
+            <h3 className={styles.fullModalTitle}>채팅방이 꽉 찼습니다</h3>
+            <p className={styles.fullModalDesc}>
+              현재 채팅방의 인원이 가득 찼어요.<br />잠시 후 다시 시도해주세요.
+            </p>
+            <button className={styles.fullModalBtn} onClick={() => setIsFullModalOpen(false)}>
+              확인
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
