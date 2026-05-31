@@ -99,6 +99,11 @@ export const RoomView = ({ room, categoryId }: Props) => {
     [participants, nickname],
   );
 
+  const levelByNickname = useMemo(
+    () => new Map(participants.map((p) => [p.nickname, p.level])),
+    [participants],
+  );
+
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
@@ -221,6 +226,9 @@ export const RoomView = ({ room, categoryId }: Props) => {
             );
           }
           const isMe = msg.sender === nickname;
+          const senderLevel = isMe
+            ? storedLevel
+            : (levelByNickname.get(msg.sender) ?? 0);
           return (
             <div key={i} className={styles.messageItem}>
               <div
@@ -235,13 +243,11 @@ export const RoomView = ({ room, categoryId }: Props) => {
                   >
                     {msg.sender}
                   </span>
-                  {isMe && (
-                    <span
-                      className={`${styles.levelBadge} ${getLevelTierClass(storedLevel)}`}
-                    >
-                      Lv.{storedLevel}
-                    </span>
-                  )}
+                  <span
+                    className={`${styles.levelBadge} ${getLevelTierClass(senderLevel)}`}
+                  >
+                    Lv.{senderLevel}
+                  </span>
                   <span className={styles.messageTime}>
                     {formatTime(msg.timestamp)}
                   </span>
