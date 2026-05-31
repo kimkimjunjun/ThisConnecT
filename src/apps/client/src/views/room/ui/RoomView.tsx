@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth";
 import { useMemberInfo } from "@/features/member";
 import { useAudioStore } from "@/features/audio";
-import { useRoom } from "@/features/chat";
+import { useRoom, useVoiceChat } from "@/features/chat";
 import { type ChannelRoom } from "@/features/channel";
 import {
   PencilIcon,
@@ -67,8 +67,26 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const chatRef = useRef<HTMLDivElement>(null);
   const isComposingRef = useRef(false);
 
-  const { messages, participants, connected, sendMessage, isDuplicate } =
-    useRoom(currentRoom.id.toString(), accessToken, nickname);
+  const {
+    messages,
+    participants,
+    connected,
+    sendMessage,
+    isDuplicate,
+    mySessionId,
+    sendVoiceSignal,
+    setVoiceSignalCallback,
+  } = useRoom(currentRoom.id.toString(), accessToken, nickname);
+
+  useVoiceChat({
+    mySessionId,
+    participants,
+    sendVoiceSignal,
+    setVoiceSignalCallback,
+    isMicOn,
+    isSpeakerOn,
+    speakerVolume,
+  });
 
   useEffect(() => {
     if (isDuplicate) {

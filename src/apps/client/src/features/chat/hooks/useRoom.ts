@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
   createStompClient,
   type ChatMessageResponse,
   type ParticipantInfo,
+  type VoiceSignalRequest,
+  type VoiceSignalResponse,
 } from '../api/chat-api'
 
 const DUPLICATE_CHECK_MS = 300
@@ -18,6 +20,12 @@ export const useRoom = (
   const [isDuplicate, setIsDuplicate] = useState(false)
   const clientRef = useRef<ReturnType<typeof createStompClient> | null>(null)
   const isDuplicateRef = useRef(false)
+  const voiceSignalCbRef = useRef<((signal: VoiceSignalResponse) => void) | null>(null)
+
+  const mySessionId = useMemo(
+    () => participants.find((p) => p.nickname === nickname)?.sessionId ?? null,
+    [participants, nickname],
+  )
 
   const sendMessage = useCallback(
     (content: string) => {
@@ -30,7 +38,25 @@ export const useRoom = (
     [roomId],
   )
 
-  // 동일 계정의 중복 탭 진입 감지 (BroadcastChannel은 동일 탭에 자신의 메시지를 전달하지 않음)
+  const sendVoiceSignal = useCallback(
+    (req: VoiceSignalRequest) => {
+      if (!clientRef.current?.connected) return
+      clientRef.current.publish({
+        destination: `/pub/rooms/${roomId}/voice/signal`,
+        body: JSON.stringify(req),
+      })
+    },
+    [roomId],
+  )
+
+  const setVoiceSignalCallback = useCallback(
+    (cb: ((signal: VoiceSignalResponse) => void) | null) => {
+      voiceSignalCbRef.current = cb
+    },
+    [],
+  )
+
+  // 동일 계정의 중복 탭 진입 감지
   useEffect(() => {
     if (!nickname || !accessToken) return
 
@@ -78,6 +104,11 @@ export const useRoom = (
           setParticipants(data.participants)
         })
 
+        client.subscribe(`/sub/rooms/${roomId}/voice`, (frame) => {
+          const signal: VoiceSignalResponse = JSON.parse(frame.body)
+          voiceSignalCbRef.current?.(signal)
+        })
+
         client.publish({ destination: `/pub/rooms/${roomId}/enter` })
       }
 
@@ -96,5 +127,14 @@ export const useRoom = (
     }
   }, [roomId, accessToken])
 
-  return { messages, participants, connected, sendMessage, isDuplicate }
+  return {
+    messages,
+    participants,
+    connected,
+    sendMessage,
+    isDuplicate,
+    mySessionId,
+    sendVoiceSignal,
+    setVoiceSignalCallback,
+  }
 }

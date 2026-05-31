@@ -21,6 +21,21 @@ export type ParticipantListResponse = {
   participants: ParticipantInfo[]
 }
 
+export type VoiceSignalType = 'OFFER' | 'ANSWER' | 'ICE_CANDIDATE'
+
+export type VoiceSignalRequest = {
+  type: VoiceSignalType
+  targetSessionId: string
+  data: RTCSessionDescriptionInit | RTCIceCandidateInit
+}
+
+export type VoiceSignalResponse = {
+  type: VoiceSignalType
+  senderSessionId: string
+  targetSessionId: string
+  data: RTCSessionDescriptionInit | RTCIceCandidateInit
+}
+
 const WS_URL = env.API_BASE_URL.replace(/^http/, 'ws') + '/ws'
 
 export const createStompClient = (accessToken: string): Client =>

@@ -1,2 +1,8 @@
 export { useRoom } from './hooks/useRoom'
-export type { ChatMessageResponse, ParticipantInfo } from './api/chat-api'
+export { useVoiceChat } from './hooks/useVoiceChat'
+export type {
+  ChatMessageResponse,
+  ParticipantInfo,
+  VoiceSignalRequest,
+  VoiceSignalResponse,
+} from './api/chat-api'
