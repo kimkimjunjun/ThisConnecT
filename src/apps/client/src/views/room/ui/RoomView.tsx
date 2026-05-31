@@ -73,6 +73,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
     connected,
     sendMessage,
     isDuplicate,
+    isRoomFull,
     mySessionId,
     sendVoiceSignal,
     setVoiceSignalCallback,
@@ -93,6 +94,12 @@ export const RoomView = ({ room, categoryId }: Props) => {
       router.replace(`/channels/${categoryId}`);
     }
   }, [isDuplicate, router, categoryId]);
+
+  useEffect(() => {
+    if (isRoomFull) {
+      router.replace(`/channels/${categoryId}`);
+    }
+  }, [isRoomFull, router, categoryId]);
 
   const displayParticipants = useMemo(
     () => participants.map((p) => ({ ...p, isMe: p.nickname === nickname })),

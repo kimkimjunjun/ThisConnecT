@@ -18,6 +18,7 @@ export const useRoom = (
   const [participants, setParticipants] = useState<ParticipantInfo[]>([])
   const [connected, setConnected] = useState(false)
   const [isDuplicate, setIsDuplicate] = useState(false)
+  const [isRoomFull, setIsRoomFull] = useState(false)
   const clientRef = useRef<ReturnType<typeof createStompClient> | null>(null)
   const isDuplicateRef = useRef(false)
   const voiceSignalCbRef = useRef<((signal: VoiceSignalResponse) => void) | null>(null)
@@ -109,6 +110,11 @@ export const useRoom = (
           voiceSignalCbRef.current?.(signal)
         })
 
+        client.subscribe(`/user/queue/room-error`, (frame) => {
+          const data: { type: string } = JSON.parse(frame.body)
+          if (data.type === 'ROOM_FULL') setIsRoomFull(true)
+        })
+
         client.publish({ destination: `/pub/rooms/${roomId}/enter` })
       }
 
@@ -133,6 +139,7 @@ export const useRoom = (
     connected,
     sendMessage,
     isDuplicate,
+    isRoomFull,
     mySessionId,
     sendVoiceSignal,
     setVoiceSignalCallback,

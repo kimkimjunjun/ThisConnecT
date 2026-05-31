@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthContext, useAuthStore } from '@/features/auth'
-import { type ChannelRoom } from '@/features/channel'
+import { type ChannelRoom, getChannelRooms } from '@/features/channel'
 import { SearchIcon, RefreshIcon } from '@/shared/assets/icons'
 import { CreateRoomModal } from './CreateRoomModal'
 import styles from './RoomBrowser.module.scss'
@@ -133,10 +133,17 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
             <div className={styles.grid}>
               {filtered.map((room) => {
                 const isFull = room.currentCount >= room.maxCount
-                const handleClick = () => {
+                const handleClick = async () => {
                   if (isFull) return
                   const dest = `/channels/${categoryId}/rooms/${room.id}`
                   if (!isLoggedIn) { openLoginModal(dest); return }
+                  try {
+                    const latest = await getChannelRooms(categoryId)
+                    const fresh = latest.find((r) => r.id === room.id)
+                    if (fresh && fresh.currentCount >= fresh.maxCount) return
+                  } catch {
+                    // API 실패 시 그냥 진입 (BE 게이트가 최종 방어)
+                  }
                   router.push(dest)
                 }
                 return (
