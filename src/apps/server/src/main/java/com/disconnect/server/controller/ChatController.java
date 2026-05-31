@@ -25,6 +25,7 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -42,8 +43,23 @@ public class ChatController {
                       Principal principal) {
         String sessionId = headerAccessor.getSessionId();
         String nickname = resolveNickname(principal);
-        int level = resolveLevel(principal);
 
+        // 정원 초과 시 입장 거부
+        boolean isFull = chatRoomRepository.findById(roomId)
+                .map(room -> roomSessionService.getCount(roomId) >= room.getMaxCount())
+                .orElse(false);
+
+        if (isFull) {
+            if (principal != null) {
+                messagingTemplate.convertAndSendToUser(
+                        principal.getName(), "/queue/room-error",
+                        Map.of("type", "ROOM_FULL", "roomId", roomId)
+                );
+            }
+            return;
+        }
+
+        int level = resolveLevel(principal);
         roomSessionService.join(sessionId, roomId, nickname, level);
         chatRoomRepository.findById(roomId).ifPresent(room -> room.updateCurrentCount(1));
 
