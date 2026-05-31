@@ -104,6 +104,11 @@ export const RoomView = ({ room, categoryId }: Props) => {
     [participants],
   );
 
+  const amIOwner = useMemo(
+    () => displayParticipants.some((p) => p.isMe && p.isOwner),
+    [displayParticipants],
+  );
+
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
@@ -131,7 +136,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
         <span className={styles.voiceIcon}>🔊</span>
         <div className={styles.titleGroup}>
           <span className={styles.roomTitle}>{currentRoom.title}</span>
-          {accessToken && (
+          {amIOwner && (
             <button
               className={styles.editRoomBtn}
               onClick={() => setIsEditModalOpen(true)}
