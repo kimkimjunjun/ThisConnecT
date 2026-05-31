@@ -91,6 +91,21 @@ $danger-hover-bg: #da3c3f;
   white-space: nowrap;
 }
 
+.roleAdmin {
+  background: linear-gradient(90deg, #a855f7, #6366f1, #a855f7);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: $font-weight-semibold;
+  animation: adminSlide 2s linear infinite;
+}
+
+@keyframes adminSlide {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
 .chevron {
   font-size: $text-xs;
   color: $text-muted;

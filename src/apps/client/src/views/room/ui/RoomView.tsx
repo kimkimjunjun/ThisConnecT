@@ -50,6 +50,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const nickname = useAuthStore((s) => s.nickname);
   const storedLevel = useAuthStore((s) => s.level);
   const accessToken = useAuthStore((s) => s.accessToken);
+  const myRole = useAuthStore((s) => s.role);
   useMemberInfo();
 
   const [currentRoom, setCurrentRoom] = useState(room);
@@ -238,6 +239,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
             );
           }
           const isMe = msg.sender === nickname;
+          const isAdminSender = isMe && myRole === "ADMIN";
           const senderLevel = isMe
             ? storedLevel
             : (levelByNickname.get(msg.sender) ?? 0);
@@ -256,9 +258,9 @@ export const RoomView = ({ room, categoryId }: Props) => {
                     {msg.sender}
                   </span>
                   <span
-                    className={`${styles.levelBadge} ${getLevelTierClass(senderLevel)}`}
+                    className={`${styles.levelBadge} ${isAdminSender ? styles.tierLegend : getLevelTierClass(senderLevel)}`}
                   >
-                    Lv.{senderLevel}
+                    {isAdminSender ? "관리자" : `Lv.${senderLevel}`}
                   </span>
                   <span className={styles.messageTime}>
                     {formatTime(msg.timestamp)}
