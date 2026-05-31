@@ -1,5 +1,6 @@
 package com.disconnect.server.controller;
 
+import com.disconnect.server.domain.member.Member;
 import com.disconnect.server.dto.request.ChatRequest;
 import com.disconnect.server.dto.request.VoiceSignalRequest;
 import com.disconnect.server.dto.response.ChatMessageResponse;
@@ -41,8 +42,9 @@ public class ChatController {
                       Principal principal) {
         String sessionId = headerAccessor.getSessionId();
         String nickname = resolveNickname(principal);
+        int level = resolveLevel(principal);
 
-        roomSessionService.join(sessionId, roomId, nickname);
+        roomSessionService.join(sessionId, roomId, nickname, level);
         chatRoomRepository.findById(roomId).ifPresent(room -> room.updateCurrentCount(1));
 
         broadcastParticipants(roomId);
@@ -97,7 +99,7 @@ public class ChatController {
     private void broadcastParticipants(Long roomId) {
         List<ParticipantListResponse.Participant> participants =
                 roomSessionService.getParticipantDetails(roomId).stream()
-                        .map(d -> new ParticipantListResponse.Participant(d.sessionId(), d.nickname()))
+                        .map(d -> new ParticipantListResponse.Participant(d.sessionId(), d.nickname(), d.level(), d.isOwner()))
                         .toList();
         messagingTemplate.convertAndSend(
                 "/sub/rooms/" + roomId + "/participants",
@@ -110,6 +112,19 @@ public class ChatController {
                 "/sub/rooms/" + roomId + "/chat",
                 new ChatMessageResponse(type, roomId, sender, content, now(), sessionId)
         );
+    }
+
+    private int resolveLevel(Principal principal) {
+        if (principal == null) return 0;
+        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) principal;
+        String role = auth.getAuthorities().stream()
+                .findFirst()
+                .map(a -> a.getAuthority().replace("ROLE_", ""))
+                .orElse("GUEST");
+        if ("GUEST".equals(role)) return 0;
+        return memberRepository.findById(Long.parseLong(principal.getName()))
+                .map(Member::getLevel)
+                .orElse(0);
     }
 
     private String resolveNickname(Principal principal) {
