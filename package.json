@@ -8,8 +8,8 @@
     "web": "pnpm --dir src/apps/client dev",
     "web:build": "pnpm --dir src/apps/client build",
     "web:lint": "pnpm --dir src/apps/client lint",
-    "server": "node -e \"const{spawnSync:s}=require('child_process'),p=require('path'),c=p.resolve('src/apps/server');s('cmd',['/c',p.join(c,'gradlew.bat'),'bootRun'],{cwd:c,stdio:'inherit'})\"",
-    "server:build": "node -e \"const{spawnSync:s}=require('child_process'),p=require('path'),c=p.resolve('src/apps/server');s('cmd',['/c',p.join(c,'gradlew.bat'),'build'],{cwd:c,stdio:'inherit'})\""
+    "server": "JAVA_HOME=/Users/kimjunhwi/Library/Java/JavaVirtualMachines/temurin-21.0.10/Contents/Home ./src/apps/server/gradlew -p src/apps/server bootRun",
+    "server:build": "JAVA_HOME=/Users/kimjunhwi/Library/Java/JavaVirtualMachines/temurin-21.0.10/Contents/Home ./src/apps/server/gradlew -p src/apps/server build"
   },
   "devDependencies": {
     "@commitlint/cli": "^19",

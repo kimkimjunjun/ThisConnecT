@@ -1,12 +1,27 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth";
 import { useMemberInfo } from "@/features/member";
 import { useAudioStore } from "@/features/audio";
 import { useRoom } from "@/features/chat";
 import { type ChannelRoom } from "@/features/channel";
+import {
+  PencilIcon,
+  MicOnIcon,
+  MicOffIcon,
+  SpeakerOnIcon,
+  SpeakerOffIcon,
+  PhoneOffIcon,
+} from "@/shared/assets/icons";
 import { EditRoomModal } from "./EditRoomModal";
 import styles from "./RoomView.module.scss";
 
@@ -51,15 +66,12 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const [inputText, setInputText] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
 
-  const { messages, participants, connected, sendMessage, isDuplicate } = useRoom(
-    currentRoom.id.toString(),
-    accessToken,
-    nickname,
-  );
+  const { messages, participants, connected, sendMessage, isDuplicate } =
+    useRoom(currentRoom.id.toString(), accessToken, nickname);
 
   useEffect(() => {
     if (isDuplicate) {
-      router.replace(`/channels/${categoryId}`)
+      router.replace(`/channels/${categoryId}`);
     }
   }, [isDuplicate, router, categoryId]);
 
@@ -157,9 +169,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
           iconOn={<SpeakerOnIcon />}
           iconOff={<SpeakerOffIcon />}
         />
-        {!connected && (
-          <span className={styles.connectingBadge}>연결 중…</span>
-        )}
+        {!connected && <span className={styles.connectingBadge}>연결 중…</span>}
         <button
           className={styles.leaveBtn}
           onClick={() => router.push(`/channels/${categoryId}`)}
@@ -174,15 +184,16 @@ export const RoomView = ({ room, categoryId }: Props) => {
         <div className={styles.chatWelcome}>
           <span className={styles.welcomeIcon}>🔊</span>
           <h3 className={styles.welcomeTitle}>
-            {currentRoom.title} 채널에 오신 것을 환영합니다!
+            {currentRoom.title} 채팅방에 오신 것을 환영합니다!
           </h3>
-          <p className={styles.welcomeSub}>이 채널의 시작점입니다.</p>
+          <p className={styles.welcomeSub}>이 채팅방의 시작점입니다.</p>
         </div>
         {messages.map((msg, i) => {
           if (msg.type === "JOIN" || msg.type === "LEAVE") {
             return (
               <div key={i} className={styles.systemMessage}>
-                {msg.sender}님이 {msg.type === "JOIN" ? "입장" : "퇴장"}했습니다.
+                {msg.sender}님이 {msg.type === "JOIN" ? "입장" : "퇴장"}
+                했습니다.
               </div>
             );
           }
@@ -264,22 +275,6 @@ export const RoomView = ({ room, categoryId }: Props) => {
   );
 };
 
-const PencilIcon = () => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-  </svg>
-);
 
 type AudioControlProps = {
   label: string;
@@ -327,7 +322,9 @@ const AudioControl = ({
         <div className={styles.audioDropdown}>
           <span className={styles.dropdownLabel}>{label}</span>
           <div className={styles.dropdownRow}>
-            <span className={styles.dropdownRowLabel}>{isOn ? "켜짐" : "꺼짐"}</span>
+            <span className={styles.dropdownRowLabel}>
+              {isOn ? "켜짐" : "꺼짐"}
+            </span>
             <button
               className={`${styles.toggleSwitch} ${isOn ? styles.toggleOn : ""}`}
               onClick={onToggle}
@@ -355,44 +352,3 @@ const AudioControl = ({
   );
 };
 
-const MicOnIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-    <line x1="12" y1="19" x2="12" y2="23" />
-    <line x1="8" y1="23" x2="16" y2="23" />
-  </svg>
-);
-
-const MicOffIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <line x1="1" y1="1" x2="23" y2="23" />
-    <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
-    <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" />
-    <line x1="12" y1="19" x2="12" y2="23" />
-    <line x1="8" y1="23" x2="16" y2="23" />
-  </svg>
-);
-
-const SpeakerOnIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-  </svg>
-);
-
-const SpeakerOffIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-    <line x1="23" y1="9" x2="17" y2="15" />
-    <line x1="17" y1="9" x2="23" y2="15" />
-  </svg>
-);
-
-const PhoneOffIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 2 2 0 0 1-.45-2.11 12.84 12.84 0 0 0 .7-2.81 2 2 0 0 1-.45-2.11z" />
-    <line x1="23" y1="1" x2="1" y2="23" />
-  </svg>
-);

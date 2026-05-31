@@ -246,6 +246,56 @@ $full-badge-color: #f23f42;
   &:active { transform: translateY(0); }
 }
 
+// ─── Refresh button ───────────────────────────────────────────────────────────
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-md;
+  background: transparent;
+  border: 1.5px solid $card-border;
+  color: $text-muted;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color $transition-fast, border-color $transition-fast, background-color $transition-fast;
+
+  &:hover:not(:disabled) {
+    color: $text-primary;
+    border-color: $text-muted;
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinning {
+  animation: spin 0.7s linear infinite;
+}
+
+// ─── Skeleton card ────────────────────────────────────────────────────────────
+.skeletonCard {
+  min-height: 120px;
+  border-radius: $radius-lg;
+  background: linear-gradient(90deg, $card-bg 25%, lighten($card-bg, 4%) 50%, $card-bg 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 // ─── Empty channel (no rooms yet) ─────────────────────────────────────────────
 .emptyChannel {
   @include flex-col-center;

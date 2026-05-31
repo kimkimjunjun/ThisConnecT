@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthContext, useAuthStore } from '@/features/auth'
 import { type ChannelRoom } from '@/features/channel'
+import { SearchIcon, RefreshIcon } from '@/shared/assets/icons'
 import { CreateRoomModal } from './CreateRoomModal'
 import styles from './RoomBrowser.module.scss'
 
@@ -12,11 +13,13 @@ type Props = {
   categoryName: string
   rooms: ChannelRoom[]
   onRoomCreated?: () => void
+  onRefresh?: () => void
+  isRefreshing?: boolean
 }
 
 const PAGE_SIZE = 8
 
-export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated }: Props) => {
+export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, onRefresh, isRefreshing = false }: Props) => {
   const [query, setQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const router = useRouter()
@@ -40,6 +43,30 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated }: 
   const handleCreated = useCallback(() => {
     onRoomCreated?.()
   }, [onRoomCreated])
+
+  if (isRefreshing) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.searchWrap}>
+          <SearchIcon className={styles.searchIcon} />
+          <div className={styles.skeletonSearch} />
+        </div>
+        <div className={styles.meta}>
+          <div className={styles.metaLeft}>
+            <h2 className={styles.categoryTitle}>
+              <span className={styles.hash}>#</span>
+              {categoryName}
+            </h2>
+          </div>
+        </div>
+        <div className={styles.grid}>
+          {Array.from({ length: rooms.length || 4 }).map((_, i) => (
+            <div key={i} className={styles.skeletonCard} />
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.container}>
@@ -90,6 +117,14 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated }: 
                   채팅방 추가
                 </button>
               )}
+              <button
+                className={styles.refreshBtn}
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                title="새로고침"
+              >
+                <RefreshIcon />
+              </button>
             </div>
             <span className={styles.metaCount}>{filtered.length}개의 채팅방</span>
           </div>
@@ -170,21 +205,3 @@ const ParticipantBar = ({
     </div>
   )
 }
-
-const SearchIcon = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-  </svg>
-)
