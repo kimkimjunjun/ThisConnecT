@@ -150,19 +150,22 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
             <div className={styles.grid}>
               {filtered.map((room) => {
                 const isFull = room.currentCount >= room.maxCount
+                const isBlocked = isFull && !isAdmin
                 const handleClick = async () => {
-                  if (isFull) return
+                  if (isBlocked) return
                   const dest = `/channels/${categoryId}/rooms/${room.id}`
                   if (!isLoggedIn) { openLoginModal(dest); return }
-                  try {
-                    const latest = await getChannelRooms(categoryId)
-                    const fresh = latest.find((r) => r.id === room.id)
-                    if (fresh && fresh.currentCount >= fresh.maxCount) {
-                      setIsFullModalOpen(true)
-                      return
+                  if (!isAdmin) {
+                    try {
+                      const latest = await getChannelRooms(categoryId)
+                      const fresh = latest.find((r) => r.id === room.id)
+                      if (fresh && fresh.currentCount >= fresh.maxCount) {
+                        setIsFullModalOpen(true)
+                        return
+                      }
+                    } catch {
+                      // API 실패 시 그냥 진입 (BE 게이트가 최종 방어)
                     }
-                  } catch {
-                    // API 실패 시 그냥 진입 (BE 게이트가 최종 방어)
                   }
                   router.push(dest)
                 }
@@ -171,7 +174,7 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
                     <button
                       className={`${styles.card} ${isFull ? styles.cardFull : ''}`}
                       onClick={handleClick}
-                      disabled={isFull}
+                      disabled={isBlocked}
                     >
                       <span className={styles.cardTitle}>{room.title}</span>
                       <div className={styles.cardFooter}>
