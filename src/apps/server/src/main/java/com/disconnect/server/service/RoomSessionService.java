@@ -13,21 +13,22 @@ public class RoomSessionService {
 
     // sessionId → RoomSession
     private final Map<String, RoomSession> sessionStore = new ConcurrentHashMap<>();
-    // roomId → { sessionId → nickname }
-    private final Map<Long, Map<String, String>> roomParticipants = new ConcurrentHashMap<>();
+    // roomId → { sessionId → ParticipantData }
+    private final Map<Long, Map<String, ParticipantData>> roomParticipants = new ConcurrentHashMap<>();
 
-    public record RoomSession(Long roomId, String nickname) {}
+    public record RoomSession(Long roomId, String nickname, int level) {}
+    public record ParticipantData(String nickname, int level) {}
 
-    public void join(String sessionId, Long roomId, String nickname) {
-        sessionStore.put(sessionId, new RoomSession(roomId, nickname));
+    public void join(String sessionId, Long roomId, String nickname, int level) {
+        sessionStore.put(sessionId, new RoomSession(roomId, nickname, level));
         roomParticipants.computeIfAbsent(roomId, k -> new ConcurrentHashMap<>())
-                .put(sessionId, nickname);
+                .put(sessionId, new ParticipantData(nickname, level));
     }
 
     public RoomSession leave(String sessionId) {
         RoomSession session = sessionStore.remove(sessionId);
         if (session != null) {
-            Map<String, String> participants = roomParticipants.get(session.roomId());
+            Map<String, ParticipantData> participants = roomParticipants.get(session.roomId());
             if (participants != null) {
                 participants.remove(sessionId);
                 if (participants.isEmpty()) {
@@ -39,23 +40,23 @@ public class RoomSessionService {
     }
 
     public List<String> getParticipants(Long roomId) {
-        Map<String, String> participants = roomParticipants.get(roomId);
+        Map<String, ParticipantData> participants = roomParticipants.get(roomId);
         if (participants == null) return List.of();
-        return new ArrayList<>(participants.values());
+        return new ArrayList<>(participants.values().stream().map(ParticipantData::nickname).toList());
     }
 
     public int getCount(Long roomId) {
-        Map<String, String> participants = roomParticipants.get(roomId);
+        Map<String, ParticipantData> participants = roomParticipants.get(roomId);
         return participants == null ? 0 : participants.size();
     }
 
-    public record ParticipantDetail(String sessionId, String nickname) {}
+    public record ParticipantDetail(String sessionId, String nickname, int level) {}
 
     public List<ParticipantDetail> getParticipantDetails(Long roomId) {
-        Map<String, String> participants = roomParticipants.get(roomId);
+        Map<String, ParticipantData> participants = roomParticipants.get(roomId);
         if (participants == null) return List.of();
         return participants.entrySet().stream()
-                .map(e -> new ParticipantDetail(e.getKey(), e.getValue()))
+                .map(e -> new ParticipantDetail(e.getKey(), e.getValue().nickname(), e.getValue().level()))
                 .toList();
     }
 }
