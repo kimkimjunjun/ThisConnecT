@@ -238,6 +238,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
             );
           }
           const isMe = msg.sender === nickname;
+          const isAdminSender = !!msg.isAdmin;
           const senderLevel = isMe
             ? storedLevel
             : (levelByNickname.get(msg.sender) ?? 0);
@@ -256,9 +257,9 @@ export const RoomView = ({ room, categoryId }: Props) => {
                     {msg.sender}
                   </span>
                   <span
-                    className={`${styles.levelBadge} ${getLevelTierClass(senderLevel)}`}
+                    className={`${styles.levelBadge} ${isAdminSender ? styles.tierLegend : getLevelTierClass(senderLevel)}`}
                   >
-                    Lv.{senderLevel}
+                    {isAdminSender ? "관리자" : `Lv.${senderLevel}`}
                   </span>
                   <span className={styles.messageTime}>
                     {formatTime(msg.timestamp)}

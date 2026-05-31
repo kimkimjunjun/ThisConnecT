@@ -59,8 +59,8 @@ export default function UserSection({ onLoginClick }: Props) {
       >
         <span className={styles.avatar}>{avatarChar}</span>
         <span className={styles.userName}>{nickname ?? '비회원'}</span>
-        <span className={styles.role}>
-          {role === 'GUEST' ? '게스트' : '멤버'}
+        <span className={`${styles.role} ${role === 'ADMIN' ? styles.roleAdmin : ''}`}>
+          {role === 'ADMIN' ? '관리자' : role === 'GUEST' ? '게스트' : '멤버'}
         </span>
         <span className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}>
           ▾
