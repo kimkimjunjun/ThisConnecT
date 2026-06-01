@@ -27,6 +27,7 @@ import { EditRoomModal } from "./EditRoomModal";
 import { ParticipantDropdown } from "./ParticipantDropdown";
 import { ReportModal } from "./ReportModal";
 import { DirectMessageModal } from "./DirectMessageModal";
+import { KickedModal } from "./KickedModal";
 import styles from "./RoomView.module.scss";
 
 type DisplayParticipant = ParticipantInfo & { isMe: boolean };
@@ -113,11 +114,6 @@ export const RoomView = ({ room, categoryId }: Props) => {
     }
   }, [isRoomFull, router, categoryId]);
 
-  useEffect(() => {
-    if (isKicked) {
-      router.replace(`/channels/${categoryId}`);
-    }
-  }, [isKicked, router, categoryId]);
 
   const displayParticipants = useMemo(
     () => participants.map((p) => ({ ...p, isMe: p.nickname === nickname })),
@@ -389,6 +385,10 @@ export const RoomView = ({ room, categoryId }: Props) => {
           targetNickname={dmTarget.nickname}
           onClose={() => setDmTarget(null)}
         />
+      )}
+
+      {isKicked && (
+        <KickedModal onConfirm={() => router.replace(`/channels/${categoryId}`)} />
       )}
     </div>
   );

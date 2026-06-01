@@ -29,6 +29,12 @@ export const useRoom = (
     [participants, nickname],
   )
 
+  // ref로 최신 sessionId 추적 — 구독 콜백이 stale closure 없이 참조
+  const mySessionIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    mySessionIdRef.current = mySessionId
+  }, [mySessionId])
+
   const sendMessage = useCallback(
     (content: string) => {
       if (!clientRef.current?.connected) return
@@ -110,6 +116,15 @@ export const useRoom = (
         client.subscribe(`/sub/rooms/${roomId}/chat`, (frame) => {
           const msg: ChatMessageResponse = JSON.parse(frame.body)
           setMessages((prev) => [...prev, msg])
+          // fallback: 본인 sessionId의 LEAVE 메시지가 도착하면 강제퇴장 처리
+          if (
+            msg.type === 'LEAVE' &&
+            msg.sessionId != null &&
+            mySessionIdRef.current != null &&
+            msg.sessionId === mySessionIdRef.current
+          ) {
+            setIsKicked(true)
+          }
         })
 
         client.subscribe(`/sub/rooms/${roomId}/participants`, (frame) => {
