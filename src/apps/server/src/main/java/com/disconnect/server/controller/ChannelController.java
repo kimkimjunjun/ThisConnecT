@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +31,11 @@ public class ChannelController {
 
     private final ChannelService channelService;
 
-    @Operation(summary = "채널 목록 조회", description = "전체 채널(카테고리) 목록을 반환합니다.")
+    @Operation(summary = "채널 목록 조회", description = "전체 채널(카테고리) 목록을 반환합니다. 인증 불필요.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 필요")
+            @ApiResponse(responseCode = "200", description = "조회 성공")
     })
+    @SecurityRequirements({})
     @GetMapping
     public ResponseEntity<List<ChannelResponse>> getChannels() {
         return ResponseEntity.ok(channelService.getChannels());
@@ -69,13 +70,13 @@ public class ChannelController {
 
     @Operation(
             summary = "채팅방 목록 조회 (커서 기반 무한 스크롤)",
-            description = "채널의 채팅방을 커서 기반으로 페이지네이션하여 반환합니다. keyword로 제목 검색 가능."
+            description = "채널의 채팅방을 커서 기반으로 페이지네이션하여 반환합니다. keyword로 제목 검색 가능. 인증 불필요."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 필요"),
             @ApiResponse(responseCode = "404", description = "채널 없음")
     })
+    @SecurityRequirements({})
     @GetMapping("/{channelId}/rooms")
     public ResponseEntity<ChatRoomPageResponse> getRooms(
             @PathVariable Long channelId,
