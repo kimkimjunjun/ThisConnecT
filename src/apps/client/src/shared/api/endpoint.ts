@@ -18,4 +18,10 @@ export const END_POINT = {
     ROOM: (channelId: number | string, roomId: number | string) =>
       `/api/channels/${channelId}/rooms/${roomId}`,
   },
+  REPORT: {
+    CREATE: '/api/reports',
+  },
+  MESSAGE: {
+    SEND: '/api/messages',
+  },
 } as const

@@ -39,6 +39,17 @@ export const useRoom = (
     [roomId],
   )
 
+  const kickParticipant = useCallback(
+    (targetSessionId: string) => {
+      if (!clientRef.current?.connected) return
+      clientRef.current.publish({
+        destination: `/pub/rooms/${roomId}/kick`,
+        body: JSON.stringify({ targetSessionId }),
+      })
+    },
+    [roomId],
+  )
+
   const sendVoiceSignal = useCallback(
     (req: VoiceSignalRequest) => {
       if (!clientRef.current?.connected) return
@@ -144,6 +155,7 @@ export const useRoom = (
     participants,
     connected,
     sendMessage,
+    kickParticipant,
     isDuplicate,
     isRoomFull,
     mySessionId,

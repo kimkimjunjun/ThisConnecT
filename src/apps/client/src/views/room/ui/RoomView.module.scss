@@ -145,6 +145,11 @@ $avatar-other-bg: #4e5058;
   }
 }
 
+.participantAvatarWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .participantAvatar {
   @include flex-center;
   position: relative;
@@ -165,6 +170,15 @@ $avatar-other-bg: #4e5058;
 
   &.avatarMe {
     background-color: $avatar-me-bg;
+  }
+}
+
+.participantAvatarBtn {
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
   }
 }
 

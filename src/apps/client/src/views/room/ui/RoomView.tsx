@@ -14,6 +14,7 @@ import { useMemberInfo } from "@/features/member";
 import { useAudioStore } from "@/features/audio";
 import { useRoom, useVoiceChat } from "@/features/chat";
 import { type ChannelRoom } from "@/features/channel";
+import type { ParticipantInfo } from "@/features/chat";
 import {
   PencilIcon,
   MicOnIcon,
@@ -23,7 +24,12 @@ import {
   PhoneOffIcon,
 } from "@/shared/assets/icons";
 import { EditRoomModal } from "./EditRoomModal";
+import { ParticipantDropdown } from "./ParticipantDropdown";
+import { ReportModal } from "./ReportModal";
+import { DirectMessageModal } from "./DirectMessageModal";
 import styles from "./RoomView.module.scss";
+
+type DisplayParticipant = ParticipantInfo & { isMe: boolean };
 
 const getLevelTierClass = (level: number): string => {
   if (level >= 50) return styles.tierLegend;
@@ -50,10 +56,14 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const nickname = useAuthStore((s) => s.nickname);
   const storedLevel = useAuthStore((s) => s.level);
   const accessToken = useAuthStore((s) => s.accessToken);
+  const role = useAuthStore((s) => s.role);
   useMemberInfo();
 
   const [currentRoom, setCurrentRoom] = useState(room);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [reportTarget, setReportTarget] = useState<DisplayParticipant | null>(null);
+  const [dmTarget, setDmTarget] = useState<DisplayParticipant | null>(null);
   const isMicOn = useAudioStore((s) => s.isMicOn);
   const isSpeakerOn = useAudioStore((s) => s.isSpeakerOn);
   const micVolume = useAudioStore((s) => s.micVolume);
@@ -72,6 +82,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
     participants,
     connected,
     sendMessage,
+    kickParticipant,
     isDuplicate,
     isRoomFull,
     mySessionId,
@@ -116,6 +127,9 @@ export const RoomView = ({ room, categoryId }: Props) => {
     [displayParticipants],
   );
 
+  // GUEST 또는 미인증이면 다른 참여자 클릭 불가
+  const canInteract = !!accessToken && role !== "GUEST";
+
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
@@ -128,6 +142,14 @@ export const RoomView = ({ room, categoryId }: Props) => {
     sendMessage(text);
     setInputText("");
   }, [inputText, connected, sendMessage]);
+
+  const handleAvatarClick = useCallback(
+    (p: DisplayParticipant) => {
+      if (!canInteract || p.isMe) return;
+      setActiveDropdown((prev) => (prev === p.sessionId ? null : p.sessionId));
+    },
+    [canInteract],
+  );
 
   return (
     <div className={styles.container}>
@@ -166,12 +188,43 @@ export const RoomView = ({ room, categoryId }: Props) => {
         <div className={styles.participantsList}>
           {displayParticipants.map((p) => (
             <div key={p.sessionId} className={styles.participantItem}>
-              <div
-                className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}
-              >
-                {p.nickname[0].toUpperCase()}
-                {p.isMe && (
-                  <span className={isMicOn ? styles.micDot : styles.mutedDot} />
+              <div className={styles.participantAvatarWrap}>
+                {!p.isMe && canInteract ? (
+                  <button
+                    className={`${styles.participantAvatar} ${styles.participantAvatarBtn}`}
+                    onClick={() => handleAvatarClick(p)}
+                    title={p.nickname}
+                  >
+                    {p.nickname[0].toUpperCase()}
+                  </button>
+                ) : (
+                  <div
+                    className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}
+                  >
+                    {p.nickname[0].toUpperCase()}
+                    {p.isMe && (
+                      <span className={isMicOn ? styles.micDot : styles.mutedDot} />
+                    )}
+                  </div>
+                )}
+                {activeDropdown === p.sessionId && (
+                  <ParticipantDropdown
+                    nickname={p.nickname}
+                    amIOwner={amIOwner}
+                    onKick={() => {
+                      kickParticipant(p.sessionId);
+                      setActiveDropdown(null);
+                    }}
+                    onMessage={() => {
+                      setDmTarget(p);
+                      setActiveDropdown(null);
+                    }}
+                    onReport={() => {
+                      setReportTarget(p);
+                      setActiveDropdown(null);
+                    }}
+                    onClose={() => setActiveDropdown(null)}
+                  />
                 )}
               </div>
               <div className={styles.participantMeta}>
@@ -315,6 +368,21 @@ export const RoomView = ({ room, categoryId }: Props) => {
           }}
         />
       )}
+
+      {reportTarget && (
+        <ReportModal
+          targetNickname={reportTarget.nickname}
+          targetMemberId={reportTarget.memberId}
+          onClose={() => setReportTarget(null)}
+        />
+      )}
+
+      {dmTarget && (
+        <DirectMessageModal
+          targetNickname={dmTarget.nickname}
+          onClose={() => setDmTarget(null)}
+        />
+      )}
     </div>
   );
 };
@@ -395,4 +463,3 @@ const AudioControl = ({
     </div>
   );
 };
-

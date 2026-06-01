@@ -16,6 +16,7 @@ export type ParticipantInfo = {
   nickname: string
   level: number
   isOwner: boolean
+  memberId?: number
 }
 
 export type ParticipantListResponse = {
