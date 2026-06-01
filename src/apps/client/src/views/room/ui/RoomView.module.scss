@@ -140,9 +140,166 @@ $avatar-other-bg: #4e5058;
   border-radius: $radius-md;
   transition: background-color $transition-fast;
 
+  &.participantItemActive {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  &.participantItemClickable {
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+      background-color: $bg-hover;
+    }
+  }
+
   &.participantSpeaking {
     background-color: rgba($speaking-color, 0.08);
   }
+}
+
+// ─── Floating Dropdown (portal) ───────────────────────────────────────────────
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dropdownFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-4px); }
+}
+
+.floatingDropdown {
+  z-index: $z-modal;
+  min-width: 128px;
+  padding: $spacing-1 0;
+  background-color: #1e1f22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $radius-lg;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  animation: dropdownFadeIn 120ms ease forwards;
+}
+
+.floatingDropdownClosing {
+  animation: dropdownFadeOut 120ms ease forwards;
+  pointer-events: none;
+}
+
+.floatingItem {
+  display: block;
+  width: 100%;
+  padding: $spacing-2 $spacing-4;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #dbdee1;
+  font-size: $text-sm;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.floatingItemDanger {
+  color: #f23f42;
+
+  &:hover {
+    background-color: rgba(242, 63, 66, 0.1);
+  }
+}
+
+.floatingItemWarn {
+  color: #f0b232;
+
+  &:hover {
+    background-color: rgba(240, 178, 50, 0.1);
+  }
+}
+
+.kickConfirmText {
+  padding: $spacing-2 $spacing-4 $spacing-1;
+  font-size: $text-xs;
+  color: #949ba4;
+  white-space: nowrap;
+}
+
+.kickConfirmActions {
+  display: flex;
+}
+
+.floatingDivider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.06);
+  margin: $spacing-1 0;
+}
+
+.peerAudioSection {
+  padding: $spacing-2 $spacing-3 $spacing-3;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+}
+
+.peerMuteBtn {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  width: 100%;
+  padding: $spacing-2 $spacing-2;
+  border-radius: $radius-sm;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #dbdee1;
+  font-size: $text-sm;
+  cursor: pointer;
+  transition: background-color $transition-fast, border-color $transition-fast;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.peerMuteBtnActive {
+  border-color: rgba(242, 63, 66, 0.35);
+  background: rgba(242, 63, 66, 0.1);
+  color: #f23f42;
+
+  &:hover {
+    background-color: rgba(242, 63, 66, 0.18);
+  }
+}
+
+.peerVolumeRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+}
+
+.peerVolumeSlider {
+  flex: 1;
+  height: 4px;
+  accent-color: $accent;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.peerVolumeLabel {
+  font-size: $text-xs;
+  color: $text-muted;
+  min-width: 32px;
+  text-align: right;
+}
+
+.participantAvatarWrap {
+  position: relative;
+  flex-shrink: 0;
 }
 
 .participantAvatar {
@@ -165,6 +322,15 @@ $avatar-other-bg: #4e5058;
 
   &.avatarMe {
     background-color: $avatar-me-bg;
+  }
+}
+
+.participantAvatarBtn {
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
   }
 }
 

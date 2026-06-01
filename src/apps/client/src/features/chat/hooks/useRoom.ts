@@ -19,6 +19,7 @@ export const useRoom = (
   const [connected, setConnected] = useState(false)
   const [isDuplicate, setIsDuplicate] = useState(false)
   const [isRoomFull, setIsRoomFull] = useState(false)
+  const [isKicked, setIsKicked] = useState(false)
   const clientRef = useRef<ReturnType<typeof createStompClient> | null>(null)
   const isDuplicateRef = useRef(false)
   const voiceSignalCbRef = useRef<((signal: VoiceSignalResponse) => void) | null>(null)
@@ -28,12 +29,29 @@ export const useRoom = (
     [participants, nickname],
   )
 
+  // ref로 최신 sessionId 추적 — 구독 콜백이 stale closure 없이 참조
+  const mySessionIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    mySessionIdRef.current = mySessionId
+  }, [mySessionId])
+
   const sendMessage = useCallback(
     (content: string) => {
       if (!clientRef.current?.connected) return
       clientRef.current.publish({
         destination: `/pub/rooms/${roomId}/chat`,
         body: JSON.stringify({ content }),
+      })
+    },
+    [roomId],
+  )
+
+  const kickParticipant = useCallback(
+    (targetSessionId: string) => {
+      if (!clientRef.current?.connected) return
+      clientRef.current.publish({
+        destination: `/pub/rooms/${roomId}/kick`,
+        body: JSON.stringify({ targetSessionId }),
       })
     },
     [roomId],
@@ -98,6 +116,15 @@ export const useRoom = (
         client.subscribe(`/sub/rooms/${roomId}/chat`, (frame) => {
           const msg: ChatMessageResponse = JSON.parse(frame.body)
           setMessages((prev) => [...prev, msg])
+          // fallback: 본인 sessionId의 LEAVE 메시지가 도착하면 강제퇴장 처리
+          if (
+            msg.type === 'LEAVE' &&
+            msg.sessionId != null &&
+            mySessionIdRef.current != null &&
+            msg.sessionId === mySessionIdRef.current
+          ) {
+            setIsKicked(true)
+          }
         })
 
         client.subscribe(`/sub/rooms/${roomId}/participants`, (frame) => {
@@ -113,6 +140,10 @@ export const useRoom = (
         client.subscribe(`/user/queue/room-error`, (frame) => {
           const data: { type: string } = JSON.parse(frame.body)
           if (data.type === 'ROOM_FULL') setIsRoomFull(true)
+        })
+
+        client.subscribe(`/user/queue/kicked`, () => {
+          setIsKicked(true)
         })
 
         // 어드민 전용: broadcast 타이밍 문제를 우회해 참여자 목록을 직접 수신
@@ -144,8 +175,10 @@ export const useRoom = (
     participants,
     connected,
     sendMessage,
+    kickParticipant,
     isDuplicate,
     isRoomFull,
+    isKicked,
     mySessionId,
     sendVoiceSignal,
     setVoiceSignalCallback,

@@ -21,12 +21,15 @@ import styles from "./DashboardLayout.module.scss";
 type Props = { children: ReactNode };
 
 export const DashboardLayout = ({ children }: Props) => {
-  const [modalRequested, setModalRequested] = useState(() => {
-    if (typeof window === "undefined") return false;
-    if (initialModalShown) return false;
+  const [modalRequested, setModalRequested] = useState(false);
+
+  useEffect(() => {
+    if (initialModalShown) return;
     initialModalShown = true;
-    return !useAuthStore.getState().accessToken;
-  });
+    Promise.resolve().then(() => {
+      if (!useAuthStore.getState().accessToken) setModalRequested(true);
+    });
+  }, []);
   const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
   const pendingRouteRef = useRef<string | null>(null);
 

@@ -10,6 +10,7 @@ export const END_POINT = {
   MEMBER: {
     MY_INFO: '/api/members/me',
     UPDATE_NICKNAME: '/api/members/me/nickname',
+    BY_NICKNAME: (nickname: string) => `/api/members/nickname/${encodeURIComponent(nickname)}`,
   },
   CHANNEL: {
     LIST: '/api/channels',
@@ -17,5 +18,11 @@ export const END_POINT = {
     ROOMS: (channelId: number | string) => `/api/channels/${channelId}/rooms`,
     ROOM: (channelId: number | string, roomId: number | string) =>
       `/api/channels/${channelId}/rooms/${roomId}`,
+  },
+  REPORT: {
+    CREATE: '/api/reports',
+  },
+  MESSAGE: {
+    SEND: '/api/messages',
   },
 } as const

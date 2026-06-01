@@ -8,12 +8,14 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth";
 import { useMemberInfo } from "@/features/member";
 import { useAudioStore } from "@/features/audio";
 import { useRoom, useVoiceChat } from "@/features/chat";
 import { type ChannelRoom } from "@/features/channel";
+import type { ParticipantInfo } from "@/features/chat";
 import {
   PencilIcon,
   MicOnIcon,
@@ -23,7 +25,13 @@ import {
   PhoneOffIcon,
 } from "@/shared/assets/icons";
 import { EditRoomModal } from "./EditRoomModal";
+import { ReportModal } from "./ReportModal";
+import { DirectMessageModal } from "./DirectMessageModal";
+import { KickedModal } from "./KickedModal";
+import { RoomFullModal } from "./RoomFullModal";
 import styles from "./RoomView.module.scss";
+
+type DisplayParticipant = ParticipantInfo & { isMe: boolean };
 
 const getLevelTierClass = (level: number): string => {
   if (level >= 50) return styles.tierLegend;
@@ -50,10 +58,17 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const nickname = useAuthStore((s) => s.nickname);
   const storedLevel = useAuthStore((s) => s.level);
   const accessToken = useAuthStore((s) => s.accessToken);
+  const role = useAuthStore((s) => s.role);
   useMemberInfo();
 
   const [currentRoom, setCurrentRoom] = useState(room);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [dropdownAnchor, setDropdownAnchor] = useState<DOMRect | null>(null);
+  const [isDropdownClosing, setIsDropdownClosing] = useState(false);
+  const [kickConfirmFor, setKickConfirmFor] = useState<string | null>(null);
+  const [reportTarget, setReportTarget] = useState<DisplayParticipant | null>(null);
+  const [dmTarget, setDmTarget] = useState<DisplayParticipant | null>(null);
   const isMicOn = useAudioStore((s) => s.isMicOn);
   const isSpeakerOn = useAudioStore((s) => s.isSpeakerOn);
   const micVolume = useAudioStore((s) => s.micVolume);
@@ -65,6 +80,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
 
   const [inputText, setInputText] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const isComposingRef = useRef(false);
 
   const {
@@ -72,14 +88,16 @@ export const RoomView = ({ room, categoryId }: Props) => {
     participants,
     connected,
     sendMessage,
+    kickParticipant,
     isDuplicate,
     isRoomFull,
+    isKicked,
     mySessionId,
     sendVoiceSignal,
     setVoiceSignalCallback,
   } = useRoom(currentRoom.id.toString(), accessToken, nickname);
 
-  useVoiceChat({
+  const { peerAudio, setParticipantMuted, setParticipantVolume } = useVoiceChat({
     mySessionId,
     participants,
     sendVoiceSignal,
@@ -95,11 +113,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
     }
   }, [isDuplicate, router, categoryId]);
 
-  useEffect(() => {
-    if (isRoomFull) {
-      router.replace(`/channels/${categoryId}`);
-    }
-  }, [isRoomFull, router, categoryId]);
+
 
   const displayParticipants = useMemo(
     () => participants.map((p) => ({ ...p, isMe: p.nickname === nickname })),
@@ -116,6 +130,9 @@ export const RoomView = ({ room, categoryId }: Props) => {
     [displayParticipants],
   );
 
+  // GUEST 또는 미인증이면 다른 참여자 클릭 불가
+  const canInteract = !!accessToken && role !== "GUEST";
+
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
@@ -128,6 +145,47 @@ export const RoomView = ({ room, categoryId }: Props) => {
     sendMessage(text);
     setInputText("");
   }, [inputText, connected, sendMessage]);
+
+  const activeParticipant = useMemo(
+    () => displayParticipants.find((p) => p.sessionId === activeDropdown) ?? null,
+    [displayParticipants, activeDropdown],
+  );
+
+  const closeDropdown = useCallback(() => {
+    setIsDropdownClosing(true);
+    setTimeout(() => {
+      setIsDropdownClosing(false);
+      setActiveDropdown(null);
+      setDropdownAnchor(null);
+      setKickConfirmFor(null);
+    }, 120);
+  }, []);
+
+  const handleCardClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>, sessionId: string) => {
+      if (activeDropdown === sessionId) {
+        closeDropdown();
+      } else {
+        setIsDropdownClosing(false);
+        setActiveDropdown(sessionId);
+        setDropdownAnchor(e.currentTarget.getBoundingClientRect());
+        setKickConfirmFor(null);
+      }
+    },
+    [activeDropdown, closeDropdown],
+  );
+
+  useEffect(() => {
+    if (!activeDropdown) return;
+    const handler = (e: MouseEvent) => {
+      if ((e.target as Element).closest("[data-session]")) return;
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        closeDropdown();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [activeDropdown, closeDropdown]);
 
   return (
     <div className={styles.container}>
@@ -165,14 +223,19 @@ export const RoomView = ({ room, categoryId }: Props) => {
         </span>
         <div className={styles.participantsList}>
           {displayParticipants.map((p) => (
-            <div key={p.sessionId} className={styles.participantItem}>
-              <div
-                className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}
-              >
-                {p.nickname[0].toUpperCase()}
-                {p.isMe && (
-                  <span className={isMicOn ? styles.micDot : styles.mutedDot} />
-                )}
+            <div
+              key={p.sessionId}
+              data-session={p.sessionId}
+              className={`${styles.participantItem}${activeDropdown === p.sessionId ? ` ${styles.participantItemActive}` : ""}${!p.isMe && canInteract ? ` ${styles.participantItemClickable}` : ""}`}
+              onClick={!p.isMe && canInteract ? (e) => handleCardClick(e, p.sessionId) : undefined}
+            >
+              <div className={styles.participantAvatarWrap}>
+                <div className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}>
+                  {p.nickname[0].toUpperCase()}
+                  {p.isMe && (
+                    <span className={isMicOn ? styles.micDot : styles.mutedDot} />
+                  )}
+                </div>
               </div>
               <div className={styles.participantMeta}>
                 <span className={styles.participantName}>
@@ -315,6 +378,129 @@ export const RoomView = ({ room, categoryId }: Props) => {
           }}
         />
       )}
+
+      {reportTarget && (
+        <ReportModal
+          targetNickname={reportTarget.nickname}
+          targetMemberId={reportTarget.memberId}
+          onClose={() => setReportTarget(null)}
+        />
+      )}
+
+      {dmTarget && (
+        <DirectMessageModal
+          targetNickname={dmTarget.nickname}
+          onClose={() => setDmTarget(null)}
+        />
+      )}
+
+      {isRoomFull && (
+        <RoomFullModal onConfirm={() => router.replace(`/channels/${categoryId}`)} />
+      )}
+
+      {isKicked && (
+        <KickedModal onConfirm={() => router.replace(`/channels/${categoryId}`)} />
+      )}
+
+      {activeParticipant && dropdownAnchor && createPortal(
+        <div
+          ref={dropdownRef}
+          className={`${styles.floatingDropdown} ${isDropdownClosing ? styles.floatingDropdownClosing : ""}`}
+          style={{
+            position: "fixed",
+            top: dropdownAnchor.bottom + 4,
+            left: dropdownAnchor.left,
+          }}
+        >
+          {kickConfirmFor === activeParticipant.sessionId ? (
+            <>
+              <p className={styles.kickConfirmText}>
+                {activeParticipant.nickname}님을 퇴장시킬까요?
+              </p>
+              <div className={styles.kickConfirmActions}>
+                <button
+                  className={styles.floatingItem}
+                  onClick={() => setKickConfirmFor(null)}
+                >
+                  취소
+                </button>
+                <button
+                  className={`${styles.floatingItem} ${styles.floatingItemDanger}`}
+                  onClick={() => {
+                    kickParticipant(activeParticipant.sessionId);
+                    setActiveDropdown(null);
+                    setDropdownAnchor(null);
+                    setKickConfirmFor(null);
+                  }}
+                >
+                  퇴장
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {amIOwner && (
+                <button
+                  className={`${styles.floatingItem} ${styles.floatingItemDanger}`}
+                  onClick={() => setKickConfirmFor(activeParticipant.sessionId)}
+                >
+                  강제퇴장
+                </button>
+              )}
+              <button
+                className={styles.floatingItem}
+                onClick={() => {
+                  setDmTarget(activeParticipant);
+                  setActiveDropdown(null);
+                  setDropdownAnchor(null);
+                }}
+              >
+                쪽지보내기
+              </button>
+              <button
+                className={`${styles.floatingItem} ${styles.floatingItemWarn}`}
+                onClick={() => {
+                  setReportTarget(activeParticipant);
+                  setActiveDropdown(null);
+                  setDropdownAnchor(null);
+                }}
+              >
+                신고하기
+              </button>
+              <div className={styles.floatingDivider} />
+              {(() => {
+                const sid = activeParticipant.sessionId;
+                const state = peerAudio[sid] ?? { muted: false, volume: 100 };
+                return (
+                  <div className={styles.peerAudioSection}>
+                    <button
+                      className={`${styles.peerMuteBtn} ${state.muted ? styles.peerMuteBtnActive : ""}`}
+                      onClick={() => setParticipantMuted(sid, !state.muted)}
+                      title={state.muted ? "음소거 해제" : "음소거"}
+                    >
+                      {state.muted ? <SpeakerOffIcon /> : <SpeakerOnIcon />}
+                      <span>{state.muted ? "음소거됨" : "소리 켜짐"}</span>
+                    </button>
+                    <div className={styles.peerVolumeRow}>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={state.volume}
+                        onChange={(e) => setParticipantVolume(sid, Number(e.target.value))}
+                        className={styles.peerVolumeSlider}
+                        disabled={state.muted}
+                      />
+                      <span className={styles.peerVolumeLabel}>{state.volume}%</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
+          )}
+        </div>,
+        document.body,
+      )}
     </div>
   );
 };
@@ -395,4 +581,3 @@ const AudioControl = ({
     </div>
   );
 };
-

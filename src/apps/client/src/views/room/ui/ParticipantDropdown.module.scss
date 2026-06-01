@@ -1,0 +1,182 @@
+@use '../../../shared/styles/variables' as *;
+@use '../../../shared/styles/mixins' as *;
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.dropdown {
+  z-index: $z-modal;
+  min-width: 160px;
+  padding: $spacing-1 0;
+  background-color: #1e1f22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $radius-lg;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  animation: dropIn 120ms ease forwards;
+}
+
+// ─── Profile Header ────────────────────────────────────────────────────────────
+.profile {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  padding: $spacing-3 $spacing-4 $spacing-2;
+}
+
+.profileAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-full;
+  background-color: #5865f2;
+  color: #fff;
+  font-size: $text-base;
+  font-weight: $font-weight-bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profileMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.profileName {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  color: #dbdee1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ownerBadge {
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 1px $spacing-1;
+  border-radius: $radius-full;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.06);
+  margin: $spacing-1 0;
+}
+
+// ─── Level Badge ───────────────────────────────────────────────────────────────
+.levelBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+.tierNovice {
+  background: rgba(107, 114, 128, 0.15);
+  color: #9ca3af;
+  border: 1px solid rgba(107, 114, 128, 0.25);
+}
+
+.tierBronze {
+  background: rgba(180, 83, 9, 0.15);
+  color: #d97706;
+  border: 1px solid rgba(180, 83, 9, 0.35);
+}
+
+.tierSilver {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  box-shadow: 0 0 6px rgba(148, 163, 184, 0.2);
+}
+
+.tierGold {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+}
+
+.tierPlatinum {
+  background: rgba(34, 211, 238, 0.12);
+  color: #22d3ee;
+  border: 1px solid rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.35);
+}
+
+.tierLegend {
+  background: linear-gradient(90deg, #a855f7, #6366f1, #a855f7);
+  background-size: 200% 100%;
+  color: #fff;
+  border: none;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
+  animation: legendSlide 2s linear infinite;
+}
+
+@keyframes legendSlide {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+// ─── Action Items ─────────────────────────────────────────────────────────────
+.item {
+  display: block;
+  width: 100%;
+  padding: $spacing-2 $spacing-4;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #dbdee1;
+  font-size: $text-sm;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.itemDanger {
+  color: #f23f42;
+
+  &:hover {
+    background-color: rgba(242, 63, 66, 0.1);
+  }
+}
+
+.itemWarn {
+  color: #f0b232;
+
+  &:hover {
+    background-color: rgba(240, 178, 50, 0.1);
+  }
+}
+
+.confirmText {
+  padding: $spacing-2 $spacing-4 $spacing-1;
+  font-size: $text-xs;
+  color: #949ba4;
+  white-space: nowrap;
+}
+
+.confirmActions {
+  display: flex;
+}

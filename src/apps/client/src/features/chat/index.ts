@@ -6,3 +6,4 @@ export type {
   VoiceSignalRequest,
   VoiceSignalResponse,
 } from './api/chat-api'
+export type { PeerAudioState } from './hooks/useVoiceChat'
