@@ -1,4 +1,5 @@
 export { useChannels } from './hooks/useChannels'
 export { useChannelRooms } from './hooks/useChannelRooms'
-export { createRoom, createChannel, updateRoom, getChannelRooms, deleteChannel, deleteRoom } from './api/channel-api'
-export type { Channel, ChannelRoom } from './api/channel-api'
+export { useChannelRoomsCursor } from './hooks/useChannelRoomsCursor'
+export { createRoom, createChannel, updateRoom, getChannelRooms, getChannelRoomsCursor, getRoomById, deleteChannel, deleteRoom } from './api/channel-api'
+export type { Channel, ChannelRoom, ChannelRoomPage } from './api/channel-api'
