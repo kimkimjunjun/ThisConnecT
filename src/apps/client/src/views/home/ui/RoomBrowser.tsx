@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthContext, useAuthStore } from '@/features/auth'
-import { type ChannelRoom, getChannelRooms, deleteRoom } from '@/features/channel'
+import { type ChannelRoom, deleteRoom, useChannelRoomsCursor } from '@/features/channel'
 import { SearchIcon, RefreshIcon, TrashIcon } from '@/shared/assets/icons'
 import { CreateRoomModal } from './CreateRoomModal'
 import styles from './RoomBrowser.module.scss'
@@ -11,17 +11,11 @@ import styles from './RoomBrowser.module.scss'
 type Props = {
   categoryId: string
   categoryName: string
-  rooms: ChannelRoom[]
-  onRoomCreated?: () => void
-  onRoomDeleted?: () => void
-  onRefresh?: () => void
-  isRefreshing?: boolean
 }
 
-const PAGE_SIZE = 8
-
-export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, onRoomDeleted, onRefresh, isRefreshing = false }: Props) => {
+export const RoomBrowser = ({ categoryId, categoryName }: Props) => {
   const [query, setQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isFullModalOpen, setIsFullModalOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<ChannelRoom | null>(null)
@@ -32,36 +26,46 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
   const canManage = role === 'USER' || role === 'ADMIN'
   const isAdmin = role === 'ADMIN'
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    const result = q
-      ? rooms.filter((r) => r.title.toLowerCase().includes(q))
-      : rooms
-    return result.slice(0, PAGE_SIZE)
-  }, [rooms, query])
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300)
+    return () => clearTimeout(timer)
+  }, [query])
+
+  const { rooms, hasNext, isPending, isFetchingMore, loadMore, refresh } =
+    useChannelRoomsCursor(categoryId, debouncedQuery)
+
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreRef = useRef(loadMore)
+  useEffect(() => { loadMoreRef.current = loadMore }, [loadMore])
+
+  const sentinelCb = useCallback((node: HTMLDivElement | null) => {
+    observerRef.current?.disconnect()
+    if (!node) return
+    observerRef.current = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMoreRef.current() },
+      { threshold: 0.1 },
+    )
+    observerRef.current.observe(node)
+  }, [])
 
   const handleAddRoom = useCallback(() => {
     if (!isLoggedIn) { openLoginModal(); return }
     setIsModalOpen(true)
   }, [isLoggedIn, openLoginModal])
 
-  const handleCreated = useCallback(() => {
-    onRoomCreated?.()
-  }, [onRoomCreated])
-
   const handleConfirmDelete = useCallback(async () => {
     if (!deleteTarget) return
     setIsDeleting(true)
     try {
       await deleteRoom(categoryId, deleteTarget.id)
-      onRoomDeleted?.()
+      refresh()
     } finally {
       setIsDeleting(false)
       setDeleteTarget(null)
     }
-  }, [deleteTarget, categoryId, onRoomDeleted])
+  }, [deleteTarget, categoryId, refresh])
 
-  if (isRefreshing) {
+  if (isPending && rooms.length === 0) {
     return (
       <div className={styles.container}>
         <div className={styles.searchWrap}>
@@ -77,7 +81,7 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
           </div>
         </div>
         <div className={styles.grid}>
-          {Array.from({ length: rooms.length || 4 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className={styles.skeletonCard} />
           ))}
         </div>
@@ -87,7 +91,7 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
 
   return (
     <div className={styles.container}>
-      {rooms.length === 0 ? (
+      {rooms.length === 0 && !debouncedQuery ? (
         <>
           <div className={styles.meta}>
             <h2 className={styles.categoryTitle}>
@@ -95,7 +99,6 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
               {categoryName}
             </h2>
           </div>
-
           <div className={styles.emptyChannel}>
             <span className={styles.emptyChannelIcon}>💬</span>
             <p className={styles.emptyChannelText}>해당 채널에서 채팅방을 만들어보세요</p>
@@ -136,73 +139,69 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
               )}
               <button
                 className={styles.refreshBtn}
-                onClick={onRefresh}
-                disabled={isRefreshing}
+                onClick={refresh}
+                disabled={isPending}
                 title="새로고침"
               >
-                <RefreshIcon />
+                <RefreshIcon className={isPending ? styles.spinning : undefined} />
               </button>
             </div>
-            <span className={styles.metaCount}>{filtered.length}개의 채팅방</span>
+            <span className={styles.metaCount}>
+              {rooms.length}개의 채팅방{hasNext ? '+' : ''}
+            </span>
           </div>
 
-          {filtered.length > 0 ? (
-            <div className={styles.grid}>
-              {filtered.map((room) => {
-                const isFull = room.currentCount >= room.maxCount
-                const isBlocked = isFull && !isAdmin
-                const handleClick = async () => {
-                  if (isBlocked) return
-                  const dest = `/channels/${categoryId}/rooms/${room.id}`
-                  if (!isLoggedIn) { openLoginModal(dest); return }
-                  if (!isAdmin) {
-                    try {
-                      const latest = await getChannelRooms(categoryId)
-                      const fresh = latest.find((r) => r.id === room.id)
-                      if (fresh && fresh.currentCount >= fresh.maxCount) {
-                        setIsFullModalOpen(true)
-                        return
-                      }
-                    } catch {
-                      // API 실패 시 그냥 진입 (BE 게이트가 최종 방어)
-                    }
+          {rooms.length > 0 ? (
+            <>
+              <div className={styles.grid}>
+                {rooms.map((room) => {
+                  const isFull = room.currentCount >= room.maxCount
+                  const isBlocked = isFull && !isAdmin
+                  const handleClick = () => {
+                    if (isBlocked) return
+                    const dest = `/channels/${categoryId}/rooms/${room.id}`
+                    if (!isLoggedIn) { openLoginModal(dest); return }
+                    router.push(dest)
                   }
-                  router.push(dest)
-                }
-                return (
-                  <div key={room.id} className={styles.cardWrap}>
-                    <button
-                      className={`${styles.card} ${isFull ? styles.cardFull : ''}`}
-                      onClick={handleClick}
-                      disabled={isBlocked}
-                    >
-                      <span className={styles.cardTitle}>{room.title}</span>
-                      <div className={styles.cardFooter}>
-                        <ParticipantBar
-                          current={room.currentCount}
-                          max={room.maxCount}
-                        />
-                        <span
-                          className={`${styles.countText} ${isFull ? styles.countFull : ''}`}
-                        >
-                          {room.currentCount}/{room.maxCount}
-                        </span>
-                        {isFull && <span className={styles.fullBadge}>꽉 참</span>}
-                      </div>
-                    </button>
-                    {isAdmin && (
+                  return (
+                    <div key={room.id} className={styles.cardWrap}>
                       <button
-                        className={styles.cardDeleteBtn}
-                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(room) }}
-                        title="채팅방 삭제"
+                        className={`${styles.card} ${isFull ? styles.cardFull : ''}`}
+                        onClick={handleClick}
+                        disabled={isBlocked}
                       >
-                        <TrashIcon />
+                        <span className={styles.cardTitle}>{room.title}</span>
+                        <div className={styles.cardFooter}>
+                          <ParticipantBar current={room.currentCount} max={room.maxCount} />
+                          <span className={`${styles.countText} ${isFull ? styles.countFull : ''}`}>
+                            {room.currentCount}/{room.maxCount}
+                          </span>
+                          {isFull && <span className={styles.fullBadge}>꽉 참</span>}
+                        </div>
                       </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+                      {isAdmin && (
+                        <button
+                          className={styles.cardDeleteBtn}
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(room) }}
+                          title="채팅방 삭제"
+                        >
+                          <TrashIcon />
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {hasNext && <div ref={sentinelCb} className={styles.sentinel} />}
+              {isFetchingMore && (
+                <div className={styles.fetchingMore}>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className={styles.skeletonCard} />
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
             <div className={styles.empty}>
               <span className={styles.emptyIcon}>🔍</span>
@@ -217,7 +216,7 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
         <CreateRoomModal
           channelId={categoryId}
           onClose={() => setIsModalOpen(false)}
-          onCreated={handleCreated}
+          onCreated={() => { refresh(); setIsModalOpen(false) }}
         />
       )}
 
@@ -269,16 +268,9 @@ export const RoomBrowser = ({ categoryId, categoryName, rooms, onRoomCreated, on
 
 // ─── Sub components ───────────────────────────────────────────────────────────
 
-const ParticipantBar = ({
-  current,
-  max,
-}: {
-  current: number
-  max: number
-}) => {
+const ParticipantBar = ({ current, max }: { current: number; max: number }) => {
   const pct = Math.min((current / max) * 100, 100)
   const isFull = current >= max
-
   return (
     <div className={styles.bar}>
       <div

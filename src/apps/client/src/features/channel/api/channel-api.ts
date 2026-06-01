@@ -23,8 +23,26 @@ export const createChannel = (name: string) =>
     body: JSON.stringify({ name }),
   })
 
+export type ChannelRoomPage = {
+  rooms: ChannelRoom[]
+  nextCursor: number | null
+  hasNext: boolean
+}
+
 export const getChannelRooms = (channelId: number | string) =>
   fetchAPI<ChannelRoom[]>(END_POINT.CHANNEL.ROOMS(channelId))
+
+export const getChannelRoomsCursor = (
+  channelId: number | string,
+  cursor?: number | null,
+  keyword?: string,
+  size = 30,
+) => {
+  const params = new URLSearchParams({ size: String(size) })
+  if (cursor != null) params.set('cursor', String(cursor))
+  if (keyword) params.set('keyword', keyword)
+  return fetchAPI<ChannelRoomPage>(`${END_POINT.CHANNEL.ROOMS(channelId)}?${params}`)
+}
 
 type CreateRoomBody = { title: string; maxCount: number }
 

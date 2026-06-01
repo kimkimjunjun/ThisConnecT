@@ -1,22 +1,23 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getChannelRooms } from '../api/channel-api'
+import { getChannelRoomsCursor } from '../api/channel-api'
 import type { ChannelRoom } from '../api/channel-api'
 
 export const useChannelRooms = (channelId: string) => {
   const [rooms, setRooms] = useState<ChannelRoom[]>([])
-  const [refreshKey, setRefreshKey] = useState(0)
   const [isPending, setIsPending] = useState(false)
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     if (!channelId) return
     setIsPending(true)
-    getChannelRooms(channelId)
-      .then(setRooms)
+    getChannelRoomsCursor(channelId)
+      .then((page) => setRooms(page.rooms))
       .catch(() => {})
       .finally(() => setIsPending(false))
-  }, [channelId, refreshKey])
+  }, [channelId])
 
-  const refresh = useCallback(() => setRefreshKey((k) => k + 1), [])
+  useEffect(() => {
+    refresh()
+  }, [refresh])
 
-  return { rooms, refresh, isPending }
+  return { rooms, isPending, refresh }
 }
