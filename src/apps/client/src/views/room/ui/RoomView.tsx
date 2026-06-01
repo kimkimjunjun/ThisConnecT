@@ -8,6 +8,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth";
 import { useMemberInfo } from "@/features/member";
@@ -63,6 +64,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const [currentRoom, setCurrentRoom] = useState(room);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [dropdownAnchor, setDropdownAnchor] = useState<DOMRect | null>(null);
   const [kickConfirmFor, setKickConfirmFor] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<DisplayParticipant | null>(null);
   const [dmTarget, setDmTarget] = useState<DisplayParticipant | null>(null);
@@ -77,6 +79,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
 
   const [inputText, setInputText] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const isComposingRef = useRef(false);
 
   const {
@@ -142,13 +145,41 @@ export const RoomView = ({ room, categoryId }: Props) => {
     setInputText("");
   }, [inputText, connected, sendMessage]);
 
-  const handleParticipantToggle = useCallback(
-    (sessionId: string) => {
-      setActiveDropdown((prev) => (prev === sessionId ? null : sessionId));
-      setKickConfirmFor(null);
-    },
-    [],
+  const activeParticipant = useMemo(
+    () => displayParticipants.find((p) => p.sessionId === activeDropdown) ?? null,
+    [displayParticipants, activeDropdown],
   );
+
+  const handleChevronClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>, sessionId: string) => {
+      e.stopPropagation();
+      if (activeDropdown === sessionId) {
+        setActiveDropdown(null);
+        setDropdownAnchor(null);
+        setKickConfirmFor(null);
+      } else {
+        const item = (e.currentTarget.closest("[data-session]") as HTMLElement | null)
+          ?? e.currentTarget;
+        setActiveDropdown(sessionId);
+        setDropdownAnchor(item.getBoundingClientRect());
+        setKickConfirmFor(null);
+      }
+    },
+    [activeDropdown],
+  );
+
+  useEffect(() => {
+    if (!activeDropdown) return;
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setActiveDropdown(null);
+        setDropdownAnchor(null);
+        setKickConfirmFor(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [activeDropdown]);
 
   return (
     <div className={styles.container}>
@@ -185,102 +216,41 @@ export const RoomView = ({ room, categoryId }: Props) => {
           참여자 · {displayParticipants.length}명
         </span>
         <div className={styles.participantsList}>
-          {displayParticipants.map((p) => {
-            const isExpanded = activeDropdown === p.sessionId;
-            const isKickConfirming = kickConfirmFor === p.sessionId;
-            return (
-              <div
-                key={p.sessionId}
-                className={`${styles.participantItem}${isExpanded ? ` ${styles.participantItemExpanded}` : ""}`}
-              >
-                <div
-                  className={styles.participantRow}
-                  onClick={() => !p.isMe && canInteract && handleParticipantToggle(p.sessionId)}
-                  style={{ cursor: !p.isMe && canInteract ? "pointer" : "default" }}
-                >
-                  <div className={styles.participantAvatarWrap}>
-                    <div className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}>
-                      {p.nickname[0].toUpperCase()}
-                      {p.isMe && (
-                        <span className={isMicOn ? styles.micDot : styles.mutedDot} />
-                      )}
-                    </div>
-                  </div>
-                  <div className={styles.participantMeta}>
-                    <span className={styles.participantName}>
-                      {p.nickname}
-                      {p.isMe && <span className={styles.meBadge}>나</span>}
-                      {p.isOwner && <span className={styles.ownerBadge}>방장</span>}
-                    </span>
-                    <span className={`${styles.levelBadge} ${getLevelTierClass(p.level)}`}>
-                      Lv.{p.level}
-                    </span>
-                  </div>
-                  {!p.isMe && canInteract && (
-                    <span className={`${styles.chevron} ${isExpanded ? styles.chevronOpen : ""}`}>
-                      ›
-                    </span>
+          {displayParticipants.map((p) => (
+            <div
+              key={p.sessionId}
+              data-session={p.sessionId}
+              className={`${styles.participantItem}${activeDropdown === p.sessionId ? ` ${styles.participantItemActive}` : ""}`}
+            >
+              <div className={styles.participantAvatarWrap}>
+                <div className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}>
+                  {p.nickname[0].toUpperCase()}
+                  {p.isMe && (
+                    <span className={isMicOn ? styles.micDot : styles.mutedDot} />
                   )}
                 </div>
-                {isExpanded && (
-                  <div className={styles.participantActions}>
-                    {isKickConfirming ? (
-                      <>
-                        <span className={styles.kickConfirmText}>
-                          {p.nickname}님을 퇴장시킬까요?
-                        </span>
-                        <button
-                          className={styles.actionBtn}
-                          onClick={() => setKickConfirmFor(null)}
-                        >
-                          취소
-                        </button>
-                        <button
-                          className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                          onClick={() => {
-                            kickParticipant(p.sessionId);
-                            setActiveDropdown(null);
-                            setKickConfirmFor(null);
-                          }}
-                        >
-                          퇴장
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        {amIOwner && (
-                          <button
-                            className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                            onClick={() => setKickConfirmFor(p.sessionId)}
-                          >
-                            강제퇴장
-                          </button>
-                        )}
-                        <button
-                          className={styles.actionBtn}
-                          onClick={() => {
-                            setDmTarget(p);
-                            setActiveDropdown(null);
-                          }}
-                        >
-                          쪽지보내기
-                        </button>
-                        <button
-                          className={`${styles.actionBtn} ${styles.actionBtnWarn}`}
-                          onClick={() => {
-                            setReportTarget(p);
-                            setActiveDropdown(null);
-                          }}
-                        >
-                          신고하기
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
-            );
-          })}
+              <div className={styles.participantMeta}>
+                <span className={styles.participantName}>
+                  {p.nickname}
+                  {p.isMe && <span className={styles.meBadge}>나</span>}
+                  {p.isOwner && <span className={styles.ownerBadge}>방장</span>}
+                </span>
+                <span className={`${styles.levelBadge} ${getLevelTierClass(p.level)}`}>
+                  Lv.{p.level}
+                </span>
+              </div>
+              {!p.isMe && canInteract && (
+                <button
+                  className={`${styles.chevron} ${activeDropdown === p.sessionId ? styles.chevronOpen : ""}`}
+                  onClick={(e) => handleChevronClick(e, p.sessionId)}
+                  title="메뉴"
+                >
+                  ›
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -432,6 +402,77 @@ export const RoomView = ({ room, categoryId }: Props) => {
 
       {isKicked && (
         <KickedModal onConfirm={() => router.replace(`/channels/${categoryId}`)} />
+      )}
+
+      {activeParticipant && dropdownAnchor && createPortal(
+        <div
+          ref={dropdownRef}
+          className={styles.floatingDropdown}
+          style={{
+            position: "fixed",
+            top: dropdownAnchor.bottom + 4,
+            left: dropdownAnchor.left,
+          }}
+        >
+          {kickConfirmFor === activeParticipant.sessionId ? (
+            <>
+              <p className={styles.kickConfirmText}>
+                {activeParticipant.nickname}님을 퇴장시킬까요?
+              </p>
+              <div className={styles.kickConfirmActions}>
+                <button
+                  className={styles.floatingItem}
+                  onClick={() => setKickConfirmFor(null)}
+                >
+                  취소
+                </button>
+                <button
+                  className={`${styles.floatingItem} ${styles.floatingItemDanger}`}
+                  onClick={() => {
+                    kickParticipant(activeParticipant.sessionId);
+                    setActiveDropdown(null);
+                    setDropdownAnchor(null);
+                    setKickConfirmFor(null);
+                  }}
+                >
+                  퇴장
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {amIOwner && (
+                <button
+                  className={`${styles.floatingItem} ${styles.floatingItemDanger}`}
+                  onClick={() => setKickConfirmFor(activeParticipant.sessionId)}
+                >
+                  강제퇴장
+                </button>
+              )}
+              <button
+                className={styles.floatingItem}
+                onClick={() => {
+                  setDmTarget(activeParticipant);
+                  setActiveDropdown(null);
+                  setDropdownAnchor(null);
+                }}
+              >
+                쪽지보내기
+              </button>
+              <button
+                className={`${styles.floatingItem} ${styles.floatingItemWarn}`}
+                onClick={() => {
+                  setReportTarget(activeParticipant);
+                  setActiveDropdown(null);
+                  setDropdownAnchor(null);
+                }}
+              >
+                신고하기
+              </button>
+            </>
+          )}
+        </div>,
+        document.body,
       )}
     </div>
   );

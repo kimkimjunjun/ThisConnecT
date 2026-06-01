@@ -128,26 +128,11 @@ $avatar-other-bg: #4e5058;
 
 .participantsList {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-wrap: wrap;
+  gap: $spacing-2;
 }
 
 .participantItem {
-  border-radius: $radius-md;
-  overflow: hidden;
-  transition: background-color $transition-fast;
-
-  &.participantItemExpanded {
-    background-color: rgba(255, 255, 255, 0.03);
-    outline: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  &.participantSpeaking {
-    background-color: rgba($speaking-color, 0.08);
-  }
-}
-
-.participantRow {
   display: flex;
   align-items: center;
   gap: $spacing-2;
@@ -155,25 +140,33 @@ $avatar-other-bg: #4e5058;
   border-radius: $radius-md;
   transition: background-color $transition-fast;
 
-  &:hover {
-    background-color: $bg-hover;
+  &.participantItemActive {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  &.participantSpeaking {
+    background-color: rgba($speaking-color, 0.08);
   }
 }
 
 .chevron {
-  margin-left: auto;
   flex-shrink: 0;
-  color: $text-muted;
-  font-size: 18px;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: none;
+  color: $text-muted;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
   transition: transform 150ms ease, color $transition-fast;
   transform: rotate(90deg);
 
-  .participantRow:hover & {
+  &:hover {
     color: $text-primary;
   }
 }
@@ -182,56 +175,66 @@ $avatar-other-bg: #4e5058;
   transform: rotate(-90deg);
 }
 
-.participantActions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: $spacing-1;
-  padding: 0 $spacing-2 $spacing-2 calc(#{$spacing-2} + 36px + #{$spacing-2});
+// ─── Floating Dropdown (portal) ───────────────────────────────────────────────
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.actionBtn {
-  padding: 2px $spacing-3;
-  border-radius: $radius-full;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: rgba(255, 255, 255, 0.04);
-  color: $text-primary;
-  font-size: $text-xs;
-  font-weight: $font-weight-medium;
+.floatingDropdown {
+  z-index: $z-modal;
+  min-width: 128px;
+  padding: $spacing-1 0;
+  background-color: #1e1f22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $radius-lg;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  animation: dropdownFadeIn 120ms ease forwards;
+}
+
+.floatingItem {
+  display: block;
+  width: 100%;
+  padding: $spacing-2 $spacing-4;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #dbdee1;
+  font-size: $text-sm;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color $transition-fast, border-color $transition-fast;
+  transition: background-color $transition-fast;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.06);
   }
 }
 
-.actionBtnDanger {
-  color: $danger;
-  border-color: rgba(242, 63, 66, 0.3);
+.floatingItemDanger {
+  color: #f23f42;
 
   &:hover {
     background-color: rgba(242, 63, 66, 0.1);
-    border-color: rgba(242, 63, 66, 0.5);
   }
 }
 
-.actionBtnWarn {
+.floatingItemWarn {
   color: #f0b232;
-  border-color: rgba(240, 178, 50, 0.3);
 
   &:hover {
     background-color: rgba(240, 178, 50, 0.1);
-    border-color: rgba(240, 178, 50, 0.5);
   }
 }
 
 .kickConfirmText {
+  padding: $spacing-2 $spacing-4 $spacing-1;
   font-size: $text-xs;
-  color: $text-muted;
-  margin-right: $spacing-1;
+  color: #949ba4;
+  white-space: nowrap;
+}
+
+.kickConfirmActions {
+  display: flex;
 }
 
 .participantAvatarWrap {
