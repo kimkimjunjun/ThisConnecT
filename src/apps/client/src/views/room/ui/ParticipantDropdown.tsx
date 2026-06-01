@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import styles from './ParticipantDropdown.module.scss'
 
 type Props = {
   nickname: string
   amIOwner: boolean
+  anchor: DOMRect
   onKick: () => void
   onMessage: () => void
   onReport: () => void
@@ -15,6 +17,7 @@ type Props = {
 export const ParticipantDropdown = ({
   nickname,
   amIOwner,
+  anchor,
   onKick,
   onMessage,
   onReport,
@@ -31,24 +34,27 @@ export const ParticipantDropdown = ({
     return () => document.removeEventListener('mousedown', handler)
   }, [onClose])
 
-  if (kickConfirm) {
-    return (
-      <div className={styles.dropdown} ref={ref}>
-        <p className={styles.confirmText}>{nickname}님을 퇴장시킬까요?</p>
-        <div className={styles.confirmActions}>
-          <button className={styles.item} onClick={() => setKickConfirm(false)}>
-            취소
-          </button>
-          <button className={`${styles.item} ${styles.itemDanger}`} onClick={onKick}>
-            퇴장
-          </button>
-        </div>
-      </div>
-    )
+  const style: React.CSSProperties = {
+    position: 'fixed',
+    top: anchor.bottom + 4,
+    left: anchor.left + anchor.width / 2,
+    transform: 'translateX(-50%)',
   }
 
-  return (
-    <div className={styles.dropdown} ref={ref}>
+  const content = kickConfirm ? (
+    <div className={styles.dropdown} style={style} ref={ref}>
+      <p className={styles.confirmText}>{nickname}님을 퇴장시킬까요?</p>
+      <div className={styles.confirmActions}>
+        <button className={styles.item} onClick={() => setKickConfirm(false)}>
+          취소
+        </button>
+        <button className={`${styles.item} ${styles.itemDanger}`} onClick={onKick}>
+          퇴장
+        </button>
+      </div>
+    </div>
+  ) : (
+    <div className={styles.dropdown} style={style} ref={ref}>
       {amIOwner && (
         <button
           className={`${styles.item} ${styles.itemDanger}`}
@@ -65,4 +71,6 @@ export const ParticipantDropdown = ({
       </button>
     </div>
   )
+
+  return createPortal(content, document.body)
 }

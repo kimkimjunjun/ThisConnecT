@@ -7,10 +7,6 @@
 }
 
 .dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 50%;
-  transform: translateX(-50%);
   z-index: $z-modal;
   min-width: 132px;
   padding: $spacing-1 0;

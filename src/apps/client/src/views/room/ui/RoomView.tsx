@@ -63,6 +63,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const [currentRoom, setCurrentRoom] = useState(room);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [dropdownAnchor, setDropdownAnchor] = useState<DOMRect | null>(null);
   const [reportTarget, setReportTarget] = useState<DisplayParticipant | null>(null);
   const [dmTarget, setDmTarget] = useState<DisplayParticipant | null>(null);
   const isMicOn = useAudioStore((s) => s.isMicOn);
@@ -147,11 +148,17 @@ export const RoomView = ({ room, categoryId }: Props) => {
   }, [inputText, connected, sendMessage]);
 
   const handleAvatarClick = useCallback(
-    (p: DisplayParticipant) => {
+    (e: React.MouseEvent<HTMLButtonElement>, p: DisplayParticipant) => {
       if (!canInteract || p.isMe) return;
-      setActiveDropdown((prev) => (prev === p.sessionId ? null : p.sessionId));
+      if (activeDropdown === p.sessionId) {
+        setActiveDropdown(null);
+        setDropdownAnchor(null);
+      } else {
+        setActiveDropdown(p.sessionId);
+        setDropdownAnchor(e.currentTarget.getBoundingClientRect());
+      }
     },
-    [canInteract],
+    [canInteract, activeDropdown],
   );
 
   return (
@@ -195,7 +202,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
                 {!p.isMe && canInteract ? (
                   <button
                     className={`${styles.participantAvatar} ${styles.participantAvatarBtn}`}
-                    onClick={() => handleAvatarClick(p)}
+                    onClick={(e) => handleAvatarClick(e, p)}
                     title={p.nickname}
                   >
                     {p.nickname[0].toUpperCase()}
@@ -210,23 +217,30 @@ export const RoomView = ({ room, categoryId }: Props) => {
                     )}
                   </div>
                 )}
-                {activeDropdown === p.sessionId && (
+                {activeDropdown === p.sessionId && dropdownAnchor && (
                   <ParticipantDropdown
                     nickname={p.nickname}
                     amIOwner={amIOwner}
+                    anchor={dropdownAnchor}
                     onKick={() => {
                       kickParticipant(p.sessionId);
                       setActiveDropdown(null);
+                      setDropdownAnchor(null);
                     }}
                     onMessage={() => {
                       setDmTarget(p);
                       setActiveDropdown(null);
+                      setDropdownAnchor(null);
                     }}
                     onReport={() => {
                       setReportTarget(p);
                       setActiveDropdown(null);
+                      setDropdownAnchor(null);
                     }}
-                    onClose={() => setActiveDropdown(null)}
+                    onClose={() => {
+                      setActiveDropdown(null);
+                      setDropdownAnchor(null);
+                    }}
                   />
                 )}
               </div>
