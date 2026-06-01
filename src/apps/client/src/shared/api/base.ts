@@ -14,6 +14,10 @@ export class ApiError extends Error {
 let isRefreshing = false
 let pendingRefresh: Promise<string | null> | null = null
 
+// 브라우저: 상대 경로 사용 → Next.js 프록시(/api/*) 경유 → 쿠키 same-origin 보장
+// 서버: 절대 URL 사용 → 백엔드 직접 호출
+const getApiBase = () => (typeof window !== 'undefined' ? '' : env.API_BASE_URL)
+
 const getStoredToken = (): string | null => {
   if (typeof window === 'undefined') return null
   try {
@@ -30,7 +34,7 @@ const tryRefresh = (): Promise<string | null> => {
   isRefreshing = true
   pendingRefresh = (async () => {
     try {
-      const res = await fetch(`${env.API_BASE_URL}${END_POINT.AUTH.REFRESH}`, {
+      const res = await fetch(`${getApiBase()}${END_POINT.AUTH.REFRESH}`, {
         method: 'POST',
         credentials: 'include',
       })
@@ -60,12 +64,19 @@ const buildHeaders = (
   ...(extra as Record<string, string> | undefined),
 })
 
+const parseResponse = async <T>(res: Response): Promise<T> => {
+  if (res.status === 204 || res.headers.get('content-length') === '0') {
+    return undefined as T
+  }
+  return res.json() as Promise<T>
+}
+
 export const fetchAPI = async <T>(
   path: string,
   options?: RequestInit,
 ): Promise<T> => {
   const token = getStoredToken()
-  const res = await fetch(`${env.API_BASE_URL}${path}`, {
+  const res = await fetch(`${getApiBase()}${path}`, {
     ...options,
     headers: buildHeaders(token, options?.headers),
   })
@@ -74,14 +85,14 @@ export const fetchAPI = async <T>(
     const newToken = await tryRefresh()
 
     if (newToken) {
-      const retry = await fetch(`${env.API_BASE_URL}${path}`, {
+      const retry = await fetch(`${getApiBase()}${path}`, {
         ...options,
         headers: buildHeaders(newToken, options?.headers),
       })
       if (!retry.ok) {
         throw new ApiError(retry.status, `${retry.status} ${retry.statusText}`)
       }
-      return retry.json() as Promise<T>
+      return parseResponse<T>(retry)
     }
 
     const { useAuthStore } = await import('@/features/auth/store/auth-store')
@@ -93,9 +104,5 @@ export const fetchAPI = async <T>(
     throw new ApiError(res.status, `${res.status} ${res.statusText}`)
   }
 
-  if (res.status === 204 || res.headers.get('content-length') === '0') {
-    return undefined as T
-  }
-
-  return res.json() as Promise<T>
+  return parseResponse<T>(res)
 }
