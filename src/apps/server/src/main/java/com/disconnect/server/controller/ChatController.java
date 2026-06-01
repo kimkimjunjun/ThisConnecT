@@ -2,6 +2,7 @@ package com.disconnect.server.controller;
 
 import com.disconnect.server.domain.member.Member;
 import com.disconnect.server.dto.request.ChatRequest;
+import com.disconnect.server.dto.request.KickRequest;
 import com.disconnect.server.dto.request.VoiceSignalRequest;
 import com.disconnect.server.dto.response.ChatMessageResponse;
 import com.disconnect.server.dto.response.ParticipantListResponse;
@@ -64,7 +65,8 @@ public class ChatController {
         }
 
         int level = resolveLevel(principal);
-        roomSessionService.join(sessionId, roomId, nickname, level, isAdmin);
+        String principalName = principal != null ? principal.getName() : "guest-" + sessionId;
+        roomSessionService.join(sessionId, roomId, nickname, level, isAdmin, principalName);
 
         if (!isAdmin) {
             // 일반 유저: 인원수 증가 + 입장 메시지 브로드캐스트
@@ -114,6 +116,38 @@ public class ChatController {
                         request.data()
                 )
         );
+    }
+
+    // 방장이 특정 참여자를 강퇴: 방장 sessionId 검증 → 대상에게 KICKED 전송 → 퇴장 처리
+    @Transactional
+    @MessageMapping("/rooms/{roomId}/kick")
+    public void kick(@DestinationVariable Long roomId,
+                     @Payload KickRequest request,
+                     SimpMessageHeaderAccessor headerAccessor) {
+        String callerSessionId = headerAccessor.getSessionId();
+        String ownerSessionId = roomSessionService.getOwnerSessionId(roomId);
+
+        if (!callerSessionId.equals(ownerSessionId)) return;
+
+        String targetSessionId = request.targetSessionId();
+        if (targetSessionId.equals(callerSessionId)) return;
+
+        String targetPrincipalName = roomSessionService.getPrincipalNameBySession(targetSessionId);
+        if (targetPrincipalName == null) return;
+
+        // 강퇴 대상에게 알림 전송 → 클라이언트는 채널 목록으로 리다이렉트
+        messagingTemplate.convertAndSendToUser(
+                targetPrincipalName, "/queue/kicked",
+                Map.of("type", "KICKED", "roomId", roomId)
+        );
+
+        // 세션 제거 (handleDisconnect 중복 처리 방지)
+        RoomSessionService.RoomSession kicked = roomSessionService.leave(targetSessionId);
+        if (kicked != null && !kicked.isAdmin()) {
+            chatRoomRepository.findById(roomId).ifPresent(room -> room.updateCurrentCount(-1));
+            broadcastParticipants(roomId);
+            broadcastMessage(roomId, "LEAVE", kicked.nickname(), kicked.nickname() + "님이 퇴장했습니다.", targetSessionId);
+        }
     }
 
     @Transactional
