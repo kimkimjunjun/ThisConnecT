@@ -46,41 +46,7 @@ $badge-bg: #f23f42;
   padding: 0 $spacing-2 $spacing-2;
 }
 
-.headerActions {
-  display: flex;
-  align-items: center;
-  gap: $spacing-1;
-}
-
-// ─── Toggle button ────────────────────────────────────────────────────────────
-.toggleBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: $radius-sm;
-  background: transparent;
-  border: none;
-  color: $text-muted;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background-color $transition-fast, color $transition-fast;
-
-  &:hover {
-    background-color: $room-hover-bg;
-    color: $text-primary;
-  }
-}
-
 // ─── Collapsed state ──────────────────────────────────────────────────────────
-.collapsedHeader {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: $spacing-4 0 $spacing-2;
-}
-
 .collapsedList {
   @include flex-col;
   align-items: center;
@@ -89,6 +55,30 @@ $badge-bg: #f23f42;
   overflow-y: auto;
 
   &::-webkit-scrollbar { width: 0; }
+}
+
+.collapsedAddBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-md;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1.5px dashed rgba(255, 255, 255, 0.15);
+  color: $text-muted;
+  font-size: $text-xl;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color $transition-fast, border-color $transition-fast,
+    color $transition-fast, border-radius $transition-fast;
+
+  &:hover {
+    background-color: $room-hover-bg;
+    border-color: rgba(255, 255, 255, 0.3);
+    border-radius: $radius-full;
+    color: $text-primary;
+  }
 }
 
 .collapsedItem {

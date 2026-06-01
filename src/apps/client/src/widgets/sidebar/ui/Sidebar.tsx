@@ -17,20 +17,7 @@ type Props = {
   onAddChannel?: () => void;
   onDeleteChannel?: (id: string) => void;
   isCollapsed: boolean;
-  onToggle: () => void;
 };
-
-const ChevronLeft = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-);
-
-const ChevronRight = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
 
 export const Sidebar = ({
   rooms,
@@ -39,7 +26,6 @@ export const Sidebar = ({
   onAddChannel,
   onDeleteChannel,
   isCollapsed,
-  onToggle,
 }: Props) => {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -60,41 +46,40 @@ export const Sidebar = ({
   return (
     <nav className={`${styles.sidebar} ${isCollapsed ? styles.sidebarCollapsed : ""}`}>
       {isCollapsed ? (
-        <>
-          <div className={styles.collapsedHeader}>
-            <button className={styles.toggleBtn} onClick={onToggle} title="사이드바 열기">
-              <ChevronRight />
-            </button>
-          </div>
-          <ul className={styles.collapsedList}>
-            {rooms.map((room) => (
-              <li key={room.id}>
-                <button
-                  className={`${styles.collapsedItem} ${activeRoomId === room.id ? styles.collapsedItemActive : ""}`}
-                  onClick={() => onSelectRoom(room.id)}
-                  title={room.name}
-                >
-                  {room.name[0]?.toUpperCase() ?? "#"}
-                  {!!room.unread && <span className={styles.collapsedBadge} />}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </>
+        <ul className={styles.collapsedList}>
+          {rooms.map((room) => (
+            <li key={room.id}>
+              <button
+                className={`${styles.collapsedItem} ${activeRoomId === room.id ? styles.collapsedItemActive : ""}`}
+                onClick={() => onSelectRoom(room.id)}
+                title={room.name}
+              >
+                {room.name[0]?.toUpperCase() ?? "#"}
+                {!!room.unread && <span className={styles.collapsedBadge} />}
+              </button>
+            </li>
+          ))}
+          {onAddChannel && (
+            <li>
+              <button
+                className={styles.collapsedAddBtn}
+                onClick={onAddChannel}
+                title="채널 추가"
+              >
+                +
+              </button>
+            </li>
+          )}
+        </ul>
       ) : (
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionLabel}>채널</span>
-            <div className={styles.headerActions}>
-              <button className={styles.toggleBtn} onClick={onToggle} title="사이드바 닫기">
-                <ChevronLeft />
+            {onAddChannel && (
+              <button className={styles.addChannelBtn} onClick={onAddChannel} title="채널 추가">
+                +
               </button>
-              {onAddChannel && (
-                <button className={styles.addChannelBtn} onClick={onAddChannel} title="채널 추가">
-                  +
-                </button>
-              )}
-            </div>
+            )}
           </div>
           <ul className={styles.roomList}>
             {rooms.map((room) => (
