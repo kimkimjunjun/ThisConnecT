@@ -144,35 +144,17 @@ $avatar-other-bg: #4e5058;
     background-color: rgba(255, 255, 255, 0.06);
   }
 
+  &.participantItemClickable {
+    cursor: pointer;
+
+    &:hover {
+      background-color: $bg-hover;
+    }
+  }
+
   &.participantSpeaking {
     background-color: rgba($speaking-color, 0.08);
   }
-}
-
-.chevron {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  border: none;
-  background: none;
-  color: $text-muted;
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  transition: transform 150ms ease, color $transition-fast;
-  transform: rotate(90deg);
-
-  &:hover {
-    color: $text-primary;
-  }
-}
-
-.chevronOpen {
-  transform: rotate(-90deg);
 }
 
 // ─── Floating Dropdown (portal) ───────────────────────────────────────────────

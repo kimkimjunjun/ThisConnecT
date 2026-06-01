@@ -150,18 +150,15 @@ export const RoomView = ({ room, categoryId }: Props) => {
     [displayParticipants, activeDropdown],
   );
 
-  const handleChevronClick = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>, sessionId: string) => {
-      e.stopPropagation();
+  const handleCardClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>, sessionId: string) => {
       if (activeDropdown === sessionId) {
         setActiveDropdown(null);
         setDropdownAnchor(null);
         setKickConfirmFor(null);
       } else {
-        const item = (e.currentTarget.closest("[data-session]") as HTMLElement | null)
-          ?? e.currentTarget;
         setActiveDropdown(sessionId);
-        setDropdownAnchor(item.getBoundingClientRect());
+        setDropdownAnchor(e.currentTarget.getBoundingClientRect());
         setKickConfirmFor(null);
       }
     },
@@ -171,6 +168,8 @@ export const RoomView = ({ room, categoryId }: Props) => {
   useEffect(() => {
     if (!activeDropdown) return;
     const handler = (e: MouseEvent) => {
+      // 참여자 카드 클릭은 카드의 onClick이 토글 처리하므로 여기서 닫지 않음
+      if ((e.target as Element).closest("[data-session]")) return;
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setActiveDropdown(null);
         setDropdownAnchor(null);
@@ -220,7 +219,8 @@ export const RoomView = ({ room, categoryId }: Props) => {
             <div
               key={p.sessionId}
               data-session={p.sessionId}
-              className={`${styles.participantItem}${activeDropdown === p.sessionId ? ` ${styles.participantItemActive}` : ""}`}
+              className={`${styles.participantItem}${activeDropdown === p.sessionId ? ` ${styles.participantItemActive}` : ""}${!p.isMe && canInteract ? ` ${styles.participantItemClickable}` : ""}`}
+              onClick={!p.isMe && canInteract ? (e) => handleCardClick(e, p.sessionId) : undefined}
             >
               <div className={styles.participantAvatarWrap}>
                 <div className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}>
@@ -240,15 +240,6 @@ export const RoomView = ({ room, categoryId }: Props) => {
                   Lv.{p.level}
                 </span>
               </div>
-              {!p.isMe && canInteract && (
-                <button
-                  className={`${styles.chevron} ${activeDropdown === p.sessionId ? styles.chevronOpen : ""}`}
-                  onClick={(e) => handleChevronClick(e, p.sessionId)}
-                  title="메뉴"
-                >
-                  ›
-                </button>
-              )}
             </div>
           ))}
         </div>
