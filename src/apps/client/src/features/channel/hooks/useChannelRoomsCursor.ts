@@ -3,29 +3,28 @@ import { getChannelRoomsCursor } from '../api/channel-api'
 import type { ChannelRoom } from '../api/channel-api'
 
 export const useChannelRoomsCursor = (channelId: string, keyword: string) => {
-  const [rooms, setRooms] = useState<ChannelRoom[]>([])
+  const [rooms, setRooms] = useState<ChannelRoom[] | null>(null)
   const [nextCursor, setNextCursor] = useState<number | null>(null)
   const [hasNext, setHasNext] = useState(false)
-  const [isPending, setIsPending] = useState(false)
   const [isFetchingMore, setIsFetchingMore] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
   const isFetchingMoreRef = useRef(false)
 
-  const fetchFirst = useCallback(() => {
+  useEffect(() => {
     if (!channelId) return
-    setIsPending(true)
+    let cancelled = false
     getChannelRoomsCursor(channelId, null, keyword || undefined)
       .then((page) => {
+        if (cancelled) return
         setRooms(page.rooms)
         setNextCursor(page.nextCursor)
         setHasNext(page.hasNext)
       })
       .catch(() => {})
-      .finally(() => setIsPending(false))
-  }, [channelId, keyword])
+    return () => { cancelled = true }
+  }, [channelId, keyword, refreshKey])
 
-  useEffect(() => {
-    fetchFirst()
-  }, [fetchFirst])
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), [])
 
   const loadMore = useCallback(() => {
     if (!hasNext || isFetchingMoreRef.current || nextCursor == null) return
@@ -33,7 +32,7 @@ export const useChannelRoomsCursor = (channelId: string, keyword: string) => {
     setIsFetchingMore(true)
     getChannelRoomsCursor(channelId, nextCursor, keyword || undefined)
       .then((page) => {
-        setRooms((prev) => [...prev, ...page.rooms])
+        setRooms((prev) => [...(prev ?? []), ...page.rooms])
         setNextCursor(page.nextCursor)
         setHasNext(page.hasNext)
       })
@@ -44,5 +43,12 @@ export const useChannelRoomsCursor = (channelId: string, keyword: string) => {
       })
   }, [channelId, nextCursor, keyword, hasNext])
 
-  return { rooms, hasNext, isPending, isFetchingMore, loadMore, refresh: fetchFirst }
+  return {
+    rooms: rooms ?? [],
+    isPending: rooms === null,
+    hasNext,
+    isFetchingMore,
+    loadMore,
+    refresh,
+  }
 }
