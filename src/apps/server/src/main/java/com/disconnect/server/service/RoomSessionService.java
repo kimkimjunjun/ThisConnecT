@@ -13,14 +13,14 @@ public class RoomSessionService {
     // roomId → { sessionId → ParticipantData } (LinkedHashMap: 삽입 순서 유지 → 첫 번째 일반 유저가 방장)
     private final Map<Long, Map<String, ParticipantData>> roomParticipants = new ConcurrentHashMap<>();
 
-    public record RoomSession(Long roomId, String nickname, int level, boolean isAdmin) {}
-    public record ParticipantData(String nickname, int level, boolean isAdmin) {}
+    public record RoomSession(Long roomId, String nickname, int level, boolean isAdmin, String principalName) {}
+    public record ParticipantData(String nickname, int level, boolean isAdmin, String principalName) {}
     public record ParticipantDetail(String sessionId, String nickname, int level, boolean isOwner) {}
 
-    public synchronized void join(String sessionId, Long roomId, String nickname, int level, boolean isAdmin) {
-        sessionStore.put(sessionId, new RoomSession(roomId, nickname, level, isAdmin));
+    public synchronized void join(String sessionId, Long roomId, String nickname, int level, boolean isAdmin, String principalName) {
+        sessionStore.put(sessionId, new RoomSession(roomId, nickname, level, isAdmin, principalName));
         roomParticipants.computeIfAbsent(roomId, k -> new LinkedHashMap<>())
-                .put(sessionId, new ParticipantData(nickname, level, isAdmin));
+                .put(sessionId, new ParticipantData(nickname, level, isAdmin, principalName));
     }
 
     public synchronized RoomSession leave(String sessionId) {
@@ -78,5 +78,22 @@ public class RoomSessionService {
                         e.getKey().equals(ownerSessionId)
                 ))
                 .toList();
+    }
+
+    // sessionId로 principalName(JWT subject) 조회
+    public synchronized String getPrincipalNameBySession(String sessionId) {
+        RoomSession session = sessionStore.get(sessionId);
+        return session != null ? session.principalName() : null;
+    }
+
+    // 방장의 principalName 조회
+    public synchronized String getOwnerPrincipalName(Long roomId) {
+        Map<String, ParticipantData> participants = roomParticipants.get(roomId);
+        if (participants == null) return null;
+        return participants.entrySet().stream()
+                .filter(e -> !e.getValue().isAdmin())
+                .map(e -> e.getValue().principalName())
+                .findFirst()
+                .orElse(null);
     }
 }
