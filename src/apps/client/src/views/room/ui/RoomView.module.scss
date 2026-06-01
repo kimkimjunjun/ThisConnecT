@@ -146,6 +146,7 @@ $avatar-other-bg: #4e5058;
 
   &.participantItemClickable {
     cursor: pointer;
+    user-select: none;
 
     &:hover {
       background-color: $bg-hover;
@@ -163,6 +164,11 @@ $avatar-other-bg: #4e5058;
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes dropdownFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-4px); }
+}
+
 .floatingDropdown {
   z-index: $z-modal;
   min-width: 128px;
@@ -172,6 +178,11 @@ $avatar-other-bg: #4e5058;
   border-radius: $radius-lg;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   animation: dropdownFadeIn 120ms ease forwards;
+}
+
+.floatingDropdownClosing {
+  animation: dropdownFadeOut 120ms ease forwards;
+  pointer-events: none;
 }
 
 .floatingItem {

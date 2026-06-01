@@ -65,6 +65,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [dropdownAnchor, setDropdownAnchor] = useState<DOMRect | null>(null);
+  const [isDropdownClosing, setIsDropdownClosing] = useState(false);
   const [kickConfirmFor, setKickConfirmFor] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<DisplayParticipant | null>(null);
   const [dmTarget, setDmTarget] = useState<DisplayParticipant | null>(null);
@@ -150,35 +151,41 @@ export const RoomView = ({ room, categoryId }: Props) => {
     [displayParticipants, activeDropdown],
   );
 
+  const closeDropdown = useCallback(() => {
+    setIsDropdownClosing(true);
+    setTimeout(() => {
+      setIsDropdownClosing(false);
+      setActiveDropdown(null);
+      setDropdownAnchor(null);
+      setKickConfirmFor(null);
+    }, 120);
+  }, []);
+
   const handleCardClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>, sessionId: string) => {
       if (activeDropdown === sessionId) {
-        setActiveDropdown(null);
-        setDropdownAnchor(null);
-        setKickConfirmFor(null);
+        closeDropdown();
       } else {
+        setIsDropdownClosing(false);
         setActiveDropdown(sessionId);
         setDropdownAnchor(e.currentTarget.getBoundingClientRect());
         setKickConfirmFor(null);
       }
     },
-    [activeDropdown],
+    [activeDropdown, closeDropdown],
   );
 
   useEffect(() => {
     if (!activeDropdown) return;
     const handler = (e: MouseEvent) => {
-      // 참여자 카드 클릭은 카드의 onClick이 토글 처리하므로 여기서 닫지 않음
       if ((e.target as Element).closest("[data-session]")) return;
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setActiveDropdown(null);
-        setDropdownAnchor(null);
-        setKickConfirmFor(null);
+        closeDropdown();
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [activeDropdown]);
+  }, [activeDropdown, closeDropdown]);
 
   return (
     <div className={styles.container}>
@@ -398,7 +405,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
       {activeParticipant && dropdownAnchor && createPortal(
         <div
           ref={dropdownRef}
-          className={styles.floatingDropdown}
+          className={`${styles.floatingDropdown} ${isDropdownClosing ? styles.floatingDropdownClosing : ""}`}
           style={{
             position: "fixed",
             top: dropdownAnchor.bottom + 4,
