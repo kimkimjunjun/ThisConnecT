@@ -66,7 +66,8 @@ public class ChatController {
 
         int level = resolveLevel(principal);
         String principalName = principal != null ? principal.getName() : "guest-" + sessionId;
-        roomSessionService.join(sessionId, roomId, nickname, level, isAdmin, principalName);
+        Long memberId = resolveMemberId(principal);
+        roomSessionService.join(sessionId, roomId, nickname, level, isAdmin, principalName, memberId);
 
         if (!isAdmin) {
             // 일반 유저: 인원수 증가 + 입장 메시지 브로드캐스트
@@ -78,7 +79,7 @@ public class ChatController {
             // broadcast 타이밍 경쟁 조건을 우회해 참여자 목록을 어드민에게 직접 전송
             List<ParticipantListResponse.Participant> participants =
                     roomSessionService.getParticipantDetails(roomId).stream()
-                            .map(d -> new ParticipantListResponse.Participant(d.sessionId(), d.nickname(), d.level(), d.isOwner()))
+                            .map(d -> new ParticipantListResponse.Participant(d.sessionId(), d.memberId(), d.nickname(), d.level(), d.isOwner()))
                             .toList();
             messagingTemplate.convertAndSendToUser(
                     principal.getName(), "/queue/participants-snapshot",
@@ -173,7 +174,7 @@ public class ChatController {
     private void broadcastParticipants(Long roomId) {
         List<ParticipantListResponse.Participant> participants =
                 roomSessionService.getParticipantDetails(roomId).stream()
-                        .map(d -> new ParticipantListResponse.Participant(d.sessionId(), d.nickname(), d.level(), d.isOwner()))
+                        .map(d -> new ParticipantListResponse.Participant(d.sessionId(), d.memberId(), d.nickname(), d.level(), d.isOwner()))
                         .toList();
         messagingTemplate.convertAndSend(
                 "/sub/rooms/" + roomId + "/participants",
@@ -186,6 +187,17 @@ public class ChatController {
                 "/sub/rooms/" + roomId + "/chat",
                 new ChatMessageResponse(type, roomId, sender, content, now(), sessionId, false)
         );
+    }
+
+    private Long resolveMemberId(Principal principal) {
+        if (principal == null) return null;
+        String role = resolveRole(principal);
+        if ("GUEST".equals(role)) return null;
+        try {
+            return Long.parseLong(principal.getName());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private String resolveRole(Principal principal) {

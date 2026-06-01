@@ -1,6 +1,7 @@
 package com.disconnect.server.service;
 
 import com.disconnect.server.domain.member.Member;
+import com.disconnect.server.dto.response.MemberIdResponse;
 import com.disconnect.server.dto.response.MemberResponse;
 import com.disconnect.server.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,13 @@ public class MemberService {
         Member member = findById(principal);
         member.updateNickname(nickname);
         return toResponse(member);
+    }
+
+    @Transactional(readOnly = true)
+    public MemberIdResponse getMemberIdByNickname(String nickname) {
+        Member member = memberRepository.findByNickname(nickname)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
+        return new MemberIdResponse(member.getId());
     }
 
     private MemberResponse toResponse(Member member) {
