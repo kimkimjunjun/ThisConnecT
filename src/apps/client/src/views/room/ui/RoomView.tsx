@@ -85,6 +85,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
     kickParticipant,
     isDuplicate,
     isRoomFull,
+    isKicked,
     mySessionId,
     sendVoiceSignal,
     setVoiceSignalCallback,
@@ -111,6 +112,12 @@ export const RoomView = ({ room, categoryId }: Props) => {
       router.replace(`/channels/${categoryId}`);
     }
   }, [isRoomFull, router, categoryId]);
+
+  useEffect(() => {
+    if (isKicked) {
+      router.replace(`/channels/${categoryId}`);
+    }
+  }, [isKicked, router, categoryId]);
 
   const displayParticipants = useMemo(
     () => participants.map((p) => ({ ...p, isMe: p.nickname === nickname })),

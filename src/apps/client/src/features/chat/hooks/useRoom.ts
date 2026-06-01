@@ -19,6 +19,7 @@ export const useRoom = (
   const [connected, setConnected] = useState(false)
   const [isDuplicate, setIsDuplicate] = useState(false)
   const [isRoomFull, setIsRoomFull] = useState(false)
+  const [isKicked, setIsKicked] = useState(false)
   const clientRef = useRef<ReturnType<typeof createStompClient> | null>(null)
   const isDuplicateRef = useRef(false)
   const voiceSignalCbRef = useRef<((signal: VoiceSignalResponse) => void) | null>(null)
@@ -126,6 +127,10 @@ export const useRoom = (
           if (data.type === 'ROOM_FULL') setIsRoomFull(true)
         })
 
+        client.subscribe(`/user/queue/kicked`, () => {
+          setIsKicked(true)
+        })
+
         // 어드민 전용: broadcast 타이밍 문제를 우회해 참여자 목록을 직접 수신
         client.subscribe(`/user/queue/participants-snapshot`, (frame) => {
           const data: { participants: ParticipantInfo[] } = JSON.parse(frame.body)
@@ -158,6 +163,7 @@ export const useRoom = (
     kickParticipant,
     isDuplicate,
     isRoomFull,
+    isKicked,
     mySessionId,
     sendVoiceSignal,
     setVoiceSignalCallback,
