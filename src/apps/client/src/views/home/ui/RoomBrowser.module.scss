@@ -120,9 +120,17 @@ $full-badge-color: #f23f42;
 // ─── Grid ─────────────────────────────────────────────────────────────────────
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: $spacing-3;
   align-content: start;
+
+  @media (max-width: $bp-md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: $bp-sm) {
+    grid-template-columns: 1fr;
+  }
 }
 
 // ─── Card wrapper ─────────────────────────────────────────────────────────────
@@ -334,8 +342,16 @@ $full-badge-color: #f23f42;
 
 .fetchingMore {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: $spacing-3;
+
+  @media (max-width: $bp-md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: $bp-sm) {
+    grid-template-columns: 1fr;
+  }
 }
 
 // ─── Skeleton card ────────────────────────────────────────────────────────────

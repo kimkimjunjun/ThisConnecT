@@ -22,6 +22,7 @@ type Props = { children: ReactNode };
 
 export const DashboardLayout = ({ children }: Props) => {
   const [modalRequested, setModalRequested] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (initialModalShown) return;
@@ -117,6 +118,8 @@ export const DashboardLayout = ({ children }: Props) => {
             onSelectRoom={handleSelectCategory}
             onAddChannel={canManage ? handleAddChannel : undefined}
             onDeleteChannel={role === "ADMIN" ? handleDeleteChannel : undefined}
+            isCollapsed={isSidebarCollapsed}
+            onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
           />
 
           <main className={styles.content}>{children}</main>
