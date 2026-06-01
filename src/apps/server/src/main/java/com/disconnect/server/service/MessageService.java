@@ -1,5 +1,6 @@
 package com.disconnect.server.service;
 
+import com.disconnect.server.domain.member.AuthProvider;
 import com.disconnect.server.domain.member.Member;
 import com.disconnect.server.domain.message.Message;
 import com.disconnect.server.dto.request.SendMessageRequest;
@@ -27,6 +28,9 @@ public class MessageService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "발신자를 찾을 수 없습니다"));
         Member receiver = memberRepository.findByNickname(request.receiverNickname())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "수신자를 찾을 수 없습니다"));
+        if (receiver.getProvider() == AuthProvider.GUEST) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "비회원에게는 쪽지를 보낼 수 없습니다");
+        }
         if (sender.getId().equals(receiver.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "자기 자신에게 쪽지를 보낼 수 없습니다");
         }

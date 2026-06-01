@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -26,13 +27,15 @@ public class MessageController {
 
     private final MessageService messageService;
 
-    @Operation(summary = "쪽지 보내기", description = "닉네임으로 상대방에게 쪽지를 전송합니다.")
+    @Operation(summary = "쪽지 보내기", description = "소셜 로그인 회원만 쪽지를 보낼 수 있으며, 비회원(게스트)에게는 전송 불가합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "전송 성공"),
-            @ApiResponse(responseCode = "400", description = "유효성 실패 또는 자기 자신에게 전송"),
+            @ApiResponse(responseCode = "400", description = "유효성 실패 / 자기 자신에게 전송 / 비회원에게 전송 시도"),
             @ApiResponse(responseCode = "401", description = "인증 필요"),
+            @ApiResponse(responseCode = "403", description = "비회원(게스트)은 쪽지 전송 불가"),
             @ApiResponse(responseCode = "404", description = "수신자 없음")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @PostMapping
     public ResponseEntity<MessageResponse> send(
             @Valid @RequestBody SendMessageRequest request,
