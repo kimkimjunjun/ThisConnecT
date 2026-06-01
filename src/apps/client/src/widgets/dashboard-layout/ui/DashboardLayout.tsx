@@ -5,23 +5,51 @@ import {
   useEffect,
   useRef,
   useCallback,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
-
-let initialModalShown = false;
-let permissionRequested = false;
-
 import { AuthModal, useAuthStore, AuthContextProvider } from "@/features/auth";
 import { AppHeader } from "@/widgets/header";
 import { Sidebar, CreateChannelModal } from "@/widgets/sidebar";
 import { useChannels, deleteChannel } from "@/features/channel";
 import styles from "./DashboardLayout.module.scss";
 
+const LS_KEY = "sidebar-collapsed";
+const SIDEBAR_TOGGLE_EVENT = "sidebar-toggle";
+
+const subscribeSidebarCollapsed = (cb: () => void) => {
+  window.addEventListener(SIDEBAR_TOGGLE_EVENT, cb);
+  return () => window.removeEventListener(SIDEBAR_TOGGLE_EVENT, cb);
+};
+const getSidebarCollapsedSnapshot = () => localStorage.getItem(LS_KEY) === "true";
+const getSidebarCollapsedServerSnapshot = () => false;
+
+const ChevronLeft = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+
+const ChevronRight = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
+
+let initialModalShown = false;
+let permissionRequested = false;
+
 type Props = { children: ReactNode };
 
 export const DashboardLayout = ({ children }: Props) => {
   const [modalRequested, setModalRequested] = useState(false);
+
+  const isSidebarCollapsed = useSyncExternalStore(
+    subscribeSidebarCollapsed,
+    getSidebarCollapsedSnapshot,
+    getSidebarCollapsedServerSnapshot,
+  );
 
   useEffect(() => {
     if (initialModalShown) return;
@@ -111,13 +139,27 @@ export const DashboardLayout = ({ children }: Props) => {
         <AppHeader onLoginClick={openModal} />
 
         <div className={styles.body}>
-          <Sidebar
-            rooms={sidebarRooms}
-            activeRoomId={activeCategoryId}
-            onSelectRoom={handleSelectCategory}
-            onAddChannel={canManage ? handleAddChannel : undefined}
-            onDeleteChannel={role === "ADMIN" ? handleDeleteChannel : undefined}
-          />
+          <div className={styles.sidebarWrapper}>
+            <Sidebar
+              rooms={sidebarRooms}
+              activeRoomId={activeCategoryId}
+              onSelectRoom={handleSelectCategory}
+              onAddChannel={canManage ? handleAddChannel : undefined}
+              onDeleteChannel={role === "ADMIN" ? handleDeleteChannel : undefined}
+              isCollapsed={isSidebarCollapsed}
+            />
+            <button
+              className={styles.sidebarToggleEdge}
+              onClick={() => {
+                const next = !isSidebarCollapsed;
+                localStorage.setItem(LS_KEY, String(next));
+                window.dispatchEvent(new Event(SIDEBAR_TOGGLE_EVENT));
+              }}
+              title={isSidebarCollapsed ? "사이드바 열기" : "사이드바 닫기"}
+            >
+              {isSidebarCollapsed ? <ChevronRight /> : <ChevronLeft />}
+            </button>
+          </div>
 
           <main className={styles.content}>{children}</main>
         </div>

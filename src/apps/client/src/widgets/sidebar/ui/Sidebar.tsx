@@ -16,6 +16,7 @@ type Props = {
   onSelectRoom: (id: string) => void;
   onAddChannel?: () => void;
   onDeleteChannel?: (id: string) => void;
+  isCollapsed: boolean;
 };
 
 export const Sidebar = ({
@@ -24,6 +25,7 @@ export const Sidebar = ({
   onSelectRoom,
   onAddChannel,
   onDeleteChannel,
+  isCollapsed,
 }: Props) => {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -42,49 +44,68 @@ export const Sidebar = ({
   };
 
   return (
-    <nav className={styles.sidebar}>
-      <div className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionLabel}>채널</span>
-          {onAddChannel && (
-            <button
-              className={styles.addChannelBtn}
-              onClick={onAddChannel}
-              title="채널 추가"
-            >
-              +
-            </button>
-          )}
-        </div>
-        <ul className={styles.roomList}>
+    <nav className={`${styles.sidebar} ${isCollapsed ? styles.sidebarCollapsed : ""}`}>
+      {isCollapsed ? (
+        <ul className={styles.collapsedList}>
           {rooms.map((room) => (
-            <li key={room.id} className={styles.roomRow}>
+            <li key={room.id}>
               <button
-                className={`${styles.roomItem} ${activeRoomId === room.id ? styles.active : ""}`}
+                className={`${styles.collapsedItem} ${activeRoomId === room.id ? styles.collapsedItemActive : ""}`}
                 onClick={() => onSelectRoom(room.id)}
+                title={room.name}
               >
-                <span className={styles.hash}>#</span>
-                <span className={styles.roomName}>{room.name}</span>
-                {!!room.unread && (
-                  <span className={styles.badge}>{room.unread}</span>
-                )}
+                {room.name[0]?.toUpperCase() ?? "#"}
+                {!!room.unread && <span className={styles.collapsedBadge} />}
               </button>
-              {onDeleteChannel && (
-                <button
-                  className={styles.deleteChannelBtn}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmId(room.id);
-                  }}
-                  title="채널 삭제"
-                >
-                  <TrashIcon />
-                </button>
-              )}
             </li>
           ))}
+          {onAddChannel && (
+            <li>
+              <button
+                className={styles.collapsedAddBtn}
+                onClick={onAddChannel}
+                title="채널 추가"
+              >
+                +
+              </button>
+            </li>
+          )}
         </ul>
-      </div>
+      ) : (
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionLabel}>채널</span>
+            {onAddChannel && (
+              <button className={styles.addChannelBtn} onClick={onAddChannel} title="채널 추가">
+                +
+              </button>
+            )}
+          </div>
+          <ul className={styles.roomList}>
+            {rooms.map((room) => (
+              <li key={room.id} className={styles.roomRow}>
+                <button
+                  className={`${styles.roomItem} ${activeRoomId === room.id ? styles.active : ""}`}
+                  onClick={() => onSelectRoom(room.id)}
+                >
+                  <span className={styles.hash}>#</span>
+                  <span className={styles.roomName}>{room.name}</span>
+                  {!!room.unread && <span className={styles.badge}>{room.unread}</span>}
+                </button>
+                {onDeleteChannel && (
+                  <button
+                    className={styles.deleteChannelBtn}
+                    onClick={(e) => { e.stopPropagation(); setConfirmId(room.id); }}
+                    title="채널 삭제"
+                  >
+                    <TrashIcon />
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {confirmId && (
         <div className={styles.confirmBackdrop} onClick={() => setConfirmId(null)}>
@@ -96,18 +117,10 @@ export const Sidebar = ({
               이 작업은 되돌릴 수 없습니다.
             </p>
             <div className={styles.confirmActions}>
-              <button
-                className={styles.cancelBtn}
-                onClick={() => setConfirmId(null)}
-                disabled={isDeleting}
-              >
+              <button className={styles.cancelBtn} onClick={() => setConfirmId(null)} disabled={isDeleting}>
                 취소
               </button>
-              <button
-                className={styles.deleteBtn}
-                onClick={handleConfirmDelete}
-                disabled={isDeleting}
-              >
+              <button className={styles.deleteBtn} onClick={handleConfirmDelete} disabled={isDeleting}>
                 {isDeleting ? "삭제 중..." : "삭제"}
               </button>
             </div>
