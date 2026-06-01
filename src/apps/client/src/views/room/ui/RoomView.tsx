@@ -97,7 +97,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
     setVoiceSignalCallback,
   } = useRoom(currentRoom.id.toString(), accessToken, nickname);
 
-  useVoiceChat({
+  const { peerAudio, setParticipantMuted, setParticipantVolume } = useVoiceChat({
     mySessionId,
     participants,
     sendVoiceSignal,
@@ -467,6 +467,35 @@ export const RoomView = ({ room, categoryId }: Props) => {
               >
                 신고하기
               </button>
+              <div className={styles.floatingDivider} />
+              {(() => {
+                const sid = activeParticipant.sessionId;
+                const state = peerAudio[sid] ?? { muted: false, volume: 100 };
+                return (
+                  <div className={styles.peerAudioSection}>
+                    <button
+                      className={`${styles.peerMuteBtn} ${state.muted ? styles.peerMuteBtnActive : ""}`}
+                      onClick={() => setParticipantMuted(sid, !state.muted)}
+                      title={state.muted ? "음소거 해제" : "음소거"}
+                    >
+                      {state.muted ? <SpeakerOffIcon /> : <SpeakerOnIcon />}
+                      <span>{state.muted ? "음소거됨" : "소리 켜짐"}</span>
+                    </button>
+                    <div className={styles.peerVolumeRow}>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={state.volume}
+                        onChange={(e) => setParticipantVolume(sid, Number(e.target.value))}
+                        className={styles.peerVolumeSlider}
+                        disabled={state.muted}
+                      />
+                      <span className={styles.peerVolumeLabel}>{state.volume}%</span>
+                    </div>
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>,

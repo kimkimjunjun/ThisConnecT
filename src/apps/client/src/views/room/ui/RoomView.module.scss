@@ -230,6 +230,73 @@ $avatar-other-bg: #4e5058;
   display: flex;
 }
 
+.floatingDivider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.06);
+  margin: $spacing-1 0;
+}
+
+.peerAudioSection {
+  padding: $spacing-2 $spacing-3 $spacing-3;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+}
+
+.peerMuteBtn {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  width: 100%;
+  padding: $spacing-2 $spacing-2;
+  border-radius: $radius-sm;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #dbdee1;
+  font-size: $text-sm;
+  cursor: pointer;
+  transition: background-color $transition-fast, border-color $transition-fast;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.peerMuteBtnActive {
+  border-color: rgba(242, 63, 66, 0.35);
+  background: rgba(242, 63, 66, 0.1);
+  color: #f23f42;
+
+  &:hover {
+    background-color: rgba(242, 63, 66, 0.18);
+  }
+}
+
+.peerVolumeRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+}
+
+.peerVolumeSlider {
+  flex: 1;
+  height: 4px;
+  accent-color: $accent;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.peerVolumeLabel {
+  font-size: $text-xs;
+  color: $text-muted;
+  min-width: 32px;
+  text-align: right;
+}
+
 .participantAvatarWrap {
   position: relative;
   flex-shrink: 0;
