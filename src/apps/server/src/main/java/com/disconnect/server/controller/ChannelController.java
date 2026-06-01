@@ -4,8 +4,11 @@ import com.disconnect.server.dto.request.CreateChannelRequest;
 import com.disconnect.server.dto.request.CreateChatRoomRequest;
 import com.disconnect.server.dto.request.UpdateChatRoomRequest;
 import com.disconnect.server.dto.response.ChannelResponse;
+import com.disconnect.server.dto.response.ChatRoomPageResponse;
 import com.disconnect.server.dto.response.ChatRoomResponse;
 import com.disconnect.server.service.ChannelService;
+
+import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -17,8 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "Channel", description = "채널(카테고리) 및 채팅방 관리 API")
 @SecurityRequirement(name = "bearerAuth")
@@ -66,15 +67,23 @@ public class ChannelController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "채팅방 목록 조회", description = "특정 채널에 속한 채팅방 목록을 반환합니다.")
+    @Operation(
+            summary = "채팅방 목록 조회 (커서 기반 무한 스크롤)",
+            description = "채널의 채팅방을 커서 기반으로 페이지네이션하여 반환합니다. keyword로 제목 검색 가능."
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 필요"),
             @ApiResponse(responseCode = "404", description = "채널 없음")
     })
     @GetMapping("/{channelId}/rooms")
-    public ResponseEntity<List<ChatRoomResponse>> getRooms(@PathVariable Long channelId) {
-        return ResponseEntity.ok(channelService.getRooms(channelId));
+    public ResponseEntity<ChatRoomPageResponse> getRooms(
+            @PathVariable Long channelId,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "30") int size
+    ) {
+        return ResponseEntity.ok(channelService.getRooms(channelId, cursor, keyword, size));
     }
 
     @Operation(summary = "채팅방 생성 (USER 이상)", description = "채널에 새 채팅방을 생성합니다. USER 이상 권한 필요.")
