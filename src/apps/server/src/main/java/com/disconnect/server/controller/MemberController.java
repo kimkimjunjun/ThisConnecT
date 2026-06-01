@@ -1,6 +1,7 @@
 package com.disconnect.server.controller;
 
 import com.disconnect.server.dto.request.UpdateNicknameRequest;
+import com.disconnect.server.dto.response.MemberIdResponse;
 import com.disconnect.server.dto.response.MemberResponse;
 import com.disconnect.server.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,6 +60,19 @@ public class MemberController {
         String principal = (String) authentication.getPrincipal();
         String role = extractRole(authentication);
         return ResponseEntity.ok(memberService.updateNickname(principal, role, request.nickname()));
+    }
+
+    @Operation(
+            summary = "닉네임으로 회원 ID 조회",
+            description = "닉네임으로 회원의 DB ID를 반환합니다. 신고 기능에서 reportedId 조회 시 사용됩니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "해당 닉네임의 회원 없음")
+    })
+    @GetMapping("/nickname/{nickname}")
+    public ResponseEntity<MemberIdResponse> getMemberIdByNickname(@PathVariable String nickname) {
+        return ResponseEntity.ok(memberService.getMemberIdByNickname(nickname));
     }
 
     private String extractRole(Authentication authentication) {

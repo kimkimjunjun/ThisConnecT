@@ -14,13 +14,13 @@ public class RoomSessionService {
     private final Map<Long, Map<String, ParticipantData>> roomParticipants = new ConcurrentHashMap<>();
 
     public record RoomSession(Long roomId, String nickname, int level, boolean isAdmin, String principalName) {}
-    public record ParticipantData(String nickname, int level, boolean isAdmin, String principalName) {}
-    public record ParticipantDetail(String sessionId, String nickname, int level, boolean isOwner) {}
+    public record ParticipantData(String nickname, int level, boolean isAdmin, String principalName, Long memberId) {}
+    public record ParticipantDetail(String sessionId, Long memberId, String nickname, int level, boolean isOwner) {}
 
-    public synchronized void join(String sessionId, Long roomId, String nickname, int level, boolean isAdmin, String principalName) {
+    public synchronized void join(String sessionId, Long roomId, String nickname, int level, boolean isAdmin, String principalName, Long memberId) {
         sessionStore.put(sessionId, new RoomSession(roomId, nickname, level, isAdmin, principalName));
         roomParticipants.computeIfAbsent(roomId, k -> new LinkedHashMap<>())
-                .put(sessionId, new ParticipantData(nickname, level, isAdmin, principalName));
+                .put(sessionId, new ParticipantData(nickname, level, isAdmin, principalName, memberId));
     }
 
     public synchronized RoomSession leave(String sessionId) {
@@ -73,6 +73,7 @@ public class RoomSessionService {
                 .filter(e -> !e.getValue().isAdmin())
                 .map(e -> new ParticipantDetail(
                         e.getKey(),
+                        e.getValue().memberId(),
                         e.getValue().nickname(),
                         e.getValue().level(),
                         e.getKey().equals(ownerSessionId)
