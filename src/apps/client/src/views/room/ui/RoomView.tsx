@@ -216,6 +216,8 @@ export const RoomView = ({ room, categoryId }: Props) => {
                 {activeDropdown === p.sessionId && dropdownAnchor && (
                   <ParticipantDropdown
                     nickname={p.nickname}
+                    level={p.level}
+                    isOwner={p.isOwner}
                     amIOwner={amIOwner}
                     anchor={dropdownAnchor}
                     onKick={() => {
