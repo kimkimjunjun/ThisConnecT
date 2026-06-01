@@ -6,10 +6,12 @@ import com.disconnect.server.dto.request.CreateChannelRequest;
 import com.disconnect.server.dto.request.CreateChatRoomRequest;
 import com.disconnect.server.dto.request.UpdateChatRoomRequest;
 import com.disconnect.server.dto.response.ChannelResponse;
+import com.disconnect.server.dto.response.ChatRoomPageResponse;
 import com.disconnect.server.dto.response.ChatRoomResponse;
 import com.disconnect.server.repository.ChannelRepository;
 import com.disconnect.server.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,13 +50,22 @@ public class ChannelService {
     }
 
     @Transactional(readOnly = true)
-    public List<ChatRoomResponse> getRooms(Long channelId) {
+    public ChatRoomPageResponse getRooms(Long channelId, Long cursor, String keyword, int size) {
         if (!channelRepository.existsById(channelId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다");
         }
-        return chatRoomRepository.findByChannelId(channelId).stream()
-                .map(ChatRoomResponse::from)
-                .toList();
+        String kw = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+        List<ChatRoom> rows = chatRoomRepository.findByChannelIdWithCursor(
+                channelId, cursor, kw, PageRequest.of(0, size + 1)
+        );
+        boolean hasNext = rows.size() > size;
+        List<ChatRoom> content = hasNext ? rows.subList(0, size) : rows;
+        Long nextCursor = content.isEmpty() ? null : content.get(content.size() - 1).getId();
+        return new ChatRoomPageResponse(
+                content.stream().map(ChatRoomResponse::from).toList(),
+                nextCursor,
+                hasNext
+        );
     }
 
     public ChatRoomResponse createRoom(Long channelId, CreateChatRoomRequest request) {

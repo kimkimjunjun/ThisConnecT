@@ -21,7 +21,12 @@ import styles from "./DashboardLayout.module.scss";
 type Props = { children: ReactNode };
 
 export const DashboardLayout = ({ children }: Props) => {
-  const [modalRequested, setModalRequested] = useState(false);
+  const [modalRequested, setModalRequested] = useState(() => {
+    if (typeof window === "undefined") return false;
+    if (initialModalShown) return false;
+    initialModalShown = true;
+    return !useAuthStore.getState().accessToken;
+  });
   const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
   const pendingRouteRef = useRef<string | null>(null);
 
@@ -40,15 +45,6 @@ export const DashboardLayout = ({ children }: Props) => {
   }));
 
   const activeCategoryId = pathname.match(/^\/channels\/([^/]+)/)?.[1] ?? null;
-
-  // 마운트 후 클라이언트에서만 비로그인 모달 표시 (SSR 불일치 방지)
-  useEffect(() => {
-    if (initialModalShown) return;
-    initialModalShown = true;
-    if (!useAuthStore.getState().accessToken) {
-      setModalRequested(true);
-    }
-  }, []);
 
   useEffect(() => {
     if (permissionRequested) return;
