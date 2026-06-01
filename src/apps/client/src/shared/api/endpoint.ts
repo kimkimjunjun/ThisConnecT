@@ -10,6 +10,7 @@ export const END_POINT = {
   MEMBER: {
     MY_INFO: '/api/members/me',
     UPDATE_NICKNAME: '/api/members/me/nickname',
+    BY_NICKNAME: (nickname: string) => `/api/members/nickname/${encodeURIComponent(nickname)}`,
   },
   CHANNEL: {
     LIST: '/api/channels',

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createReport } from '@/features/report'
+import { getMemberIdByNickname } from '@/features/member'
 import styles from './ActionModal.module.scss'
 
 type Props = {
@@ -10,14 +11,25 @@ type Props = {
   onClose: () => void
 }
 
-export const ReportModal = ({ targetNickname, targetMemberId, onClose }: Props) => {
+export const ReportModal = ({ targetNickname, targetMemberId: initialMemberId, onClose }: Props) => {
   const [reason, setReason] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [memberId, setMemberId] = useState<number | undefined>(initialMemberId)
+  const [isFetchingId, setIsFetchingId] = useState(false)
 
-  const isValid = reason.trim().length > 0 && !!targetMemberId
+  useEffect(() => {
+    if (initialMemberId != null) return
+    setIsFetchingId(true)
+    getMemberIdByNickname(targetNickname)
+      .then((data) => setMemberId(data.id))
+      .catch(() => setMemberId(undefined))
+      .finally(() => setIsFetchingId(false))
+  }, [targetNickname, initialMemberId])
+
+  const isValid = reason.trim().length > 0 && memberId != null && !isFetchingId
 
   const handleClose = () => {
     if (isClosing) return
@@ -26,11 +38,11 @@ export const ReportModal = ({ targetNickname, targetMemberId, onClose }: Props) 
   }
 
   const handleSubmit = async () => {
-    if (!isValid || !targetMemberId) return
+    if (!isValid || memberId == null) return
     setIsLoading(true)
     setError(null)
     try {
-      await createReport(targetMemberId, reason.trim())
+      await createReport(memberId, reason.trim())
       setSuccess(true)
       setTimeout(handleClose, 1200)
     } catch {
@@ -65,12 +77,13 @@ export const ReportModal = ({ targetNickname, targetMemberId, onClose }: Props) 
                 maxLength={1000}
                 rows={4}
                 autoFocus
-                disabled={isLoading}
+                disabled={isLoading || isFetchingId}
               />
               <span className={styles.charCount}>{reason.length} / 1000</span>
             </label>
 
-            {!targetMemberId && (
+            {isFetchingId && <p className={styles.infoMsg}>사용자 정보를 불러오는 중...</p>}
+            {!isFetchingId && memberId == null && (
               <p className={styles.errorMsg}>현재 신고 기능을 사용할 수 없습니다.</p>
             )}
             {error && <p className={styles.errorMsg}>{error}</p>}

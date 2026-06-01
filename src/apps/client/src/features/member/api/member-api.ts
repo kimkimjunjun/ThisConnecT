@@ -11,6 +11,10 @@ export type MemberInfo = {
   requiredXp: number | null
 }
 
+export type MemberIdResponse = {
+  id: number
+}
+
 export const getMemberInfo = () =>
   fetchAPI<MemberInfo>(END_POINT.MEMBER.MY_INFO)
 
@@ -19,3 +23,6 @@ export const patchNickname = (nickname: string) =>
     method: 'PATCH',
     body: JSON.stringify({ nickname }),
   })
+
+export const getMemberIdByNickname = (nickname: string) =>
+  fetchAPI<MemberIdResponse>(END_POINT.MEMBER.BY_NICKNAME(nickname))
