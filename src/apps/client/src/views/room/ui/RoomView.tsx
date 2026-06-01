@@ -24,7 +24,6 @@ import {
   PhoneOffIcon,
 } from "@/shared/assets/icons";
 import { EditRoomModal } from "./EditRoomModal";
-import { ParticipantDropdown } from "./ParticipantDropdown";
 import { ReportModal } from "./ReportModal";
 import { DirectMessageModal } from "./DirectMessageModal";
 import { KickedModal } from "./KickedModal";
@@ -64,7 +63,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
   const [currentRoom, setCurrentRoom] = useState(room);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [dropdownAnchor, setDropdownAnchor] = useState<DOMRect | null>(null);
+  const [kickConfirmFor, setKickConfirmFor] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<DisplayParticipant | null>(null);
   const [dmTarget, setDmTarget] = useState<DisplayParticipant | null>(null);
   const isMicOn = useAudioStore((s) => s.isMicOn);
@@ -143,18 +142,12 @@ export const RoomView = ({ room, categoryId }: Props) => {
     setInputText("");
   }, [inputText, connected, sendMessage]);
 
-  const handleAvatarClick = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>, p: DisplayParticipant) => {
-      if (!canInteract || p.isMe) return;
-      if (activeDropdown === p.sessionId) {
-        setActiveDropdown(null);
-        setDropdownAnchor(null);
-      } else {
-        setActiveDropdown(p.sessionId);
-        setDropdownAnchor(e.currentTarget.getBoundingClientRect());
-      }
+  const handleParticipantToggle = useCallback(
+    (sessionId: string) => {
+      setActiveDropdown((prev) => (prev === sessionId ? null : sessionId));
+      setKickConfirmFor(null);
     },
-    [canInteract, activeDropdown],
+    [],
   );
 
   return (
@@ -192,68 +185,102 @@ export const RoomView = ({ room, categoryId }: Props) => {
           참여자 · {displayParticipants.length}명
         </span>
         <div className={styles.participantsList}>
-          {displayParticipants.map((p) => (
-            <div key={p.sessionId} className={styles.participantItem}>
-              <div className={styles.participantAvatarWrap}>
-                {!p.isMe && canInteract ? (
-                  <button
-                    className={`${styles.participantAvatar} ${styles.participantAvatarBtn}`}
-                    onClick={(e) => handleAvatarClick(e, p)}
-                    title={p.nickname}
-                  >
-                    {p.nickname[0].toUpperCase()}
-                  </button>
-                ) : (
-                  <div
-                    className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}
-                  >
-                    {p.nickname[0].toUpperCase()}
-                    {p.isMe && (
-                      <span className={isMicOn ? styles.micDot : styles.mutedDot} />
+          {displayParticipants.map((p) => {
+            const isExpanded = activeDropdown === p.sessionId;
+            const isKickConfirming = kickConfirmFor === p.sessionId;
+            return (
+              <div
+                key={p.sessionId}
+                className={`${styles.participantItem}${isExpanded ? ` ${styles.participantItemExpanded}` : ""}`}
+              >
+                <div
+                  className={styles.participantRow}
+                  onClick={() => !p.isMe && canInteract && handleParticipantToggle(p.sessionId)}
+                  style={{ cursor: !p.isMe && canInteract ? "pointer" : "default" }}
+                >
+                  <div className={styles.participantAvatarWrap}>
+                    <div className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}>
+                      {p.nickname[0].toUpperCase()}
+                      {p.isMe && (
+                        <span className={isMicOn ? styles.micDot : styles.mutedDot} />
+                      )}
+                    </div>
+                  </div>
+                  <div className={styles.participantMeta}>
+                    <span className={styles.participantName}>
+                      {p.nickname}
+                      {p.isMe && <span className={styles.meBadge}>나</span>}
+                      {p.isOwner && <span className={styles.ownerBadge}>방장</span>}
+                    </span>
+                    <span className={`${styles.levelBadge} ${getLevelTierClass(p.level)}`}>
+                      Lv.{p.level}
+                    </span>
+                  </div>
+                  {!p.isMe && canInteract && (
+                    <span className={`${styles.chevron} ${isExpanded ? styles.chevronOpen : ""}`}>
+                      ›
+                    </span>
+                  )}
+                </div>
+                {isExpanded && (
+                  <div className={styles.participantActions}>
+                    {isKickConfirming ? (
+                      <>
+                        <span className={styles.kickConfirmText}>
+                          {p.nickname}님을 퇴장시킬까요?
+                        </span>
+                        <button
+                          className={styles.actionBtn}
+                          onClick={() => setKickConfirmFor(null)}
+                        >
+                          취소
+                        </button>
+                        <button
+                          className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                          onClick={() => {
+                            kickParticipant(p.sessionId);
+                            setActiveDropdown(null);
+                            setKickConfirmFor(null);
+                          }}
+                        >
+                          퇴장
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {amIOwner && (
+                          <button
+                            className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                            onClick={() => setKickConfirmFor(p.sessionId)}
+                          >
+                            강제퇴장
+                          </button>
+                        )}
+                        <button
+                          className={styles.actionBtn}
+                          onClick={() => {
+                            setDmTarget(p);
+                            setActiveDropdown(null);
+                          }}
+                        >
+                          쪽지보내기
+                        </button>
+                        <button
+                          className={`${styles.actionBtn} ${styles.actionBtnWarn}`}
+                          onClick={() => {
+                            setReportTarget(p);
+                            setActiveDropdown(null);
+                          }}
+                        >
+                          신고하기
+                        </button>
+                      </>
                     )}
                   </div>
                 )}
-                {activeDropdown === p.sessionId && dropdownAnchor && (
-                  <ParticipantDropdown
-                    nickname={p.nickname}
-                    level={p.level}
-                    isOwner={p.isOwner}
-                    amIOwner={amIOwner}
-                    anchor={dropdownAnchor}
-                    onKick={() => {
-                      kickParticipant(p.sessionId);
-                      setActiveDropdown(null);
-                      setDropdownAnchor(null);
-                    }}
-                    onMessage={() => {
-                      setDmTarget(p);
-                      setActiveDropdown(null);
-                      setDropdownAnchor(null);
-                    }}
-                    onReport={() => {
-                      setReportTarget(p);
-                      setActiveDropdown(null);
-                      setDropdownAnchor(null);
-                    }}
-                    onClose={() => {
-                      setActiveDropdown(null);
-                      setDropdownAnchor(null);
-                    }}
-                  />
-                )}
               </div>
-              <div className={styles.participantMeta}>
-                <span className={styles.participantName}>
-                  {p.nickname}
-                  {p.isMe && <span className={styles.meBadge}>나</span>}
-                  {p.isOwner && <span className={styles.ownerBadge}>방장</span>}
-                </span>
-                <span className={`${styles.levelBadge} ${getLevelTierClass(p.level)}`}>
-                  Lv.{p.level}
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
