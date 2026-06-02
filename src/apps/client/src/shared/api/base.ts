@@ -18,7 +18,7 @@ let pendingRefresh: Promise<string | null> | null = null
 // 서버: 절대 URL 사용 → 백엔드 직접 호출
 const getApiBase = () => (typeof window !== 'undefined' ? '' : env.API_BASE_URL)
 
-const getStoredToken = (): string | null => {
+export const getStoredToken = (): string | null => {
   if (typeof window === 'undefined') return null
   try {
     const raw = localStorage.getItem('auth')
@@ -28,7 +28,16 @@ const getStoredToken = (): string | null => {
   }
 }
 
-const tryRefresh = (): Promise<string | null> => {
+export const isTokenExpired = (token: string): boolean => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.exp * 1000 < Date.now()
+  } catch {
+    return true
+  }
+}
+
+export const tryRefresh = (): Promise<string | null> => {
   if (isRefreshing) return pendingRefresh!
 
   isRefreshing = true

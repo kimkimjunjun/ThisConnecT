@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { tryRefresh, isTokenExpired } from '@/shared/api'
 import {
   createStompClient,
   type ChatMessageResponse,
@@ -101,10 +102,17 @@ export const useRoom = (
 
     let cancelled = false
 
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       if (cancelled || isDuplicateRef.current) return
 
-      const client = createStompClient(accessToken)
+      // 토큰이 만료된 경우 재발급 후 STOMP 연결
+      if (isTokenExpired(accessToken)) {
+        await tryRefresh()
+      }
+
+      if (cancelled || isDuplicateRef.current) return
+
+      const client = createStompClient()
 
       client.onConnect = () => {
         if (cancelled) {
