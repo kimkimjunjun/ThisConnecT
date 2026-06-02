@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useMailbox, sendDirectMessage } from '@/features/message'
+import { ReportModal } from '@/views/room'
 import styles from './MailboxView.module.scss'
 
 type Tab = 'inbox' | 'outbox'
@@ -24,6 +25,7 @@ export const MailboxView = () => {
   const [replySending, setReplySending] = useState(false)
   const [replyError, setReplyError] = useState<string | null>(null)
   const [replySuccess, setReplySuccess] = useState(false)
+  const [reportingNickname, setReportingNickname] = useState<string | null>(null)
 
   const { messages, loading, error, markRead } = useMailbox(tab)
 
@@ -160,12 +162,20 @@ export const MailboxView = () => {
 
                     {tab === 'inbox' && (
                       <div className={styles.replySection}>
-                        <button
-                          className={`${styles.replyToggleBtn} ${isReplying ? styles.replyToggleBtnActive : ''}`}
-                          onClick={() => handleReplyToggle(msg.id, msg.title)}
-                        >
-                          답장하기
-                        </button>
+                        <div className={styles.actionBtns}>
+                          <button
+                            className={`${styles.replyToggleBtn} ${isReplying ? styles.replyToggleBtnActive : ''}`}
+                            onClick={() => handleReplyToggle(msg.id, msg.title)}
+                          >
+                            답장하기
+                          </button>
+                          <button
+                            className={styles.reportBtn}
+                            onClick={() => setReportingNickname(msg.senderNickname)}
+                          >
+                            신고하기
+                          </button>
+                        </div>
 
                         {isReplying && (
                           <div className={styles.replyForm}>
@@ -214,6 +224,14 @@ export const MailboxView = () => {
             )
           })}
         </ul>
+      )}
+
+      {reportingNickname && (
+        <ReportModal
+          targetNickname={reportingNickname}
+          targetMemberId={undefined}
+          onClose={() => setReportingNickname(null)}
+        />
       )}
     </div>
   )

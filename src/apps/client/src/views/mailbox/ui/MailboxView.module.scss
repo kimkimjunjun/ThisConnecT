@@ -202,6 +202,11 @@ $danger: #f23f42;
   gap: $spacing-3;
 }
 
+.actionBtns {
+  display: flex;
+  gap: $spacing-2;
+}
+
 .replyToggleBtn {
   align-self: flex-start;
   padding: $spacing-2 $spacing-3;
@@ -223,6 +228,23 @@ $danger: #f23f42;
 .replyToggleBtnActive {
   background-color: $accent;
   color: #fff;
+}
+
+.reportBtn {
+  padding: $spacing-2 $spacing-3;
+  border-radius: $radius-md;
+  background-color: rgba($danger, 0.12);
+  color: $danger;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  border: 1px solid rgba($danger, 0.25);
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    background-color: $danger;
+    color: #fff;
+  }
 }
 
 .replyForm {
