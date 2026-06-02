@@ -1,0 +1,331 @@
+@use "../../../shared/styles/variables" as *;
+@use "../../../shared/styles/mixins" as *;
+
+$bg-primary: #313338;
+$bg-secondary: #2b2d31;
+$bg-item: #232428;
+$border-color: rgba(255, 255, 255, 0.06);
+$text-primary: #dbdee1;
+$text-muted: #949ba4;
+$accent: #5865f2;
+$accent-hover: #4752c4;
+$success: #3ba55d;
+$danger: #f23f42;
+
+.container {
+  @include flex-col;
+  height: 100%;
+  overflow-y: auto;
+  padding: $spacing-8;
+  gap: $spacing-6;
+  background-color: $bg-primary;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: $radius-full;
+  }
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.header {
+  padding-bottom: $spacing-4;
+  border-bottom: 1px solid $border-color;
+}
+
+.title {
+  font-size: $text-xl;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+.tabs {
+  display: flex;
+  gap: $spacing-1;
+  background-color: $bg-item;
+  border-radius: $radius-lg;
+  padding: $spacing-1;
+  width: fit-content;
+}
+
+.tab {
+  padding: $spacing-2 $spacing-4;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  color: $text-muted;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color $transition-fast, color $transition-fast;
+  &:hover { color: $text-primary; }
+}
+
+.tabActive {
+  background-color: $accent;
+  color: #fff;
+  &:hover { color: #fff; }
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+.stateBox {
+  @include flex-center;
+  flex: 1;
+  min-height: 160px;
+}
+
+.stateText {
+  font-size: $text-sm;
+  color: $text-muted;
+}
+
+// ─── List ─────────────────────────────────────────────────────────────────────
+.list {
+  @include flex-col;
+  gap: $spacing-2;
+  list-style: none;
+}
+
+.item {
+  background-color: $bg-secondary;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  transition: border-color $transition-fast;
+  &:hover { border-color: rgba(255, 255, 255, 0.12); }
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-4;
+  width: 100%;
+  padding: $spacing-4;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.itemMeta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  min-width: 0;
+  flex: 1;
+}
+
+// ─── Read / Unread badges ─────────────────────────────────────────────────────
+.badgeUnread {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  padding: 2px $spacing-2;
+  border-radius: $radius-full;
+  background-color: rgba($danger, 0.15);
+  color: $danger;
+  white-space: nowrap;
+}
+
+.badgeRead {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: $font-weight-medium;
+  padding: 2px $spacing-2;
+  border-radius: $radius-full;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+.itemTitle {
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  @include text-ellipsis;
+}
+
+.itemParty {
+  flex-shrink: 0;
+  font-size: $text-xs;
+  color: $text-muted;
+  background-color: $bg-item;
+  padding: 2px $spacing-2;
+  border-radius: $radius-sm;
+  white-space: nowrap;
+}
+
+.itemRight {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  flex-shrink: 0;
+}
+
+.itemDate {
+  font-size: $text-xs;
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+.chevron {
+  font-size: $text-xs;
+  color: $text-muted;
+  transition: transform $transition-fast;
+  display: inline-block;
+  user-select: none;
+}
+
+.chevronOpen { transform: rotate(180deg); }
+
+// ─── Expanded body ────────────────────────────────────────────────────────────
+.itemBody {
+  @include flex-col;
+  gap: $spacing-3;
+  padding: 0 $spacing-4 $spacing-4;
+}
+
+.itemContent {
+  font-size: $text-sm;
+  color: $text-primary;
+  line-height: $leading-relaxed;
+  padding: $spacing-3;
+  background-color: $bg-item;
+  border-radius: $radius-md;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+// ─── Reply section ────────────────────────────────────────────────────────────
+.replySection {
+  @include flex-col;
+  gap: $spacing-3;
+}
+
+.actionBtns {
+  display: flex;
+  gap: $spacing-2;
+}
+
+.replyToggleBtn {
+  align-self: flex-start;
+  padding: $spacing-2 $spacing-3;
+  border-radius: $radius-md;
+  background-color: rgba($accent, 0.15);
+  color: $accent;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  border: 1px solid rgba($accent, 0.3);
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    background-color: $accent;
+    color: #fff;
+  }
+}
+
+.replyToggleBtnActive {
+  background-color: $accent;
+  color: #fff;
+}
+
+.reportBtn {
+  padding: $spacing-2 $spacing-3;
+  border-radius: $radius-md;
+  background-color: rgba($danger, 0.12);
+  color: $danger;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  border: 1px solid rgba($danger, 0.25);
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    background-color: $danger;
+    color: #fff;
+  }
+}
+
+.replyForm {
+  @include flex-col;
+  gap: $spacing-2;
+  padding: $spacing-4;
+  background-color: $bg-item;
+  border-radius: $radius-md;
+  border: 1px solid rgba($accent, 0.2);
+}
+
+.replyInput {
+  padding: $spacing-2 $spacing-3;
+  background-color: $bg-secondary;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $radius-md;
+  color: $text-primary;
+  font-size: $text-sm;
+  outline: none;
+  transition: border-color $transition-fast;
+
+  &::placeholder { color: $text-muted; }
+  &:focus { border-color: $accent; }
+  &:disabled { opacity: 0.5; }
+}
+
+.replyTextarea {
+  padding: $spacing-2 $spacing-3;
+  background-color: $bg-secondary;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $radius-md;
+  color: $text-primary;
+  font-size: $text-sm;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  transition: border-color $transition-fast;
+
+  &::placeholder { color: $text-muted; }
+  &:focus { border-color: $accent; }
+  &:disabled { opacity: 0.5; }
+}
+
+.replyFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-3;
+}
+
+.replyCharCount {
+  font-size: $text-xs;
+  color: $text-muted;
+  margin-right: auto;
+}
+
+.replyError {
+  font-size: $text-xs;
+  color: $danger;
+}
+
+.replySendBtn {
+  padding: $spacing-2 $spacing-4;
+  border-radius: $radius-md;
+  background-color: $accent;
+  color: #fff;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  border: none;
+  transition: background-color $transition-fast;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) { background-color: $accent-hover; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.replySuccess {
+  font-size: $text-sm;
+  color: $success;
+  text-align: center;
+  padding: $spacing-2 0;
+}

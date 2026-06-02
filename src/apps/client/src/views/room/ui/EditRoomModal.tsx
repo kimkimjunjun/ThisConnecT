@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { updateRoom, type ChannelRoom } from '@/features/channel'
 import styles from './EditRoomModal.module.scss'
 
@@ -16,6 +16,7 @@ export const EditRoomModal = ({ room, channelId, onClose, onUpdated }: Props) =>
   const [maxCount, setMaxCount] = useState(String(room.maxCount))
   const [isLoading, setIsLoading] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const mouseDownOnBackdrop = useRef(false)
 
   const isValid =
     title.trim().length > 0 &&
@@ -51,7 +52,8 @@ export const EditRoomModal = ({ room, channelId, onClose, onUpdated }: Props) =>
   return (
     <div
       className={`${styles.backdrop} ${isClosing ? styles.backdropClosing : ''}`}
-      onClick={handleClose}
+      onMouseDown={(e) => { mouseDownOnBackdrop.current = e.target === e.currentTarget }}
+      onClick={() => { if (mouseDownOnBackdrop.current) handleClose() }}
     >
       <div
         className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`}

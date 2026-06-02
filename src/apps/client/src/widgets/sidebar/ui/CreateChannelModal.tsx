@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { createChannel } from '@/features/channel'
 import styles from './CreateChannelModal.module.scss'
 
@@ -13,6 +13,7 @@ export const CreateChannelModal = ({ onClose, onCreated }: Props) => {
   const [name, setName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const mouseDownOnBackdrop = useRef(false)
 
   const isValid = name.trim().length > 0
 
@@ -42,7 +43,8 @@ export const CreateChannelModal = ({ onClose, onCreated }: Props) => {
   return (
     <div
       className={`${styles.backdrop} ${isClosing ? styles.backdropClosing : ''}`}
-      onClick={handleClose}
+      onMouseDown={(e) => { mouseDownOnBackdrop.current = e.target === e.currentTarget }}
+      onClick={() => { if (mouseDownOnBackdrop.current) handleClose() }}
     >
       <div
         className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`}

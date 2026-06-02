@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createReport } from '@/features/report'
 import { getMemberIdByNickname } from '@/features/member'
 import styles from './ActionModal.module.scss'
@@ -19,6 +19,7 @@ export const ReportModal = ({ targetNickname, targetMemberId: initialMemberId, o
   const [success, setSuccess] = useState(false)
   const [memberId, setMemberId] = useState<number | undefined>(initialMemberId)
   const [isFetchingId, setIsFetchingId] = useState(false)
+  const mouseDownOnBackdrop = useRef(false)
 
   useEffect(() => {
     if (initialMemberId != null) return
@@ -54,7 +55,8 @@ export const ReportModal = ({ targetNickname, targetMemberId: initialMemberId, o
   return (
     <div
       className={`${styles.backdrop} ${isClosing ? styles.backdropClosing : ''}`}
-      onClick={handleClose}
+      onMouseDown={(e) => { mouseDownOnBackdrop.current = e.target === e.currentTarget }}
+      onClick={() => { if (mouseDownOnBackdrop.current) handleClose() }}
     >
       <div
         className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`}
