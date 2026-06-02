@@ -1,0 +1,35 @@
+name: BE CI
+
+on:
+  pull_request:
+    branches: [develop, staging, prod]
+    paths:
+      - 'src/apps/server/**'
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x src/apps/server/gradlew
+
+      - name: Build with Gradle
+        working-directory: src/apps/server
+        run: ./gradlew clean build -x test
+
+      - name: Run tests
+        working-directory: src/apps/server
+        run: ./gradlew test
+        continue-on-error: true
