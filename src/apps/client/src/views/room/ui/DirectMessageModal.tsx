@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { sendDirectMessage } from '@/features/message'
 import styles from './ActionModal.module.scss'
 
@@ -15,6 +15,7 @@ export const DirectMessageModal = ({ targetNickname, onClose }: Props) => {
   const [isClosing, setIsClosing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const mouseDownOnBackdrop = useRef(false)
 
   const handleClose = () => {
     if (isClosing) return
@@ -39,7 +40,8 @@ export const DirectMessageModal = ({ targetNickname, onClose }: Props) => {
   return (
     <div
       className={`${styles.backdrop} ${isClosing ? styles.backdropClosing : ''}`}
-      onClick={handleClose}
+      onMouseDown={(e) => { mouseDownOnBackdrop.current = e.target === e.currentTarget }}
+      onClick={() => { if (mouseDownOnBackdrop.current) handleClose() }}
     >
       <div
         className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { redirectToKakao, redirectToGoogle } from '../lib/oauth'
 import { postGuestLogin } from '../api/auth-api'
 import { useAuthStore } from '../store/auth-store'
@@ -19,6 +19,7 @@ export const AuthModal = ({ isOpen, onClose }: Props) => {
   const [nickname, setNickname] = useState('')
   const [isPending, setIsPending] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const mouseDownOnBackdrop = useRef(false)
   const setAuth = useAuthStore((s) => s.setAuth)
 
   useEffect(() => {
@@ -60,7 +61,8 @@ export const AuthModal = ({ isOpen, onClose }: Props) => {
   return (
     <div
       className={`${styles.backdrop} ${isClosing ? styles.backdropClosing : ''}`}
-      onClick={handleClose}
+      onMouseDown={(e) => { mouseDownOnBackdrop.current = e.target === e.currentTarget }}
+      onClick={() => { if (mouseDownOnBackdrop.current) handleClose() }}
     >
       <div
         className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`}

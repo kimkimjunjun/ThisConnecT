@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createRoom } from '@/features/channel'
 import styles from './CreateRoomModal.module.scss'
@@ -16,6 +16,7 @@ export const CreateRoomModal = ({ channelId, onClose, onCreated }: Props) => {
   const [maxCount, setMaxCount] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const mouseDownOnBackdrop = useRef(false)
   const router = useRouter()
 
   const isValid = title.trim().length > 0 && parseInt(maxCount, 10) >= 1
@@ -46,7 +47,8 @@ export const CreateRoomModal = ({ channelId, onClose, onCreated }: Props) => {
   return (
     <div
       className={`${styles.backdrop} ${isClosing ? styles.backdropClosing : ''}`}
-      onClick={handleClose}
+      onMouseDown={(e) => { mouseDownOnBackdrop.current = e.target === e.currentTarget }}
+      onClick={() => { if (mouseDownOnBackdrop.current) handleClose() }}
     >
       <div
         className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`}
