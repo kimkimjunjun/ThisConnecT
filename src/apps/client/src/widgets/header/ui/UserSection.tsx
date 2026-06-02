@@ -78,6 +78,15 @@ export default function UserSection({ onLoginClick }: Props) {
               마이페이지
             </button>
           </li>
+          <li role="none">
+            <button
+              className={styles.dropdownItem}
+              role="menuitem"
+              onClick={() => { setOpen(false); router.push('/mailbox') }}
+            >
+              쪽지함
+            </button>
+          </li>
           {role === 'ADMIN' && (
             <li role="none">
               <button

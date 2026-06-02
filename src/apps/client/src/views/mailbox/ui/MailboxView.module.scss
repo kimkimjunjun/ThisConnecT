@@ -1,0 +1,193 @@
+@use "../../../shared/styles/variables" as *;
+@use "../../../shared/styles/mixins" as *;
+
+$bg-primary: #313338;
+$bg-secondary: #2b2d31;
+$bg-item: #232428;
+$border-color: rgba(255, 255, 255, 0.06);
+$text-primary: #dbdee1;
+$text-muted: #949ba4;
+$accent: #5865f2;
+$unread: #3ba55d;
+
+.container {
+  @include flex-col;
+  height: 100%;
+  overflow-y: auto;
+  padding: $spacing-8;
+  gap: $spacing-6;
+  background-color: $bg-primary;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: $radius-full;
+  }
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.header {
+  padding-bottom: $spacing-4;
+  border-bottom: 1px solid $border-color;
+}
+
+.title {
+  font-size: $text-xl;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+.tabs {
+  display: flex;
+  gap: $spacing-1;
+  background-color: $bg-item;
+  border-radius: $radius-lg;
+  padding: $spacing-1;
+  width: fit-content;
+}
+
+.tab {
+  padding: $spacing-2 $spacing-4;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  color: $text-muted;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    color: $text-primary;
+  }
+}
+
+.tabActive {
+  background-color: $accent;
+  color: #fff;
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+.stateBox {
+  @include flex-center;
+  flex: 1;
+  min-height: 160px;
+}
+
+.stateText {
+  font-size: $text-sm;
+  color: $text-muted;
+}
+
+// ─── List ─────────────────────────────────────────────────────────────────────
+.list {
+  @include flex-col;
+  gap: $spacing-2;
+  list-style: none;
+}
+
+.item {
+  background-color: $bg-secondary;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  transition: border-color $transition-fast;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-4;
+  width: 100%;
+  padding: $spacing-4;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.itemMeta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  min-width: 0;
+  flex: 1;
+}
+
+.unreadDot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: $radius-full;
+  background-color: $unread;
+}
+
+.itemTitle {
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  @include text-ellipsis;
+}
+
+.itemParty {
+  flex-shrink: 0;
+  font-size: $text-xs;
+  color: $text-muted;
+  background-color: $bg-item;
+  padding: 2px $spacing-2;
+  border-radius: $radius-sm;
+  white-space: nowrap;
+}
+
+.itemRight {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  flex-shrink: 0;
+}
+
+.itemDate {
+  font-size: $text-xs;
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+.chevron {
+  font-size: $text-xs;
+  color: $text-muted;
+  transition: transform $transition-fast;
+  display: inline-block;
+  user-select: none;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+// ─── Expanded body ────────────────────────────────────────────────────────────
+.itemBody {
+  padding: $spacing-4;
+  padding-top: 0;
+}
+
+.itemContent {
+  font-size: $text-sm;
+  color: $text-primary;
+  line-height: $leading-relaxed;
+  padding: $spacing-3;
+  background-color: $bg-item;
+  border-radius: $radius-md;
+  word-break: break-word;
+  white-space: pre-wrap;
+}

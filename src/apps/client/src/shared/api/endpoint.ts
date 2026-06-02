@@ -25,5 +25,7 @@ export const END_POINT = {
   },
   MESSAGE: {
     SEND: '/api/messages',
+    INBOX: '/api/messages/inbox',
+    OUTBOX: '/api/messages/outbox',
   },
 } as const
