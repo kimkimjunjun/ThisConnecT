@@ -21,6 +21,7 @@ export const END_POINT = {
   },
   REPORT: {
     CREATE: '/api/reports',
+    LIST: '/api/reports',
   },
   MESSAGE: {
     SEND: '/api/messages',
