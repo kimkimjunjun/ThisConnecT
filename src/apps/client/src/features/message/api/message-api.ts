@@ -8,13 +8,13 @@ export type MessageItem = {
   title: string
   content: string
   sentAt: string
-  readAt: string | null
+  isRead: boolean
 }
 
-export const sendDirectMessage = (receiverNickname: string, content: string) =>
+export const sendDirectMessage = (receiverNickname: string, content: string, title?: string) =>
   fetchAPI<void>(END_POINT.MESSAGE.SEND, {
     method: 'POST',
-    body: JSON.stringify({ receiverNickname, content }),
+    body: JSON.stringify({ receiverNickname, content, ...(title ? { title } : {}) }),
   })
 
 export const getInbox = () =>
@@ -22,3 +22,6 @@ export const getInbox = () =>
 
 export const getOutbox = () =>
   fetchAPI<MessageItem[]>(END_POINT.MESSAGE.OUTBOX)
+
+export const markAsRead = (messageId: number) =>
+  fetchAPI<void>(END_POINT.MESSAGE.MARK_READ(messageId), { method: 'PATCH' })

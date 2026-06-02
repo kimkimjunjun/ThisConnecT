@@ -8,7 +8,9 @@ $border-color: rgba(255, 255, 255, 0.06);
 $text-primary: #dbdee1;
 $text-muted: #949ba4;
 $accent: #5865f2;
-$unread: #3ba55d;
+$accent-hover: #4752c4;
+$success: #3ba55d;
+$danger: #f23f42;
 
 .container {
   @include flex-col;
@@ -18,10 +20,7 @@ $unread: #3ba55d;
   gap: $spacing-6;
   background-color: $bg-primary;
 
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
+  &::-webkit-scrollbar { width: 6px; }
   &::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.08);
     border-radius: $radius-full;
@@ -59,19 +58,13 @@ $unread: #3ba55d;
   background: transparent;
   cursor: pointer;
   transition: background-color $transition-fast, color $transition-fast;
-
-  &:hover {
-    color: $text-primary;
-  }
+  &:hover { color: $text-primary; }
 }
 
 .tabActive {
   background-color: $accent;
   color: #fff;
-
-  &:hover {
-    color: #fff;
-  }
+  &:hover { color: #fff; }
 }
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -99,10 +92,7 @@ $unread: #3ba55d;
   border-radius: $radius-lg;
   overflow: hidden;
   transition: border-color $transition-fast;
-
-  &:hover {
-    border-color: rgba(255, 255, 255, 0.12);
-  }
+  &:hover { border-color: rgba(255, 255, 255, 0.12); }
 }
 
 .itemHeader {
@@ -125,12 +115,27 @@ $unread: #3ba55d;
   flex: 1;
 }
 
-.unreadDot {
+// ─── Read / Unread badges ─────────────────────────────────────────────────────
+.badgeUnread {
   flex-shrink: 0;
-  width: 8px;
-  height: 8px;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  padding: 2px $spacing-2;
   border-radius: $radius-full;
-  background-color: $unread;
+  background-color: rgba($danger, 0.15);
+  color: $danger;
+  white-space: nowrap;
+}
+
+.badgeRead {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: $font-weight-medium;
+  padding: 2px $spacing-2;
+  border-radius: $radius-full;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: $text-muted;
+  white-space: nowrap;
 }
 
 .itemTitle {
@@ -171,14 +176,13 @@ $unread: #3ba55d;
   user-select: none;
 }
 
-.chevronOpen {
-  transform: rotate(180deg);
-}
+.chevronOpen { transform: rotate(180deg); }
 
 // ─── Expanded body ────────────────────────────────────────────────────────────
 .itemBody {
-  padding: $spacing-4;
-  padding-top: 0;
+  @include flex-col;
+  gap: $spacing-3;
+  padding: 0 $spacing-4 $spacing-4;
 }
 
 .itemContent {
@@ -190,4 +194,116 @@ $unread: #3ba55d;
   border-radius: $radius-md;
   word-break: break-word;
   white-space: pre-wrap;
+}
+
+// ─── Reply section ────────────────────────────────────────────────────────────
+.replySection {
+  @include flex-col;
+  gap: $spacing-3;
+}
+
+.replyToggleBtn {
+  align-self: flex-start;
+  padding: $spacing-2 $spacing-3;
+  border-radius: $radius-md;
+  background-color: rgba($accent, 0.15);
+  color: $accent;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  border: 1px solid rgba($accent, 0.3);
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    background-color: $accent;
+    color: #fff;
+  }
+}
+
+.replyToggleBtnActive {
+  background-color: $accent;
+  color: #fff;
+}
+
+.replyForm {
+  @include flex-col;
+  gap: $spacing-2;
+  padding: $spacing-4;
+  background-color: $bg-item;
+  border-radius: $radius-md;
+  border: 1px solid rgba($accent, 0.2);
+}
+
+.replyInput {
+  padding: $spacing-2 $spacing-3;
+  background-color: $bg-secondary;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $radius-md;
+  color: $text-primary;
+  font-size: $text-sm;
+  outline: none;
+  transition: border-color $transition-fast;
+
+  &::placeholder { color: $text-muted; }
+  &:focus { border-color: $accent; }
+  &:disabled { opacity: 0.5; }
+}
+
+.replyTextarea {
+  padding: $spacing-2 $spacing-3;
+  background-color: $bg-secondary;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $radius-md;
+  color: $text-primary;
+  font-size: $text-sm;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  transition: border-color $transition-fast;
+
+  &::placeholder { color: $text-muted; }
+  &:focus { border-color: $accent; }
+  &:disabled { opacity: 0.5; }
+}
+
+.replyFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-3;
+}
+
+.replyCharCount {
+  font-size: $text-xs;
+  color: $text-muted;
+  margin-right: auto;
+}
+
+.replyError {
+  font-size: $text-xs;
+  color: $danger;
+}
+
+.replySendBtn {
+  padding: $spacing-2 $spacing-4;
+  border-radius: $radius-md;
+  background-color: $accent;
+  color: #fff;
+  font-size: $text-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  border: none;
+  transition: background-color $transition-fast;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) { background-color: $accent-hover; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.replySuccess {
+  font-size: $text-sm;
+  color: $success;
+  text-align: center;
+  padding: $spacing-2 0;
 }

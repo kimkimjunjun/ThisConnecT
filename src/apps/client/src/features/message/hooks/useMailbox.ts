@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { getInbox, getOutbox, type MessageItem } from '../api/message-api'
+import { useState, useEffect, useCallback } from 'react'
+import { getInbox, getOutbox, markAsRead, type MessageItem } from '../api/message-api'
 
 export const useMailbox = (tab: 'inbox' | 'outbox') => {
   const [messages, setMessages] = useState<MessageItem[]>([])
@@ -16,5 +16,16 @@ export const useMailbox = (tab: 'inbox' | 'outbox') => {
       .finally(() => setLoading(false))
   }, [tab])
 
-  return { messages, loading, error }
+  const markRead = useCallback((messageId: number) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, isRead: true } : m))
+    )
+    markAsRead(messageId).catch(() => {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, isRead: false } : m))
+      )
+    })
+  }, [])
+
+  return { messages, loading, error, markRead }
 }
