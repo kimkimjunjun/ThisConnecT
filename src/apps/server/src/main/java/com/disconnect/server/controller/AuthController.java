@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -29,6 +30,9 @@ public class AuthController {
     private static final int REFRESH_MAX_AGE = 7 * 24 * 60 * 60; // 7d
 
     private final AuthService authService;
+
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
 
     @Operation(summary = "게스트 로그인", description = "닉네임만 입력해 비회원으로 로그인합니다. DB에 저장되지 않으며 role은 GUEST로 발급됩니다.")
     @ApiResponses({
@@ -98,7 +102,7 @@ public class AuthController {
     private void setRefreshCookie(HttpServletResponse response, String value) {
         ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE, value)
                 .httpOnly(true)
-                .secure(false) // prod: true
+                .secure(cookieSecure)
                 .path("/api/auth")
                 .maxAge(REFRESH_MAX_AGE)
                 .sameSite("Lax")
