@@ -1,53 +1,53 @@
-'use client'
+"use client";
 
-import { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuthStore, logout } from '@/features/auth'
-import styles from './AppHeader.module.scss'
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore, logout } from "@/features/auth";
+import styles from "./AppHeader.module.scss";
 
 type Props = {
-  onLoginClick: () => void
-}
+  onLoginClick: () => void;
+};
 
 export default function UserSection({ onLoginClick }: Props) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  const router = useRouter()
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
-  const accessToken = useAuthStore((s) => s.accessToken)
-  const nickname = useAuthStore((s) => s.nickname)
-  const role = useAuthStore((s) => s.role)
-  const clearAuth = useAuthStore((s) => s.clearAuth)
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const nickname = useAuthStore((s) => s.nickname);
+  const role = useAuthStore((s) => s.role);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
+        setOpen(false);
       }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const handleLogout = async () => {
-    setOpen(false)
+    setOpen(false);
     try {
-      await logout()
+      await logout();
     } finally {
-      clearAuth()
-      router.push('/')
+      clearAuth();
+      router.push("/");
     }
-  }
+  };
 
   if (!accessToken) {
     return (
       <button className={styles.loginButton} onClick={onLoginClick}>
         로그인
       </button>
-    )
+    );
   }
 
-  const avatarChar = nickname ? nickname[0].toUpperCase() : '?'
+  const avatarChar = nickname ? nickname[0].toUpperCase() : "?";
 
   return (
     <div className={styles.userSection} ref={ref}>
@@ -58,11 +58,13 @@ export default function UserSection({ onLoginClick }: Props) {
         aria-expanded={open}
       >
         <span className={styles.avatar}>{avatarChar}</span>
-        <span className={styles.userName}>{nickname ?? '비회원'}</span>
-        <span className={`${styles.role} ${role === 'ADMIN' ? styles.roleAdmin : ''}`}>
-          {role === 'ADMIN' ? '관리자' : role === 'GUEST' ? '게스트' : '멤버'}
+        <span className={styles.userName}>{nickname ?? "비회원"}</span>
+        <span
+          className={`${styles.role} ${role === "ADMIN" ? styles.roleAdmin : ""}`}
+        >
+          {role === "ADMIN" ? "관리자" : role === "GUEST" ? "게스트" : "멤버"}
         </span>
-        <span className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}>
+        <span className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`}>
           ▾
         </span>
       </button>
@@ -73,26 +75,37 @@ export default function UserSection({ onLoginClick }: Props) {
             <button
               className={styles.dropdownItem}
               role="menuitem"
-              onClick={() => { setOpen(false); router.push('/mypage') }}
+              onClick={() => {
+                setOpen(false);
+                router.push("/mypage");
+              }}
             >
               마이페이지
             </button>
           </li>
-          <li role="none">
-            <button
-              className={styles.dropdownItem}
-              role="menuitem"
-              onClick={() => { setOpen(false); router.push('/mailbox') }}
-            >
-              쪽지함
-            </button>
-          </li>
-          {role === 'ADMIN' && (
+          {role !== "GUEST" && (
             <li role="none">
               <button
                 className={styles.dropdownItem}
                 role="menuitem"
-                onClick={() => { setOpen(false); router.push('/reports') }}
+                onClick={() => {
+                  setOpen(false);
+                  router.push("/mailbox");
+                }}
+              >
+                쪽지함
+              </button>
+            </li>
+          )}
+          {role === "ADMIN" && (
+            <li role="none">
+              <button
+                className={styles.dropdownItem}
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false);
+                  router.push("/reports");
+                }}
               >
                 신고내역
               </button>
@@ -113,5 +126,5 @@ export default function UserSection({ onLoginClick }: Props) {
         </ul>
       )}
     </div>
-  )
+  );
 }
