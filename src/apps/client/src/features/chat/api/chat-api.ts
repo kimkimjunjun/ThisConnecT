@@ -1,5 +1,6 @@
 import { Client } from '@stomp/stompjs'
 import { env } from '@/shared/config'
+import { getStoredToken } from '@/shared/api'
 
 export type ChatMessageResponse = {
   type: 'CHAT' | 'JOIN' | 'LEAVE'
@@ -42,11 +43,16 @@ export type VoiceSignalResponse = {
 
 const WS_URL = env.API_BASE_URL.replace(/^http/, 'ws') + '/ws'
 
-export const createStompClient = (accessToken: string): Client =>
-  new Client({
+export const createStompClient = (): Client => {
+  const client = new Client({
     brokerURL: WS_URL,
-    connectHeaders: {
-      Authorization: `Bearer ${accessToken}`,
-    },
     reconnectDelay: 5000,
   })
+  // beforeConnect은 최초 연결 및 모든 재연결 시 호출되므로
+  // 토큰 갱신 후에도 항상 최신 토큰을 사용할 수 있음
+  client.beforeConnect = () => {
+    const token = getStoredToken()
+    client.connectHeaders = { Authorization: `Bearer ${token ?? ''}` }
+  }
+  return client
+}
