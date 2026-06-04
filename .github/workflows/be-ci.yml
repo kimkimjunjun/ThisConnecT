@@ -32,4 +32,3 @@ jobs:
       - name: Run tests
         working-directory: src/apps/server
         run: ./gradlew test
-        continue-on-error: true
