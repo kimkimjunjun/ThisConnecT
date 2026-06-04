@@ -80,7 +80,7 @@ ThisConnecT은 Discord에서 영감을 받은 실시간 채팅 + 쪽지(DM) + �
 ### 모노레포 구조
 
 ```
-disconnect/
+thisconnect/
 ├── src/
 │   ├── apps/
 │   │   ├── client/          # Next.js 16
@@ -139,7 +139,7 @@ features/<domain>/
 ### Backend — Layered Architecture
 
 ```
-com.disconnect.server/
+com.thisconnect.server/
 ├── controller/              # REST + WebSocket 컨트롤러
 ├── service/                 # 비즈니스 로직
 ├── repository/              # Spring Data JPA 인터페이스
