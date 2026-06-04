@@ -80,15 +80,16 @@ const useMicLevel = (enabled: boolean, noiseSuppression: boolean): number => {
         if (cancelled) { s.getTracks().forEach((t) => t.stop()); return }
         stream = s
         ctx = new AudioContext()
+        if (ctx.state === 'suspended') ctx.resume().catch(() => {})
         const analyser = ctx.createAnalyser()
-        analyser.fftSize = 256
+        analyser.fftSize = 512
         ctx.createMediaStreamSource(stream).connect(analyser)
-        const data = new Uint8Array(analyser.frequencyBinCount)
+        const data = new Uint8Array(analyser.fftSize)
         const tick = () => {
           if (cancelled) return
-          analyser.getByteFrequencyData(data)
-          const avg = data.reduce((sum, v) => sum + v, 0) / data.length
-          setLevel(Math.round((avg / 255) * 100))
+          analyser.getByteTimeDomainData(data)
+          const rms = Math.sqrt(data.reduce((sum, v) => sum + (v - 128) ** 2, 0) / data.length)
+          setLevel(Math.min(100, Math.round((rms / 64) * 100)))
           rafRef.current = requestAnimationFrame(tick)
         }
         rafRef.current = requestAnimationFrame(tick)

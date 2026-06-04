@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import type { ParticipantInfo, VoiceSignalRequest, VoiceSignalResponse } from '../api/chat-api'
 
 const ICE_SERVERS: RTCIceServer[] = [
@@ -32,9 +32,17 @@ export const useVoiceChat = ({
   const localStreamRef = useRef<MediaStream | null>(null)
   const initialDoneRef = useRef(false)
 
+  // localStream 준비 여부 — OFFER 전송 타이밍 게이트
+  const [localStreamReady, setLocalStreamReady] = useState(false)
+
+  // 마이크 발화 감지
+  const [isMySpeaking, setIsMySpeaking] = useState(false)
+  const animFrameRef = useRef<number | null>(null)
+  const isMicOnRef = useRef(isMicOn)
+  useEffect(() => { isMicOnRef.current = isMicOn }, [isMicOn])
+
   const [peerAudio, setPeerAudio] = useState<Record<string, PeerAudioState>>({})
 
-  // 최신 값을 ref로 유지해 peer connection 콜백에서 클로저 문제 방지
   const sendSignalRef = useRef(sendVoiceSignal)
   const isSpeakerOnRef = useRef(isSpeakerOn)
   const speakerVolumeRef = useRef(speakerVolume)
@@ -44,13 +52,14 @@ export const useVoiceChat = ({
   useEffect(() => { speakerVolumeRef.current = speakerVolume }, [speakerVolume])
   useEffect(() => { peerAudioRef.current = peerAudio }, [peerAudio])
 
-  // 마이크 스트림 획득
+  // 마이크 스트림 획득 — 완료 시 localStreamReady = true
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ audio: true, video: false })
       .then((stream) => {
         localStreamRef.current = stream
         stream.getAudioTracks().forEach((t) => { t.enabled = isMicOn })
+        setLocalStreamReady(true)
       })
       .catch(() => {})
 
@@ -65,7 +74,7 @@ export const useVoiceChat = ({
     localStreamRef.current?.getAudioTracks().forEach((t) => { t.enabled = isMicOn })
   }, [isMicOn])
 
-  // 글로벌 스피커 상태/볼륨 변경 시 모든 오디오에 반영 (per-user 설정 우선)
+  // 글로벌 스피커 상태/볼륨 변경 시 모든 오디오에 반영
   useEffect(() => {
     audiosRef.current.forEach((audio, sessionId) => {
       const userState = peerAudioRef.current[sessionId]
@@ -82,6 +91,7 @@ export const useVoiceChat = ({
 
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS })
 
+    // 로컬 스트림 트랙 추가 — stream이 준비된 시점에 호출되므로 항상 존재
     localStreamRef.current?.getTracks().forEach((track) => {
       pc.addTrack(track, localStreamRef.current!)
     })
@@ -95,9 +105,9 @@ export const useVoiceChat = ({
       })
     }
 
-    pc.ontrack = ({ streams }) => {
-      const stream = streams[0]
-      if (!stream) return
+    pc.ontrack = ({ track, streams }) => {
+      // streams[0]이 없는 경우를 대비해 track으로 직접 MediaStream 생성
+      const stream = streams[0] ?? new MediaStream([track])
 
       let audio = audiosRef.current.get(remoteId)
       if (!audio) {
@@ -105,7 +115,12 @@ export const useVoiceChat = ({
         audio.autoplay = true
         audiosRef.current.set(remoteId, audio)
       }
-      audio.srcObject = stream
+
+      if (audio.srcObject !== stream) {
+        audio.srcObject = stream
+        // 브라우저 autoplay 정책 우회를 위해 명시적 play() 호출
+        audio.play().catch(() => {})
+      }
 
       const userState = peerAudioRef.current[remoteId]
       const userMuted = userState?.muted ?? false
@@ -113,7 +128,6 @@ export const useVoiceChat = ({
       audio.muted = !isSpeakerOnRef.current || userMuted
       audio.volume = Math.min(1, (speakerVolumeRef.current / 100) * (userVolume / 100))
 
-      // 첫 연결 시 peerAudio 기본값 초기화
       setPeerAudio((prev) => {
         if (prev[remoteId]) return prev
         return { ...prev, [remoteId]: { muted: false, volume: 100 } }
@@ -180,9 +194,11 @@ export const useVoiceChat = ({
     return () => setVoiceSignalCallback(null)
   }, [setVoiceSignalCallback, handleSignal])
 
-  // 입장 시 기존 참여자에게 OFFER 전송 (최초 1회)
+  // 입장 시 기존 참여자에게 OFFER 전송
+  // localStreamReady가 true일 때만 실행 — getUserMedia 완료 전에 OFFER를 보내면
+  // 오디오 트랙이 없는 OFFER가 전송되어 상대방이 소리를 들을 수 없음
   useEffect(() => {
-    if (!mySessionId || initialDoneRef.current) return
+    if (!mySessionId || !localStreamReady || initialDoneRef.current) return
     initialDoneRef.current = true
 
     participants
@@ -197,9 +213,9 @@ export const useVoiceChat = ({
           // ignore
         }
       })
-  }, [mySessionId, participants, getOrCreatePc])
+  }, [mySessionId, participants, getOrCreatePc, localStreamReady])
 
-  // 퇴장한 참여자 정리
+  // 퇴장한 참여자 WebRTC/Audio 정리 — setState는 호출하지 않음 (React Compiler 규칙)
   useEffect(() => {
     const currentIds = new Set(participants.map((p) => p.sessionId))
     pcsRef.current.forEach((pc, sessionId) => {
@@ -213,18 +229,65 @@ export const useVoiceChat = ({
         }
       }
     })
-    setPeerAudio((prev) => {
-      const next = { ...prev }
-      let changed = false
-      Object.keys(next).forEach((id) => {
-        if (!currentIds.has(id)) {
-          delete next[id]
-          changed = true
-        }
-      })
-      return changed ? next : prev
-    })
   }, [participants])
+
+  // 퇴장한 참여자를 peerAudio에서 필터링 — effect 내 setState 대신 useMemo로 파생
+  const activePeerAudio = useMemo(() => {
+    const currentIds = new Set(participants.map((p) => p.sessionId))
+    const filtered: Record<string, PeerAudioState> = {}
+    for (const [id, state] of Object.entries(peerAudio)) {
+      if (currentIds.has(id)) filtered[id] = state
+    }
+    return filtered
+  }, [participants, peerAudio])
+
+  // 마이크 발화 감지 — localStreamReady 이후 AudioContext + AnalyserNode 루프
+  useEffect(() => {
+    if (!localStreamReady || !localStreamRef.current) return
+
+    let ctx: AudioContext | null = null
+    let source: MediaStreamAudioSourceNode | null = null
+    let analyser: AnalyserNode | null = null
+    let frameId: number | null = null
+
+    try {
+      ctx = new AudioContext()
+      // 브라우저 autoplay 정책으로 suspended 상태가 될 수 있으므로 명시적 resume
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {})
+
+      source = ctx.createMediaStreamSource(localStreamRef.current)
+      analyser = ctx.createAnalyser()
+      analyser.fftSize = 512
+      source.connect(analyser)
+
+      // 시간 도메인(time-domain) RMS — 주파수 도메인보다 발화 감지에 정확함
+      const buf = new Uint8Array(analyser.fftSize)
+
+      const tick = () => {
+        frameId = requestAnimationFrame(tick)
+        if (!analyser || !isMicOnRef.current) {
+          setIsMySpeaking((prev) => (prev ? false : prev))
+          return
+        }
+        analyser.getByteTimeDomainData(buf)
+        // 128이 무음 기준값, 편차의 RMS로 진폭 측정
+        const rms = Math.sqrt(buf.reduce((s, v) => s + (v - 128) ** 2, 0) / buf.length)
+        const speaking = rms > 8
+        setIsMySpeaking((prev) => (prev === speaking ? prev : speaking))
+      }
+
+      frameId = requestAnimationFrame(tick)
+    } catch {
+      // AudioContext 불가 환경 무시
+    }
+
+    return () => {
+      if (frameId !== null) cancelAnimationFrame(frameId)
+      source?.disconnect()
+      ctx?.close().catch(() => {})
+      setIsMySpeaking(false)
+    }
+  }, [localStreamReady])
 
   // 언마운트 시 전체 정리
   useEffect(() => {
@@ -236,5 +299,5 @@ export const useVoiceChat = ({
     }
   }, [])
 
-  return { peerAudio, setParticipantMuted, setParticipantVolume }
+  return { peerAudio: activePeerAudio, setParticipantMuted, setParticipantVolume, isMySpeaking }
 }
