@@ -2,7 +2,7 @@ name: FE CI
 
 on:
   pull_request:
-    branches: [develop, staging, prod]
+    branches: [develop, prod]
     paths:
       - 'src/apps/client/**'
 
