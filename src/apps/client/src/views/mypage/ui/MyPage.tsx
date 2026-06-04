@@ -66,6 +66,7 @@ const useMicLevel = (enabled: boolean, noiseSuppression: boolean): number => {
     let cancelled = false
     let stream: MediaStream | null = null
     let ctx: AudioContext | null = null
+    let tryResume: (() => void) | null = null
 
     navigator.mediaDevices
       .getUserMedia({
@@ -81,18 +82,34 @@ const useMicLevel = (enabled: boolean, noiseSuppression: boolean): number => {
         stream = s
         ctx = new AudioContext()
         if (ctx.state === 'suspended') ctx.resume().catch(() => {})
+
+        tryResume = () => {
+          if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {})
+        }
+
         const analyser = ctx.createAnalyser()
         analyser.fftSize = 512
         ctx.createMediaStreamSource(stream).connect(analyser)
         const data = new Uint8Array(analyser.fftSize)
         const tick = () => {
           if (cancelled) return
+          // suspended 상태면 resume 요청 후 이 프레임은 건너뜀
+          if (ctx?.state === 'suspended') {
+            tryResume?.()
+            rafRef.current = requestAnimationFrame(tick)
+            return
+          }
           analyser.getByteTimeDomainData(data)
           const rms = Math.sqrt(data.reduce((sum, v) => sum + (v - 128) ** 2, 0) / data.length)
           setLevel(Math.min(100, Math.round((rms / 64) * 100)))
           rafRef.current = requestAnimationFrame(tick)
         }
         rafRef.current = requestAnimationFrame(tick)
+
+        // 클릭·키입력·탭 복귀 시 suspended AudioContext 자동 복구
+        document.addEventListener('click', tryResume)
+        document.addEventListener('keydown', tryResume)
+        document.addEventListener('visibilitychange', tryResume)
       })
       .catch(() => {})
 
@@ -101,6 +118,11 @@ const useMicLevel = (enabled: boolean, noiseSuppression: boolean): number => {
       cancelAnimationFrame(rafRef.current)
       stream?.getTracks().forEach((t) => t.stop())
       ctx?.close()
+      if (tryResume) {
+        document.removeEventListener('click', tryResume)
+        document.removeEventListener('keydown', tryResume)
+        document.removeEventListener('visibilitychange', tryResume)
+      }
     }
   }, [enabled, noiseSuppression])
 

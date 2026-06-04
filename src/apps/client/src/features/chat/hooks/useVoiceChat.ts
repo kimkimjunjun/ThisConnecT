@@ -250,9 +250,13 @@ export const useVoiceChat = ({
     let analyser: AnalyserNode | null = null
     let frameId: number | null = null
 
+    // suspended 시 resume 시도 — 브라우저 정책으로 중단된 컨텍스트 복구
+    const tryResume = () => {
+      if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {})
+    }
+
     try {
       ctx = new AudioContext()
-      // 브라우저 autoplay 정책으로 suspended 상태가 될 수 있으므로 명시적 resume
       if (ctx.state === 'suspended') ctx.resume().catch(() => {})
 
       source = ctx.createMediaStreamSource(localStreamRef.current)
@@ -260,7 +264,6 @@ export const useVoiceChat = ({
       analyser.fftSize = 512
       source.connect(analyser)
 
-      // 시간 도메인(time-domain) RMS — 주파수 도메인보다 발화 감지에 정확함
       const buf = new Uint8Array(analyser.fftSize)
 
       const tick = () => {
@@ -269,14 +272,20 @@ export const useVoiceChat = ({
           setIsMySpeaking((prev) => (prev ? false : prev))
           return
         }
+        // suspended 상태면 resume 요청 후 이 프레임은 건너뜀
+        if (ctx?.state === 'suspended') { tryResume(); return }
         analyser.getByteTimeDomainData(buf)
-        // 128이 무음 기준값, 편차의 RMS로 진폭 측정
         const rms = Math.sqrt(buf.reduce((s, v) => s + (v - 128) ** 2, 0) / buf.length)
         const speaking = rms > 8
         setIsMySpeaking((prev) => (prev === speaking ? prev : speaking))
       }
 
       frameId = requestAnimationFrame(tick)
+
+      // 클릭·키입력·탭 복귀 시 suspended AudioContext 자동 복구
+      document.addEventListener('click', tryResume)
+      document.addEventListener('keydown', tryResume)
+      document.addEventListener('visibilitychange', tryResume)
     } catch {
       // AudioContext 불가 환경 무시
     }
@@ -286,6 +295,9 @@ export const useVoiceChat = ({
       source?.disconnect()
       ctx?.close().catch(() => {})
       setIsMySpeaking(false)
+      document.removeEventListener('click', tryResume)
+      document.removeEventListener('keydown', tryResume)
+      document.removeEventListener('visibilitychange', tryResume)
     }
   }, [localStreamReady])
 
