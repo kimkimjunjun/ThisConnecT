@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { getChannelRoomsCursor } from '../api/channel-api'
 import type { ChannelRoom } from '../api/channel-api'
 import { channelRoomsQueryKey } from '../query-keys'
@@ -16,6 +16,7 @@ export const useChannelRoomsQuery = (channelId: string, keyword: string) => {
     getNextPageParam: (lastPage) =>
       lastPage.hasNext ? lastPage.nextCursor : undefined,
     staleTime: 30 * 1000,
+    placeholderData: keepPreviousData,
   })
 
   const rooms: ChannelRoom[] = query.data?.pages.flatMap((p) => p.rooms) ?? []
@@ -31,6 +32,7 @@ export const useChannelRoomsQuery = (channelId: string, keyword: string) => {
   return {
     rooms,
     isPending: query.isPending,
+    isPlaceholderData: query.isPlaceholderData,
     hasNext,
     isFetchingMore: query.isFetchingNextPage,
     loadMore,

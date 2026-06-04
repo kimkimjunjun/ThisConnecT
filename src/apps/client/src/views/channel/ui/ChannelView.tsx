@@ -10,5 +10,5 @@ export const ChannelView = ({ channelId }: Props) => {
   const channel = channels.find((c) => c.id.toString() === channelId)
   const channelName = channel?.name ?? ''
 
-  return <RoomBrowser key={channelId} categoryId={channelId} categoryName={channelName} />
+  return <RoomBrowser categoryId={channelId} categoryName={channelName} />
 }

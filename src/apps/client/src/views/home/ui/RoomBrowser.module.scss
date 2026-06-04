@@ -17,6 +17,12 @@ $full-badge-bg: rgba(242, 63, 66, 0.15);
 $full-badge-color: #f23f42;
 
 // ─── Container ────────────────────────────────────────────────────────────────
+.containerLoading {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
 .container {
   @include flex-col;
   height: 100%;

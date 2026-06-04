@@ -12,7 +12,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { AuthModal, useAuthStore, AuthContextProvider } from "@/features/auth";
 import { AppHeader } from "@/widgets/header";
 import { Sidebar, CreateChannelModal } from "@/widgets/sidebar";
-import { useChannels, deleteChannel } from "@/features/channel";
+import { useChannelsQuery, deleteChannel, channelsQueryKey } from "@/features/channel";
+import { useQueryClient } from "@tanstack/react-query";
 import styles from "./DashboardLayout.module.scss";
 
 const LS_KEY = "sidebar-collapsed";
@@ -83,11 +84,16 @@ export const DashboardLayout = ({ children }: Props) => {
 
   const isModalOpen = modalRequested && !accessToken;
 
-  const { channels, refresh: refreshChannels } = useChannels();
+  const queryClient = useQueryClient();
+  const { data: channels = [] } = useChannelsQuery();
   const sidebarRooms = channels.map((c) => ({
     id: c.id.toString(),
     name: c.name,
   }));
+  const refreshChannels = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: channelsQueryKey }),
+    [queryClient],
+  );
 
   const activeCategoryId = pathname.match(/^\/channels\/([^/]+)/)?.[1] ?? null;
 
