@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthContext, useAuthStore } from '@/features/auth'
-import { type ChannelRoom, deleteRoom, useChannelRoomsCursor } from '@/features/channel'
+import { type ChannelRoom, deleteRoom, useChannelRoomsQuery } from '@/features/channel'
 import { SearchIcon, RefreshIcon, TrashIcon } from '@/shared/assets/icons'
 import { CreateRoomModal } from './CreateRoomModal'
 import styles from './RoomBrowser.module.scss'
@@ -32,7 +32,7 @@ export const RoomBrowser = ({ categoryId, categoryName }: Props) => {
   }, [query])
 
   const { rooms, hasNext, isPending, isFetchingMore, loadMore, refresh } =
-    useChannelRoomsCursor(categoryId, debouncedQuery)
+    useChannelRoomsQuery(categoryId, debouncedQuery)
 
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef(loadMore)
@@ -81,7 +81,7 @@ export const RoomBrowser = ({ categoryId, categoryName }: Props) => {
           </div>
         </div>
         <div className={styles.grid}>
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 20 }).map((_, i) => (
             <div key={i} className={styles.skeletonCard} />
           ))}
         </div>
@@ -154,7 +154,7 @@ export const RoomBrowser = ({ categoryId, categoryName }: Props) => {
           {rooms.length > 0 ? (
             <>
               <div className={styles.grid}>
-                {rooms.map((room) => {
+                {rooms.map((room: ChannelRoom) => {
                   const isFull = room.currentCount >= room.maxCount
                   const isBlocked = isFull && !isAdmin
                   const handleClick = () => {

@@ -105,6 +105,12 @@ $danger: #f23f42;
   background: transparent;
   cursor: pointer;
   text-align: left;
+
+  @media (max-width: $bp-md) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: $spacing-2;
+  }
 }
 
 .itemMeta {
@@ -113,6 +119,11 @@ $danger: #f23f42;
   gap: $spacing-2;
   min-width: 0;
   flex: 1;
+
+  @media (max-width: $bp-md) {
+    flex-wrap: wrap;
+    row-gap: $spacing-1;
+  }
 }
 
 // ─── Read / Unread badges ─────────────────────────────────────────────────────
@@ -143,6 +154,13 @@ $danger: #f23f42;
   font-weight: $font-weight-semibold;
   color: $text-primary;
   @include text-ellipsis;
+
+  @media (max-width: $bp-md) {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: break-word;
+  }
 }
 
 .itemParty {
@@ -160,6 +178,10 @@ $danger: #f23f42;
   align-items: center;
   gap: $spacing-2;
   flex-shrink: 0;
+
+  @media (max-width: $bp-md) {
+    justify-content: space-between;
+  }
 }
 
 .itemDate {

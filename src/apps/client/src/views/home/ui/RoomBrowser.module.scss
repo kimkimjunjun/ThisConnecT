@@ -115,6 +115,10 @@ $full-badge-color: #f23f42;
 .metaCount {
   font-size: $text-sm;
   color: $text-muted;
+
+  @media (max-width: $bp-md) {
+    display: none;
+  }
 }
 
 // ─── Grid ─────────────────────────────────────────────────────────────────────

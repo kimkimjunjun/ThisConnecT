@@ -17,6 +17,7 @@ import styles from "./DashboardLayout.module.scss";
 
 const LS_KEY = "sidebar-collapsed";
 const SIDEBAR_TOGGLE_EVENT = "sidebar-toggle";
+const MOBILE_BREAKPOINT = 768;
 
 const subscribeSidebarCollapsed = (cb: () => void) => {
   window.addEventListener(SIDEBAR_TOGGLE_EVENT, cb);
@@ -24,6 +25,17 @@ const subscribeSidebarCollapsed = (cb: () => void) => {
 };
 const getSidebarCollapsedSnapshot = () => localStorage.getItem(LS_KEY) === "true";
 const getSidebarCollapsedServerSnapshot = () => false;
+
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+};
 
 const ChevronLeft = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -45,11 +57,13 @@ type Props = { children: ReactNode };
 export const DashboardLayout = ({ children }: Props) => {
   const [modalRequested, setModalRequested] = useState(false);
 
-  const isSidebarCollapsed = useSyncExternalStore(
+  const isMobile = useIsMobile();
+  const isSidebarCollapsedStored = useSyncExternalStore(
     subscribeSidebarCollapsed,
     getSidebarCollapsedSnapshot,
     getSidebarCollapsedServerSnapshot,
   );
+  const isSidebarCollapsed = isMobile || isSidebarCollapsedStored;
 
   useEffect(() => {
     if (initialModalShown) return;
@@ -148,17 +162,19 @@ export const DashboardLayout = ({ children }: Props) => {
               onDeleteChannel={role === "ADMIN" ? handleDeleteChannel : undefined}
               isCollapsed={isSidebarCollapsed}
             />
-            <button
-              className={styles.sidebarToggleEdge}
-              onClick={() => {
-                const next = !isSidebarCollapsed;
-                localStorage.setItem(LS_KEY, String(next));
-                window.dispatchEvent(new Event(SIDEBAR_TOGGLE_EVENT));
-              }}
-              title={isSidebarCollapsed ? "사이드바 열기" : "사이드바 닫기"}
-            >
-              {isSidebarCollapsed ? <ChevronRight /> : <ChevronLeft />}
-            </button>
+            {!isMobile && (
+              <button
+                className={styles.sidebarToggleEdge}
+                onClick={() => {
+                  const next = !isSidebarCollapsedStored;
+                  localStorage.setItem(LS_KEY, String(next));
+                  window.dispatchEvent(new Event(SIDEBAR_TOGGLE_EVENT));
+                }}
+                title={isSidebarCollapsedStored ? "사이드바 열기" : "사이드바 닫기"}
+              >
+                {isSidebarCollapsedStored ? <ChevronRight /> : <ChevronLeft />}
+              </button>
+            )}
           </div>
 
           <main className={styles.content}>{children}</main>
