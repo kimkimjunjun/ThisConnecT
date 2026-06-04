@@ -81,7 +81,7 @@ export const RoomBrowser = ({ categoryId, categoryName }: Props) => {
           </div>
         </div>
         <div className={styles.grid}>
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 20 }).map((_, i) => (
             <div key={i} className={styles.skeletonCard} />
           ))}
         </div>
