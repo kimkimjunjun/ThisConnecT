@@ -1,4 +1,6 @@
 export { AuthModal } from './ui/AuthModal'
 export { redirectToKakao, redirectToGoogle } from './lib/oauth'
-export { postSocialCallback, postGuestLogin } from './api/auth-api'
-export type { AuthProvider, AuthCallbackResponse, GuestLoginResponse } from './api/auth-api'
+export { postSocialCallback, postGuestLogin, logout } from './api/auth-api'
+export { useAuthStore } from './store/auth-store'
+export { AuthContextProvider, useAuthContext } from './lib/auth-context'
+export type { AuthProvider, AuthResponse } from './api/auth-api'

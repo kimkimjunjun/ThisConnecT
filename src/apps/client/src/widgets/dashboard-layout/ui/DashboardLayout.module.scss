@@ -1,0 +1,55 @@
+@use '../../../shared/styles/variables' as *;
+@use '../../../shared/styles/mixins' as *;
+
+$app-bg: #313338;
+
+.app {
+  @include flex-col;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: $app-bg;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.content {
+  @include flex-col;
+  flex: 1;
+  overflow: hidden;
+  background-color: $app-bg;
+}
+
+.sidebarWrapper {
+  position: relative;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.sidebarToggleEdge {
+  position: absolute;
+  top: 18px;
+  right: -12px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #2b2d31;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  color: #949ba4;
+  cursor: pointer;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.4);
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+
+  &:hover {
+    background-color: #35373c;
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #dbdee1;
+  }
+}
