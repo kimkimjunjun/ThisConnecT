@@ -27,11 +27,16 @@ export const RoomBrowser = ({ categoryId, categoryName }: Props) => {
   const isAdmin = role === 'ADMIN'
 
   useEffect(() => {
+    setQuery('')
+    setDebouncedQuery('')
+  }, [categoryId])
+
+  useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300)
     return () => clearTimeout(timer)
   }, [query])
 
-  const { rooms, hasNext, isPending, isFetchingMore, loadMore, refresh } =
+  const { rooms, hasNext, isPending, isPlaceholderData, isFetchingMore, loadMore, refresh } =
     useChannelRoomsQuery(categoryId, debouncedQuery)
 
   const observerRef = useRef<IntersectionObserver | null>(null)
@@ -90,7 +95,7 @@ export const RoomBrowser = ({ categoryId, categoryName }: Props) => {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${isPlaceholderData ? styles.containerLoading : ''}`}>
       {rooms.length === 0 && !debouncedQuery ? (
         <>
           <div className={styles.meta}>
