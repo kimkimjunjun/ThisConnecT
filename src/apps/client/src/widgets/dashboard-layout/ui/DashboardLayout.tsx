@@ -3,6 +3,7 @@
 import {
   useState,
   useEffect,
+  useLayoutEffect,
   useRef,
   useCallback,
   useSyncExternalStore,
@@ -29,7 +30,7 @@ const getSidebarCollapsedServerSnapshot = () => false;
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
     check();
     window.addEventListener("resize", check);
