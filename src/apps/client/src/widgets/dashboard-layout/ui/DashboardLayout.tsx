@@ -3,7 +3,6 @@
 import {
   useState,
   useEffect,
-  useLayoutEffect,
   useRef,
   useCallback,
   useSyncExternalStore,
@@ -29,10 +28,11 @@ const getSidebarCollapsedSnapshot = () => localStorage.getItem(LS_KEY) === "true
 const getSidebarCollapsedServerSnapshot = () => false;
 
 const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  useLayoutEffect(() => {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth <= MOBILE_BREAKPOINT,
+  );
+  useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
-    check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
