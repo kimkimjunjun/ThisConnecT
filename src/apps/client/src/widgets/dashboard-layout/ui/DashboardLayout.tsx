@@ -27,17 +27,12 @@ const subscribeSidebarCollapsed = (cb: () => void) => {
 const getSidebarCollapsedSnapshot = () => localStorage.getItem(LS_KEY) === "true";
 const getSidebarCollapsedServerSnapshot = () => false;
 
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== "undefined" && window.innerWidth <= MOBILE_BREAKPOINT,
-  );
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-  return isMobile;
+const subscribeResize = (cb: () => void) => {
+  window.addEventListener("resize", cb);
+  return () => window.removeEventListener("resize", cb);
 };
+const getIsMobileSnapshot = () => window.innerWidth <= MOBILE_BREAKPOINT;
+const getIsMobileServerSnapshot = () => false;
 
 const ChevronLeft = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -58,8 +53,13 @@ type Props = { children: ReactNode };
 
 export const DashboardLayout = ({ children }: Props) => {
   const [modalRequested, setModalRequested] = useState(false);
+  const [transitionReady, setTransitionReady] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setTransitionReady(true), 0);
+    return () => clearTimeout(id);
+  }, []);
 
-  const isMobile = useIsMobile();
+  const isMobile = useSyncExternalStore(subscribeResize, getIsMobileSnapshot, getIsMobileServerSnapshot);
   const isSidebarCollapsedStored = useSyncExternalStore(
     subscribeSidebarCollapsed,
     getSidebarCollapsedSnapshot,
@@ -160,7 +160,7 @@ export const DashboardLayout = ({ children }: Props) => {
         <AppHeader onLoginClick={openModal} />
 
         <div className={styles.body}>
-          <div className={styles.sidebarWrapper}>
+          <div className={`${styles.sidebarWrapper} ${transitionReady ? "" : styles.sidebarNoTransition}`}>
             <Sidebar
               rooms={sidebarRooms}
               activeRoomId={activeCategoryId}

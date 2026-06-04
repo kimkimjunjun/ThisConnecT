@@ -29,6 +29,10 @@ $app-bg: #313338;
   height: 100%;
 }
 
+.sidebarNoTransition :global(*) {
+  transition: none !important;
+}
+
 .sidebarToggleEdge {
   position: absolute;
   top: 18px;
