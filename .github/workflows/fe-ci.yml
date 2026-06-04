@@ -1,0 +1,31 @@
+name: FE CI
+
+on:
+  pull_request:
+    branches: [develop, staging, prod]
+    paths:
+      - 'src/apps/client/**'
+
+jobs:
+  build:
+    name: Type Check & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/apps/client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/apps/client
+        run: npm ci
+
+      - name: Build
+        working-directory: src/apps/client
+        run: npm run build

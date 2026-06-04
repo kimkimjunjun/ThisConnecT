@@ -1,8 +1,8 @@
-name: BE Deploy
+name: BE CD
 
 on:
   push:
-    branches: [develop]
+    branches: [prod]
     paths:
       - 'src/apps/server/**'
 
