@@ -1,4 +1,4 @@
-name: BE Deploy
+name: BE CD
 
 on:
   push:
