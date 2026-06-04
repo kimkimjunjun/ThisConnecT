@@ -97,7 +97,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
     setVoiceSignalCallback,
   } = useRoom(currentRoom.id.toString(), accessToken, nickname);
 
-  const { peerAudio, setParticipantMuted, setParticipantVolume } = useVoiceChat({
+  const { peerAudio, setParticipantMuted, setParticipantVolume, isMySpeaking } = useVoiceChat({
     mySessionId,
     participants,
     sendVoiceSignal,
@@ -230,7 +230,7 @@ export const RoomView = ({ room, categoryId }: Props) => {
               onClick={!p.isMe && canInteract ? (e) => handleCardClick(e, p.sessionId) : undefined}
             >
               <div className={styles.participantAvatarWrap}>
-                <div className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""}`}>
+                <div className={`${styles.participantAvatar} ${p.isMe ? styles.avatarMe : ""} ${p.isMe && isMySpeaking ? styles.avatarSpeaking : ""}`}>
                   {p.nickname[0].toUpperCase()}
                   {p.isMe && (
                     <span className={isMicOn ? styles.micDot : styles.mutedDot} />
@@ -243,9 +243,18 @@ export const RoomView = ({ room, categoryId }: Props) => {
                   {p.isMe && <span className={styles.meBadge}>나</span>}
                   {p.isOwner && <span className={styles.ownerBadge}>방장</span>}
                 </span>
-                <span className={`${styles.levelBadge} ${getLevelTierClass(p.level)}`}>
-                  Lv.{p.level}
-                </span>
+                {p.isMe && isMySpeaking ? (
+                  <span className={styles.speakingLabel}>
+                    <span className={styles.speakingWave}>
+                      <span /><span /><span />
+                    </span>
+                    말하는 중
+                  </span>
+                ) : (
+                  <span className={`${styles.levelBadge} ${getLevelTierClass(p.level)}`}>
+                    Lv.{p.level}
+                  </span>
+                )}
               </div>
             </div>
           ))}
