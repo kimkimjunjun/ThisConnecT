@@ -20,6 +20,6 @@ app:
 
 logging:
   level:
-    com.disconnect: INFO
+    com.thisconnect: INFO
     org.springframework: WARN
     org.hibernate: WARN
