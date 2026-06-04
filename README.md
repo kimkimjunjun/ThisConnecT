@@ -190,8 +190,7 @@ com.disconnect.server/
 ### 브랜치 계층
 
 ```
-prod      ─── 운영 배포 (직접 push 금지, staging에서만 병합)
-staging   ─── 배포 전 검증 (develop에서만 병합)
+prod      ─── 운영 배포 (직접 push 금지, develop에서만 병합)
 develop   ─── 개발 통합 브랜치 (서브 브랜치 PR 대상)
 │
 ├── feat/#<이슈번호>/fe/<설명>   # 프론트엔드 기능 개발
@@ -205,8 +204,7 @@ develop   ─── 개발 통합 브랜치 (서브 브랜치 PR 대상)
 ```
 feat/* | fix/* | refactor/*
   └─ PR ─→ develop
-              └─ PR ─→ staging
-                          └─ PR ─→ prod
+              └─ PR ─→ prod
 ```
 
 ### 브랜치별 코드 수정 범위
@@ -227,7 +225,7 @@ feat/* | fix/* | refactor/*
 5. git push origin <브랜치>
 6. PR 생성 (base: develop, PR 템플릿 + 이슈번호 필수)
 7. CI 통과 확인 (빌드·타입체크)
-8. develop 병합 → staging → prod 순차 병합
+8. develop 병합 → prod PR 생성 후 병합
 9. prod 병합 시 CD 자동 트리거 → 자동 배포
 ```
 
@@ -239,7 +237,7 @@ feat/* | fix/* | refactor/*
 
 ```
 .github/workflows/
-├── fe-ci.yml     # FE PR 빌드 검증 (develop · staging · prod 대상 PR)
+├── fe-ci.yml     # FE PR 빌드 검증 (develop · prod 대상 PR)
 ├── fe-cd.yml     # FE 배포 (prod 머지 시 → Vercel)
 ├── be-ci.yml     # BE PR 빌드·테스트 검증
 └── be-cd.yml     # BE 배포 (prod 머지 시 → AWS EC2)
@@ -248,8 +246,8 @@ feat/* | fix/* | refactor/*
 ### FE CI (`fe-ci.yml`)
 
 ```
-트리거: PR → develop | staging | prod (src/apps/client/** 변경 시)
-실행:   Node 20 설치 → npm ci → next build (타입 체크 포함)
+트리거: PR → develop | prod (src/apps/client/** 변경 시)
+실행:   pnpm install → next build (타입 체크 포함)
 ```
 
 ### FE CD (`fe-cd.yml`)
@@ -265,7 +263,7 @@ feat/* | fix/* | refactor/*
 ### BE CI (`be-ci.yml`)
 
 ```
-트리거: PR → develop | staging | prod (src/apps/server/** 변경 시)
+트리거: PR → develop | prod (src/apps/server/** 변경 시)
 실행:   JDK 17 (Corretto) → ./gradlew clean build -x test → ./gradlew test
 ```
 

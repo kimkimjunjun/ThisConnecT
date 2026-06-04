@@ -64,8 +64,7 @@ import { useMemberInfo, patchNickname } from '@/features/member'
 
 ## Branch Rules
 ```
-prod                    → 운영 배포용 (직접 push 금지, staging에서만 병합)
-staging                 → 배포 전 검증 브랜치 (develop에서만 병합)
+prod                    → 운영 배포용 (직접 push 금지, develop에서만 병합)
 develop                 → 개발 통합 브랜치 (서브 브랜치 PR 대상)
 feat/#1/fe/card         → 프론트엔드 기능 개발
 feat/#2/be/auth-api     → 백엔드 기능 개발
@@ -78,8 +77,7 @@ refactor/#5/my-page     → FE/BE 구분 없는 리팩터링
 ```
 feat/* | fix/* | refactor/*
   → PR → develop
-         → PR → staging
-                → PR → prod
+         → PR → prod
 ```
 
 ## 브랜치별 코드 수정 범위 (IMPORTANT)
@@ -110,8 +108,7 @@ build: 빌드 시스템
 1. Issue 생성 → `develop`에서 브랜치 생성
 2. 구현 → `git commit` (commitlint 자동 검증, prepare-commit-msg 훅으로 메시지 자동 생성)
 3. PR → `develop` (PR 템플릿 사용, 서브 브랜치는 반드시 `develop`으로만 PR)
-4. 검증: `develop` → `staging` PR
-5. 배포: `staging` → `prod` PR
+4. 배포: `develop` → `prod` PR
 
 ## PR 생성 규칙 (Claude 자동화)
 
