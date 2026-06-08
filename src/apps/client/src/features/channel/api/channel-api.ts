@@ -1,4 +1,4 @@
-import { fetchAPI } from "@/shared/api";
+import { publicApi, privateApi } from "@/shared/api";
 import { END_POINT } from "@/shared/api/endpoint";
 
 export type Channel = {
@@ -14,22 +14,14 @@ export type ChannelRoom = {
   maxCount: number;
 };
 
-export const getChannels = () => fetchAPI<Channel[]>(END_POINT.CHANNEL.LIST);
-
-export const createChannel = (name: string) =>
-  fetchAPI<Channel>(END_POINT.CHANNEL.LIST, {
-    method: "POST",
-    body: JSON.stringify({ name }),
-  });
-
 export type ChannelRoomPage = {
   rooms: ChannelRoom[];
   nextCursor: number | null;
   hasNext: boolean;
 };
 
-export const getChannelRooms = (channelId: number | string) =>
-  fetchAPI<ChannelRoom[]>(END_POINT.CHANNEL.ROOMS(channelId));
+export const getChannels = () =>
+  publicApi.get<Channel[]>(END_POINT.CHANNEL.LIST).then((r) => r.data);
 
 export const getChannelRoomsCursor = (
   channelId: number | string,
@@ -37,12 +29,12 @@ export const getChannelRoomsCursor = (
   keyword?: string,
   size = 20,
 ) => {
-  const params = new URLSearchParams({ size: String(size) });
-  if (cursor != null) params.set("cursor", String(cursor));
-  if (keyword) params.set("keyword", keyword);
-  return fetchAPI<ChannelRoomPage>(
-    `${END_POINT.CHANNEL.ROOMS(channelId)}?${params}`,
-  );
+  const params: Record<string, string | number> = { size };
+  if (cursor != null) params.cursor = cursor;
+  if (keyword) params.keyword = keyword;
+  return publicApi
+    .get<ChannelRoomPage>(END_POINT.CHANNEL.ROOMS(channelId), { params })
+    .then((r) => r.data);
 };
 
 // cursor = roomId - 1, size = 1 로 해당 방 하나만 정확히 조회
@@ -56,13 +48,17 @@ export const getRoomById = (
   );
 };
 
+export const createChannel = (name: string) =>
+  privateApi
+    .post<Channel>(END_POINT.CHANNEL.LIST, { name })
+    .then((r) => r.data);
+
 type CreateRoomBody = { title: string; maxCount: number };
 
 export const createRoom = (channelId: number | string, body: CreateRoomBody) =>
-  fetchAPI<ChannelRoom>(END_POINT.CHANNEL.ROOMS(channelId), {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  privateApi
+    .post<ChannelRoom>(END_POINT.CHANNEL.ROOMS(channelId), body)
+    .then((r) => r.data);
 
 type UpdateRoomBody = { title?: string; maxCount?: number };
 
@@ -71,18 +67,19 @@ export const updateRoom = (
   roomId: number | string,
   body: UpdateRoomBody,
 ) =>
-  fetchAPI<ChannelRoom>(END_POINT.CHANNEL.ROOM(channelId, roomId), {
-    method: "PATCH",
-    body: JSON.stringify(body),
-  });
+  privateApi
+    .patch<ChannelRoom>(END_POINT.CHANNEL.ROOM(channelId, roomId), body)
+    .then((r) => r.data);
 
 export const deleteChannel = (channelId: number | string) =>
-  fetchAPI<void>(END_POINT.CHANNEL.DETAIL(channelId), { method: "DELETE" });
+  privateApi
+    .delete<void>(END_POINT.CHANNEL.DETAIL(channelId))
+    .then((r) => r.data);
 
 export const deleteRoom = (
   channelId: number | string,
   roomId: number | string,
 ) =>
-  fetchAPI<void>(END_POINT.CHANNEL.ROOM(channelId, roomId), {
-    method: "DELETE",
-  });
+  privateApi
+    .delete<void>(END_POINT.CHANNEL.ROOM(channelId, roomId))
+    .then((r) => r.data);

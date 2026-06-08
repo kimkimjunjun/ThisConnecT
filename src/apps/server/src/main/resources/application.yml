@@ -3,10 +3,10 @@ spring:
     name: thisconnect-server
 
   datasource:
-    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/thisconnectdb}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/disconnectdb}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DATABASE_USERNAME:root}
-    password: ${DATABASE_PASSWORD:}
+    password: ${DATABASE_PASSWORD:7875}
 
   jpa:
     hibernate:
@@ -21,7 +21,7 @@ server:
   port: 8080
 
 jwt:
-  secret: ${JWT_SECRET:thisconnect-dev-secret-key-must-be-at-least-256-bits-long-for-hs256}
+  secret: ${JWT_SECRET:8u8ZyEX60IBgbZp4M6MlXv3jYu5bhKlut9hzr8Xo/p8=}
 
 oauth:
   kakao:

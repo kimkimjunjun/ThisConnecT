@@ -1,4 +1,4 @@
-import { fetchAPI } from '@/shared/api'
+import { privateApi } from '@/shared/api'
 import { END_POINT } from '@/shared/api/endpoint'
 
 export type MemberInfo = {
@@ -16,13 +16,14 @@ export type MemberIdResponse = {
 }
 
 export const getMemberInfo = () =>
-  fetchAPI<MemberInfo>(END_POINT.MEMBER.MY_INFO)
+  privateApi.get<MemberInfo>(END_POINT.MEMBER.MY_INFO).then((r) => r.data)
 
 export const patchNickname = (nickname: string) =>
-  fetchAPI<MemberInfo>(END_POINT.MEMBER.UPDATE_NICKNAME, {
-    method: 'PATCH',
-    body: JSON.stringify({ nickname }),
-  })
+  privateApi
+    .patch<MemberInfo>(END_POINT.MEMBER.UPDATE_NICKNAME, { nickname })
+    .then((r) => r.data)
 
 export const getMemberIdByNickname = (nickname: string) =>
-  fetchAPI<MemberIdResponse>(END_POINT.MEMBER.BY_NICKNAME(nickname))
+  privateApi
+    .get<MemberIdResponse>(END_POINT.MEMBER.BY_NICKNAME(nickname))
+    .then((r) => r.data)

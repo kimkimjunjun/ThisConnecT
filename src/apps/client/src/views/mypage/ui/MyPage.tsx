@@ -186,7 +186,7 @@ export const MyPage = () => {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
     } catch {
-      // fetchAPI가 에러 시 ApiError를 throw — 저장 실패 처리
+      // 요청 실패 시 저장 실패 처리
     } finally {
       setIsSaving(false);
     }
