@@ -18,12 +18,12 @@ export const ReportModal = ({ targetNickname, targetMemberId: initialMemberId, o
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [memberId, setMemberId] = useState<number | undefined>(initialMemberId)
-  const [isFetchingId, setIsFetchingId] = useState(false)
+  // initialMemberId가 없으면 첫 렌더부터 fetching 상태로 시작 — effect 내 동기 setState 제거
+  const [isFetchingId, setIsFetchingId] = useState(initialMemberId == null)
   const mouseDownOnBackdrop = useRef(false)
 
   useEffect(() => {
     if (initialMemberId != null) return
-    setIsFetchingId(true)
     getMemberIdByNickname(targetNickname)
       .then((data) => setMemberId(data.id))
       .catch(() => setMemberId(undefined))

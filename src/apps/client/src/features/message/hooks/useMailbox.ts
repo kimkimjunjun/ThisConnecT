@@ -5,10 +5,16 @@ export const useMailbox = (tab: 'inbox' | 'outbox') => {
   const [messages, setMessages] = useState<MessageItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [prevTab, setPrevTab] = useState(tab)
 
-  useEffect(() => {
+  // tab 변경 시 렌더 단계에서 즉시 초기화 — effect 내 동기 setState 제거
+  if (prevTab !== tab) {
+    setPrevTab(tab)
     setLoading(true)
     setError(false)
+  }
+
+  useEffect(() => {
     const fetcher = tab === 'inbox' ? getInbox : getOutbox
     fetcher()
       .then(setMessages)
