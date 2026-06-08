@@ -22,11 +22,14 @@ export const END_POINT = {
   REPORT: {
     CREATE: '/api/reports',
     LIST: '/api/reports',
+    BY_REPORTED: (reportedId: number) => `/api/reports/users/${reportedId}`,
   },
   MESSAGE: {
     SEND: '/api/messages',
     INBOX: '/api/messages/inbox',
     OUTBOX: '/api/messages/outbox',
     MARK_READ: (messageId: number) => `/api/messages/${messageId}/read`,
+    INBOX_DELETE: (messageId: number) => `/api/messages/inbox/${messageId}`,
+    OUTBOX_DELETE: (messageId: number) => `/api/messages/outbox/${messageId}`,
   },
 } as const

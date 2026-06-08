@@ -25,3 +25,9 @@ export const getOutbox = () =>
 
 export const markAsRead = (messageId: number) =>
   fetchAPI<void>(END_POINT.MESSAGE.MARK_READ(messageId), { method: 'PATCH' })
+
+export const deleteFromInbox = (messageId: number) =>
+  fetchAPI<void>(END_POINT.MESSAGE.INBOX_DELETE(messageId), { method: 'DELETE' })
+
+export const deleteFromOutbox = (messageId: number) =>
+  fetchAPI<void>(END_POINT.MESSAGE.OUTBOX_DELETE(messageId), { method: 'DELETE' })
