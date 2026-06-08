@@ -26,3 +26,6 @@ export const createReport = (reportedId: number, reason: string) =>
 
 export const getReports = () =>
   fetchAPI<ReportListItem[]>(END_POINT.REPORT.LIST)
+
+export const getReportsByReported = (reportedId: number) =>
+  fetchAPI<ReportListItem[]>(END_POINT.REPORT.BY_REPORTED(reportedId))
