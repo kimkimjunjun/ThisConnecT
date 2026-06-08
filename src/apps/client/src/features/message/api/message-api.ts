@@ -1,4 +1,4 @@
-import { fetchAPI } from '@/shared/api'
+import { privateApi } from '@/shared/api'
 import { END_POINT } from '@/shared/api/endpoint'
 
 export type MessageItem = {
@@ -11,23 +11,36 @@ export type MessageItem = {
   isRead: boolean
 }
 
-export const sendDirectMessage = (receiverNickname: string, content: string, title?: string) =>
-  fetchAPI<void>(END_POINT.MESSAGE.SEND, {
-    method: 'POST',
-    body: JSON.stringify({ receiverNickname, content, ...(title ? { title } : {}) }),
-  })
+export const sendDirectMessage = (
+  receiverNickname: string,
+  content: string,
+  title?: string,
+) =>
+  privateApi
+    .post<void>(END_POINT.MESSAGE.SEND, {
+      receiverNickname,
+      content,
+      ...(title ? { title } : {}),
+    })
+    .then((r) => r.data)
 
 export const getInbox = () =>
-  fetchAPI<MessageItem[]>(END_POINT.MESSAGE.INBOX)
+  privateApi.get<MessageItem[]>(END_POINT.MESSAGE.INBOX).then((r) => r.data)
 
 export const getOutbox = () =>
-  fetchAPI<MessageItem[]>(END_POINT.MESSAGE.OUTBOX)
+  privateApi.get<MessageItem[]>(END_POINT.MESSAGE.OUTBOX).then((r) => r.data)
 
 export const markAsRead = (messageId: number) =>
-  fetchAPI<void>(END_POINT.MESSAGE.MARK_READ(messageId), { method: 'PATCH' })
+  privateApi
+    .patch<void>(END_POINT.MESSAGE.MARK_READ(messageId))
+    .then((r) => r.data)
 
 export const deleteFromInbox = (messageId: number) =>
-  fetchAPI<void>(END_POINT.MESSAGE.INBOX_DELETE(messageId), { method: 'DELETE' })
+  privateApi
+    .delete<void>(END_POINT.MESSAGE.INBOX_DELETE(messageId))
+    .then((r) => r.data)
 
 export const deleteFromOutbox = (messageId: number) =>
-  fetchAPI<void>(END_POINT.MESSAGE.OUTBOX_DELETE(messageId), { method: 'DELETE' })
+  privateApi
+    .delete<void>(END_POINT.MESSAGE.OUTBOX_DELETE(messageId))
+    .then((r) => r.data)

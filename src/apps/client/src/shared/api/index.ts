@@ -1,4 +1,5 @@
-export { fetchAPI, ApiError, tryRefresh, isTokenExpired, getStoredToken } from './base'
+export { publicApi, privateApi, tryRefresh, isTokenExpired, getStoredToken } from './base'
+export type { AuthResponse } from './base'
 export { END_POINT } from './endpoint'
 export type { AuthProvider } from './endpoint'
 export { getQueryClient } from './query-client'

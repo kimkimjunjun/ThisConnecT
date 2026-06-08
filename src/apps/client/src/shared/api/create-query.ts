@@ -40,7 +40,7 @@ type QueryHook<TData, TError = Error, TQueryKey extends QueryKey = QueryKey> = {
  * @example
  * export const usePostsQuery = createQuery({
  *   queryKey: ['posts'] as const,
- *   queryFn: () => fetchAPI<Post[]>('/posts'),
+ *   queryFn: () => publicApi.get<Post[]>('/posts').then((r) => r.data),
  *   options: { staleTime: 5 * 60 * 1000 },
  * })
  *
