@@ -30,7 +30,9 @@ export const useVoiceChat = ({
   const pcsRef = useRef<Map<string, RTCPeerConnection>>(new Map())
   const audiosRef = useRef<Map<string, HTMLAudioElement>>(new Map())
   const localStreamRef = useRef<MediaStream | null>(null)
-  const initialDoneRef = useRef(false)
+  // boolean 대신 Set으로 교체 — participants가 늦게 도착해도 신규 참여자에게 OFFER 전송 가능
+  const offeredToRef = useRef<Set<string>>(new Set())
+  const peerAnalysersRef = useRef<Map<string, { ctx: AudioContext; frameId: number }>>(new Map())
 
   // localStream 준비 여부 — OFFER 전송 타이밍 게이트
   const [localStreamReady, setLocalStreamReady] = useState(false)
@@ -42,6 +44,7 @@ export const useVoiceChat = ({
   useEffect(() => { isMicOnRef.current = isMicOn }, [isMicOn])
 
   const [peerAudio, setPeerAudio] = useState<Record<string, PeerAudioState>>({})
+  const [peerSpeaking, setPeerSpeaking] = useState<Record<string, boolean>>({})
 
   const sendSignalRef = useRef(sendVoiceSignal)
   const isSpeakerOnRef = useRef(isSpeakerOn)
@@ -118,8 +121,43 @@ export const useVoiceChat = ({
 
       if (audio.srcObject !== stream) {
         audio.srcObject = stream
-        // 브라우저 autoplay 정책 우회를 위해 명시적 play() 호출
-        audio.play().catch(() => {})
+        audio.play().catch(() => {
+          // autoplay 거부 시 다음 사용자 상호작용에서 재시도
+          const retryPlay = () => {
+            audio!.play().catch(() => {})
+            document.removeEventListener('click', retryPlay)
+            document.removeEventListener('keydown', retryPlay)
+          }
+          document.addEventListener('click', retryPlay)
+          document.addEventListener('keydown', retryPlay)
+        })
+
+        // 원격 참여자 발화 감지 — AudioContext로 수신 오디오 분석
+        const existing = peerAnalysersRef.current.get(remoteId)
+        if (existing) {
+          cancelAnimationFrame(existing.frameId)
+          existing.ctx.close().catch(() => {})
+        }
+        try {
+          const peerCtx = new AudioContext()
+          if (peerCtx.state === 'suspended') peerCtx.resume().catch(() => {})
+          const peerSource = peerCtx.createMediaStreamSource(stream)
+          const peerAnalyser = peerCtx.createAnalyser()
+          peerAnalyser.fftSize = 512
+          peerSource.connect(peerAnalyser)
+          const peerBuf = new Uint8Array(peerAnalyser.fftSize)
+          let peerFrameId = 0
+          const peerTick = () => {
+            peerFrameId = requestAnimationFrame(peerTick)
+            if (peerCtx.state === 'suspended') { peerCtx.resume().catch(() => {}); return }
+            peerAnalyser.getByteTimeDomainData(peerBuf)
+            const rms = Math.sqrt(peerBuf.reduce((s, v) => s + (v - 128) ** 2, 0) / peerBuf.length)
+            const speaking = rms > 8
+            setPeerSpeaking((prev) => prev[remoteId] === speaking ? prev : { ...prev, [remoteId]: speaking })
+          }
+          peerFrameId = requestAnimationFrame(peerTick)
+          peerAnalysersRef.current.set(remoteId, { ctx: peerCtx, frameId: peerFrameId })
+        } catch {}
       }
 
       const userState = peerAudioRef.current[remoteId]
@@ -194,30 +232,38 @@ export const useVoiceChat = ({
     return () => setVoiceSignalCallback(null)
   }, [setVoiceSignalCallback, handleSignal])
 
-  // 입장 시 기존 참여자에게 OFFER 전송
-  // localStreamReady가 true일 때만 실행 — getUserMedia 완료 전에 OFFER를 보내면
-  // 오디오 트랙이 없는 OFFER가 전송되어 상대방이 소리를 들을 수 없음
+  // 참여자별 OFFER 전송 — Set 기반으로 미전송 대상만 처리
+  // participants가 늦게 도착하거나 새 참여자가 추가될 때도 정확히 한 번씩 OFFER 전송
   useEffect(() => {
-    if (!mySessionId || !localStreamReady || initialDoneRef.current) return
-    initialDoneRef.current = true
+    if (!mySessionId || !localStreamReady) return
 
-    participants
-      .filter((p) => p.sessionId !== mySessionId)
-      .forEach(async (p) => {
-        try {
-          const pc = getOrCreatePc(p.sessionId)
-          const offer = await pc.createOffer()
-          await pc.setLocalDescription(offer)
-          sendSignalRef.current({ type: 'OFFER', targetSessionId: p.sessionId, data: offer })
-        } catch {
-          // ignore
-        }
-      })
+    const pending = participants.filter(
+      (p) => p.sessionId !== mySessionId && !offeredToRef.current.has(p.sessionId)
+    )
+    if (pending.length === 0) return
+
+    pending.forEach(async (p) => {
+      offeredToRef.current.add(p.sessionId)
+      try {
+        const pc = getOrCreatePc(p.sessionId)
+        const offer = await pc.createOffer()
+        await pc.setLocalDescription(offer)
+        sendSignalRef.current({ type: 'OFFER', targetSessionId: p.sessionId, data: offer })
+      } catch {
+        offeredToRef.current.delete(p.sessionId) // 실패 시 재시도 허용
+      }
+    })
   }, [mySessionId, participants, getOrCreatePc, localStreamReady])
 
-  // 퇴장한 참여자 WebRTC/Audio 정리 — setState는 호출하지 않음 (React Compiler 규칙)
+  // 퇴장한 참여자 WebRTC/Audio/분석 정리
   useEffect(() => {
     const currentIds = new Set(participants.map((p) => p.sessionId))
+
+    // 재입장 시 새 OFFER를 보낼 수 있도록 offeredToRef에서도 제거
+    offeredToRef.current.forEach((id) => {
+      if (!currentIds.has(id)) offeredToRef.current.delete(id)
+    })
+
     pcsRef.current.forEach((pc, sessionId) => {
       if (!currentIds.has(sessionId)) {
         pc.close()
@@ -226,6 +272,12 @@ export const useVoiceChat = ({
         if (audio) {
           audio.srcObject = null
           audiosRef.current.delete(sessionId)
+        }
+        const analysis = peerAnalysersRef.current.get(sessionId)
+        if (analysis) {
+          cancelAnimationFrame(analysis.frameId)
+          analysis.ctx.close().catch(() => {})
+          peerAnalysersRef.current.delete(sessionId)
         }
       }
     })
@@ -308,8 +360,13 @@ export const useVoiceChat = ({
       pcsRef.current.clear()
       audiosRef.current.forEach((audio) => { audio.srcObject = null })
       audiosRef.current.clear()
+      peerAnalysersRef.current.forEach((analysis) => {
+        cancelAnimationFrame(analysis.frameId)
+        analysis.ctx.close().catch(() => {})
+      })
+      peerAnalysersRef.current.clear()
     }
   }, [])
 
-  return { peerAudio: activePeerAudio, setParticipantMuted, setParticipantVolume, isMySpeaking }
+  return { peerAudio: activePeerAudio, setParticipantMuted, setParticipantVolume, isMySpeaking, peerSpeaking }
 }

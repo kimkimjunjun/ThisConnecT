@@ -1,8 +1,0 @@
-package com.thisconnect.server.dto.request;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-
-public record GuestLoginRequest(
-        @NotBlank @Size(max = 20) String nickname
-) {}
