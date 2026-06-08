@@ -70,15 +70,3 @@ feat | fix | docs | style | refactor | test | chore | build
 |------|----------|------|------|
 | 2026-06-08 | 초기 하네스 구성 | 전체 | 이슈 #71 |
 
----
-
-## Available Commands (slash)
-
-| 커맨드 | 용도 |
-|---|---|
-| `/new-branch` | 이슈 번호·타입으로 브랜치 생성 및 전환 |
-| `/commit` | 변경사항 분석 후 컨벤션에 맞게 커밋 |
-| `/push` | 현재 브랜치 origin 푸시 |
-| `/pr` | develop 대상 PR 생성 (템플릿·타이틀 자동 적용) |
-| `/fe-feature` | FE features/ 도메인 레이어 스캐폴딩 |
-| `/be-domain` | BE domain/ 도메인 레이어 스캐폴딩 |
