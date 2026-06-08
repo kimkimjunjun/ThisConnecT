@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react'
 import axios, { isAxiosError } from 'axios'
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { toast } from 'sonner'
@@ -100,8 +99,6 @@ privateApi.interceptors.response.use(
         if (isAuthFailure) {
           useAuthStore.getState().clearAuth()
           if (typeof window !== 'undefined') window.location.href = '/'
-        } else {
-          Sentry.captureException(refreshError, { tags: { source: 'token-refresh' } })
         }
         return Promise.reject(refreshError)
       } finally {
@@ -119,17 +116,6 @@ privateApi.interceptors.response.use(
     if (isAxiosError(error) && !error.response) {
       toast.error('네트워크 연결을 확인해 주세요.')
       return Promise.reject(error)
-    }
-
-    // 5xx 서버 에러 → Sentry
-    if (error.response?.status && error.response.status >= 500) {
-      Sentry.captureException(error, {
-        extra: {
-          url: error.config?.url,
-          method: error.config?.method,
-          status: error.response.status,
-        },
-      })
     }
 
     return Promise.reject(error)
