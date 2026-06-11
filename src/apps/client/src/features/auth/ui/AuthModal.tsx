@@ -1,75 +1,81 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import { redirectToKakao, redirectToGoogle } from '../lib/oauth'
-import { postGuestLogin } from '../api/auth-api'
-import { useAuthStore } from '../store/auth-store'
-import { KakaoIcon, GoogleIcon } from '@/shared/assets/icons'
-import styles from './AuthModal.module.scss'
+import { useState, useRef } from "react";
+import { redirectToKakao, redirectToGoogle } from "../lib/oauth";
+import { postGuestLogin } from "../api/auth-api";
+import { useAuthStore } from "../store/auth-store";
+import { KakaoIcon, GoogleIcon } from "@/shared/assets/icons";
+import styles from "./AuthModal.module.scss";
 
-type Step = 'auth' | 'nickname'
+type Step = "auth" | "nickname";
 
 type Props = {
-  isOpen: boolean
-  onClose: () => void
-}
+  isOpen: boolean;
+  onClose: () => void;
+};
 
 export const AuthModal = ({ isOpen, onClose }: Props) => {
-  const [step, setStep] = useState<Step>('auth')
-  const [nickname, setNickname] = useState('')
-  const [isPending, setIsPending] = useState(false)
-  const [isClosing, setIsClosing] = useState(false)
-  const mouseDownOnBackdrop = useRef(false)
-  const setAuth = useAuthStore((s) => s.setAuth)
+  const [step, setStep] = useState<Step>("auth");
+  const [nickname, setNickname] = useState("");
+  const [isPending, setIsPending] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  const mouseDownOnBackdrop = useRef(false);
+  const setAuth = useAuthStore((s) => s.setAuth);
 
-  useEffect(() => {
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
-      setIsClosing(false)
+      setIsClosing(false);
     } else {
-      setStep('auth')
-      setNickname('')
+      setStep("auth");
+      setNickname("");
     }
-  }, [isOpen])
-
-  const handleClose = () => {
-    if (isClosing) return
-    setIsClosing(true)
-    setTimeout(() => {
-      setIsClosing(false)
-      onClose()
-    }, 200)
   }
 
-  if (!isOpen && !isClosing) return null
+  const handleClose = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 200);
+  };
+
+  if (!isOpen && !isClosing) return null;
 
   const handleSubmitNickname = async () => {
-    const trimmed = nickname.trim()
-    if (!trimmed || isPending) return
+    const trimmed = nickname.trim();
+    if (!trimmed || isPending) return;
 
-    setIsPending(true)
+    setIsPending(true);
     try {
-      const data = await postGuestLogin(trimmed)
-      setAuth(data)
-      onClose()
+      const data = await postGuestLogin(trimmed);
+      setAuth(data);
+      onClose();
     } catch {
       // TODO: 에러 토스트 처리
     } finally {
-      setIsPending(false)
+      setIsPending(false);
     }
-  }
+  };
 
   return (
     <div
-      className={`${styles.backdrop} ${isClosing ? styles.backdropClosing : ''}`}
-      onMouseDown={(e) => { mouseDownOnBackdrop.current = e.target === e.currentTarget }}
-      onClick={() => { if (mouseDownOnBackdrop.current) handleClose() }}
+      className={`${styles.backdrop} ${isClosing ? styles.backdropClosing : ""}`}
+      onMouseDown={(e) => {
+        mouseDownOnBackdrop.current = e.target === e.currentTarget;
+      }}
+      onClick={() => {
+        if (mouseDownOnBackdrop.current) handleClose();
+      }}
     >
       <div
-        className={`${styles.modal} ${isClosing ? styles.modalClosing : ''}`}
+        className={`${styles.modal} ${isClosing ? styles.modalClosing : ""}`}
         key={step}
         onClick={(e) => e.stopPropagation()}
       >
-        {step === 'auth' ? (
+        {step === "auth" ? (
           <>
             <div className={styles.header}>
               <h1 className={styles.logo}>ThisConnecT</h1>
@@ -79,7 +85,7 @@ export const AuthModal = ({ isOpen, onClose }: Props) => {
             <div className={styles.buttons}>
               <button
                 className={`${styles.button} ${styles.guestButton}`}
-                onClick={() => setStep('nickname')}
+                onClick={() => setStep("nickname")}
               >
                 비회원으로 들어가기
               </button>
@@ -103,7 +109,9 @@ export const AuthModal = ({ isOpen, onClose }: Props) => {
           </>
         ) : (
           <>
-            <p className={styles.nicknameTitle}>사용하실 닉네임을 입력해주세요</p>
+            <p className={styles.nicknameTitle}>
+              사용하실 닉네임을 입력해주세요
+            </p>
 
             <div className={styles.nicknameRow}>
               <input
@@ -112,7 +120,7 @@ export const AuthModal = ({ isOpen, onClose }: Props) => {
                 placeholder="닉네임"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSubmitNickname()}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmitNickname()}
                 autoFocus
                 maxLength={20}
                 disabled={isPending}
@@ -122,13 +130,12 @@ export const AuthModal = ({ isOpen, onClose }: Props) => {
                 onClick={handleSubmitNickname}
                 disabled={isPending || !nickname.trim()}
               >
-                {isPending ? '접속 중...' : '접속하기'}
+                {isPending ? "접속 중..." : "접속하기"}
               </button>
             </div>
           </>
         )}
       </div>
     </div>
-  )
-}
-
+  );
+};

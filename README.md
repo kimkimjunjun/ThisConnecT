@@ -37,41 +37,41 @@ ThisConnecT은 Discord에서 영감을 받은 실시간 채팅 + 쪽지(DM) + �
 
 ### Frontend
 
-| 분류 | 기술 |
-|---|---|
-| 프레임워크 | Next.js 16 (App Router) |
-| UI 라이브러리 | React 19 |
-| 언어 | TypeScript 5 |
-| 스타일링 | SCSS Modules |
-| 서버 상태 관리 | TanStack React Query v5 |
-| 클라이언트 상태 관리 | Zustand v5 (persist) |
-| 실시간 통신 | STOMP over WebSocket (`@stomp/stompjs`) |
-| 음성 통신 | WebRTC (`getUserMedia`) |
-| 배포 | Vercel |
+| 분류                 | 기술                                    |
+| -------------------- | --------------------------------------- |
+| 프레임워크           | Next.js 16 (App Router)                 |
+| UI 라이브러리        | React 19                                |
+| 언어                 | TypeScript 5                            |
+| 스타일링             | SCSS Modules                            |
+| 서버 상태 관리       | TanStack React Query v5                 |
+| 클라이언트 상태 관리 | Zustand v5 (persist)                    |
+| 실시간 통신          | STOMP over WebSocket (`@stomp/stompjs`) |
+| 음성 통신            | WebRTC (`getUserMedia`)                 |
+| 배포                 | Vercel                                  |
 
 ### Backend
 
-| 분류 | 기술 |
-|---|---|
-| 프레임워크 | Spring Boot 3.3 |
-| 언어 | Java 17 |
-| ORM | Spring Data JPA / Hibernate |
-| DB | MySQL |
-| 인증/인가 | Spring Security + JWT (`jjwt 0.12`) |
-| 소셜 로그인 | OAuth 2.0 (카카오, 구글) |
-| API 문서 | SpringDoc OpenAPI (Swagger UI) |
-| 빌드 도구 | Gradle |
-| 배포 | AWS EC2 (systemd) |
+| 분류        | 기술                                |
+| ----------- | ----------------------------------- |
+| 프레임워크  | Spring Boot 3.3                     |
+| 언어        | Java 17                             |
+| ORM         | Spring Data JPA / Hibernate         |
+| DB          | MySQL                               |
+| 인증/인가   | Spring Security + JWT (`jjwt 0.12`) |
+| 소셜 로그인 | OAuth 2.0 (카카오, 구글)            |
+| API 문서    | SpringDoc OpenAPI (Swagger UI)      |
+| 빌드 도구   | Gradle                              |
+| 배포        | AWS EC2 (systemd)                   |
 
 ### DevOps / Tooling
 
-| 분류 | 기술 |
-|---|---|
-| 패키지 매니저 | pnpm 9 (모노레포) |
-| CI/CD | GitHub Actions |
-| Git Hook | Husky + commitlint + lint-staged |
-| 코드 포맷 | ESLint (Next.js 규칙셋) |
-| AI 어시스턴트 | Claude Code (Anthropic) |
+| 분류          | 기술                             |
+| ------------- | -------------------------------- |
+| 패키지 매니저 | pnpm 9 (모노레포)                |
+| CI/CD         | GitHub Actions                   |
+| Git Hook      | Husky + commitlint + lint-staged |
+| 코드 포맷     | ESLint (Next.js 규칙셋)          |
+| AI 어시스턴트 | Claude Code (Anthropic)          |
 
 ---
 
@@ -136,23 +136,50 @@ features/<domain>/
 
 컴포넌트에서는 `features/<domain>` 배럴을 통해서만 import하며, `fetchAPI`, `fetch`, `END_POINT`, `env`를 컴포넌트 내부에서 직접 사용하는 것을 금지합니다.
 
-### Backend — Layered Architecture
+### Backend — Domain-Driven Design
+
+각 도메인이 `controller / service / repository / entity / dto` 레이어를 자체적으로 보유합니다.
 
 ```
 com.thisconnect.server/
-├── controller/              # REST + WebSocket 컨트롤러
-├── service/                 # 비즈니스 로직
-├── repository/              # Spring Data JPA 인터페이스
-├── domain/                  # JPA 엔티티
-│   ├── channel/
-│   ├── chatroom/
-│   ├── member/              # Role: ADMIN · USER · GUEST
-│   ├── message/
-│   └── report/
-├── dto/                     # request / response DTO
-├── security/                # JWT 필터, SecurityConfig
-├── oauth/                   # 카카오·구글 OAuth 처리
-└── config/                  # CORS, WebSocket, JPA 설정
+├── domain/
+│   ├── auth/                # 소셜 로그인, 게스트 로그인, 토큰 갱신·로그아웃
+│   │   ├── controller/
+│   │   ├── dto/             # request / response
+│   │   ├── oauth/           # 카카오·구글 OAuth 클라이언트
+│   │   └── service/
+│   ├── channel/             # 채널 CRUD, 채팅방 CRUD (커서 페이지네이션)
+│   │   ├── controller/
+│   │   ├── dto/
+│   │   ├── entity/
+│   │   ├── repository/
+│   │   └── service/
+│   ├── chat/                # STOMP WebSocket 메시지 처리, 참여자 관리, 강퇴
+│   │   ├── controller/      # @MessageMapping 핸들러
+│   │   ├── dto/
+│   │   └── service/         # RoomSessionService (인메모리 세션)
+│   ├── member/              # 회원 정보 조회·수정 (Role: ADMIN · USER · GUEST)
+│   │   ├── controller/
+│   │   ├── dto/
+│   │   ├── entity/
+│   │   ├── repository/
+│   │   └── service/
+│   ├── message/             # 쪽지 송수신, 읽음 처리, 수·발신함 삭제
+│   │   ├── controller/
+│   │   ├── dto/
+│   │   ├── entity/
+│   │   ├── repository/
+│   │   └── service/
+│   └── report/              # 신고 제출, 관리자 신고 목록 조회
+│       ├── controller/
+│       ├── dto/
+│       ├── entity/
+│       ├── repository/
+│       └── service/
+└── global/
+    ├── config/              # SecurityConfig, WebConfig (CORS), WebSocketConfig
+    ├── controller/          # HealthController (/api/health)
+    └── security/            # JwtAuthFilter, JwtProvider, WebSocketAuthInterceptor
 ```
 
 ### 인증 플로우
@@ -170,18 +197,18 @@ com.thisconnect.server/
 
 ## 주요 기능
 
-| 기능 | 설명 |
-|---|---|
-| 소셜 로그인 | 카카오 / 구글 OAuth 2.0 |
-| 비회원 로그인 | 닉네임만으로 GUEST 역할 참여 |
-| 채널 관리 | 채널 생성·삭제 (USER/ADMIN), 채팅방 목록 |
-| 실시간 채팅 | STOMP WebSocket, 메시지 이력 무한 스크롤 |
-| 음성 채팅 | WebRTC getUserMedia 기반 인원 수 표시 |
-| 쪽지(DM) | 수신함·발신함, 읽음 처리, 답장 |
-| 신고 | 쪽지 신고, 관리자 신고 내역 조회 |
-| 반응형 UI | 모바일 사이드바 자동 접힘, 쪽지함 레이아웃 최적화 |
-| 스켈레톤 UI | 채팅방 목록 데이터 로딩 중 스켈레톤 카드 표시 |
-| SSR prefetch | TanStack Query + Next.js 서버 컴포넌트 prefetch |
+| 기능          | 설명                                              |
+| ------------- | ------------------------------------------------- |
+| 소셜 로그인   | 카카오 / 구글 OAuth 2.0                           |
+| 비회원 로그인 | 닉네임만으로 GUEST 역할 참여                      |
+| 채널 관리     | 채널 생성·삭제 (USER/ADMIN), 채팅방 목록          |
+| 실시간 채팅   | STOMP WebSocket, 메시지 이력 무한 스크롤          |
+| 음성 채팅     | WebRTC getUserMedia 기반 인원 수 표시             |
+| 쪽지(DM)      | 수신함·발신함, 읽음 처리, 답장                    |
+| 신고          | 쪽지 신고, 관리자 신고 내역 조회                  |
+| 반응형 UI     | 모바일 사이드바 자동 접힘, 쪽지함 레이아웃 최적화 |
+| 스켈레톤 UI   | 채팅방 목록 데이터 로딩 중 스켈레톤 카드 표시     |
+| SSR prefetch  | TanStack Query + Next.js 서버 컴포넌트 prefetch   |
 
 ---
 
@@ -190,8 +217,8 @@ com.thisconnect.server/
 ### 브랜치 계층
 
 ```
-prod      ─── 운영 배포 (직접 push 금지, develop에서만 병합)
-develop   ─── 개발 통합 브랜치 (서브 브랜치 PR 대상)
+prod      ─── 운영 배포 (직접 push 금지, dev에서만 병합)
+dev   ─── 개발 통합 브랜치 (서브 브랜치 PR 대상)
 │
 ├── feat/#<이슈번호>/fe/<설명>   # 프론트엔드 기능 개발
 ├── feat/#<이슈번호>/be/<설명>   # 백엔드 기능 개발
@@ -201,31 +228,32 @@ develop   ─── 개발 통합 브랜치 (서브 브랜치 PR 대상)
 ```
 
 병합 흐름:
+
 ```
 feat/* | fix/* | refactor/*
-  └─ PR ─→ develop
+  └─ PR ─→ dev
               └─ PR ─→ prod
 ```
 
 ### 브랜치별 코드 수정 범위
 
-| 브랜치 패턴 | 수정 허용 범위 |
-|---|---|
+| 브랜치 패턴 | 수정 허용 범위            |
+| ----------- | ------------------------- |
 | `/fe/` 포함 | `src/apps/client/` 하위만 |
 | `/be/` 포함 | `src/apps/server/` 하위만 |
-| 해당 없음 | 양쪽 모두 가능 |
+| 해당 없음   | 양쪽 모두 가능            |
 
 ### 개발 사이클
 
 ```
 1. GitHub에서 이슈 생성
-2. develop 기반으로 브랜치 생성 (브랜치명에 이슈번호 포함)
+2. dev 기반으로 브랜치 생성 (브랜치명에 이슈번호 포함)
 3. 구현
 4. git commit → commitlint 자동 검증 + prepare-commit-msg 훅으로 접두사 자동 삽입
 5. git push origin <브랜치>
-6. PR 생성 (base: develop, PR 템플릿 + 이슈번호 필수)
+6. PR 생성 (base: dev, PR 템플릿 + 이슈번호 필수)
 7. CI 통과 확인 (빌드·타입체크)
-8. develop 병합 → prod PR 생성 후 병합
+8. dev 병합 → prod PR 생성 후 병합
 9. prod 병합 시 CD 자동 트리거 → 자동 배포
 ```
 
@@ -237,7 +265,7 @@ feat/* | fix/* | refactor/*
 
 ```
 .github/workflows/
-├── fe-ci.yml     # FE PR 빌드 검증 (develop · prod 대상 PR)
+├── fe-ci.yml     # FE PR 빌드 검증 (dev · prod 대상 PR)
 ├── fe-cd.yml     # FE 배포 (prod 머지 시 → Vercel)
 ├── be-ci.yml     # BE PR 빌드·테스트 검증
 └── be-cd.yml     # BE 배포 (prod 머지 시 → AWS EC2)
@@ -246,7 +274,7 @@ feat/* | fix/* | refactor/*
 ### FE CI (`fe-ci.yml`)
 
 ```
-트리거: PR → develop | prod (src/apps/client/** 변경 시)
+트리거: PR → dev | prod (src/apps/client/** 변경 시)
 실행:   pnpm install → next build (타입 체크 포함)
 ```
 
@@ -263,7 +291,7 @@ feat/* | fix/* | refactor/*
 ### BE CI (`be-ci.yml`)
 
 ```
-트리거: PR → develop | prod (src/apps/server/** 변경 시)
+트리거: PR → dev | prod (src/apps/server/** 변경 시)
 실행:   JDK 17 (Corretto) → ./gradlew clean build -x test → ./gradlew test
 ```
 
@@ -283,16 +311,16 @@ feat/* | fix/* | refactor/*
 
 commitlint로 자동 검증됩니다. `prepare-commit-msg` 훅이 브랜치명 기반으로 접두사를 자동 삽입합니다.
 
-| 타입 | 사용 시점 |
-|---|---|
-| `feat` | 새로운 기능 |
-| `fix` | 버그 수정 |
-| `docs` | 문서 변경 |
-| `style` | 포맷팅 (기능 변경 없음) |
-| `refactor` | 리팩터링 |
-| `test` | 테스트 추가·수정 |
-| `chore` | 빌드·설정·기타 |
-| `build` | 빌드 시스템 변경 |
+| 타입       | 사용 시점               |
+| ---------- | ----------------------- |
+| `feat`     | 새로운 기능             |
+| `fix`      | 버그 수정               |
+| `docs`     | 문서 변경               |
+| `style`    | 포맷팅 (기능 변경 없음) |
+| `refactor` | 리팩터링                |
+| `test`     | 테스트 추가·수정        |
+| `chore`    | 빌드·설정·기타          |
+| `build`    | 빌드 시스템 변경        |
 
 예시: 브랜치 `feat/#10/fe/mailbox-ui` → 커밋 `feat(mailbox-ui): 쪽지함 UI 구현`
 
@@ -303,6 +331,7 @@ commitlint로 자동 검증됩니다. `prepare-commit-msg` 훅이 브랜치명 �
 ```
 
 예시:
+
 - `[FEAT/FE] #8 대시보드 UI 전체 구현`
 - `[FEAT/BE] #9 채널 API 구현`
 - `[FIX/FE] #52 만료 토큰 STOMP Anonymous 닉네임 버그 수정`
@@ -393,27 +422,27 @@ pnpm server
 
 **Backend** (`src/apps/server/src/main/resources/application.yml`)
 
-| 변수 | 설명 |
-|---|---|
-| `DATABASE_URL` | MySQL 연결 URL |
-| `DATABASE_USERNAME` | DB 사용자 이름 |
-| `DATABASE_PASSWORD` | DB 비밀번호 |
-| `JWT_SECRET` | JWT 서명 키 (256비트 이상) |
-| `KAKAO_CLIENT_ID` | 카카오 OAuth 앱 키 |
-| `KAKAO_CLIENT_SECRET` | 카카오 OAuth 시크릿 |
-| `KAKAO_REDIRECT_URI` | 카카오 콜백 URI |
-| `GOOGLE_CLIENT_ID` | 구글 OAuth 클라이언트 ID |
-| `GOOGLE_CLIENT_SECRET` | 구글 OAuth 시크릿 |
-| `GOOGLE_REDIRECT_URI` | 구글 콜백 URI |
+| 변수                   | 설명                       |
+| ---------------------- | -------------------------- |
+| `DATABASE_URL`         | MySQL 연결 URL             |
+| `DATABASE_USERNAME`    | DB 사용자 이름             |
+| `DATABASE_PASSWORD`    | DB 비밀번호                |
+| `JWT_SECRET`           | JWT 서명 키 (256비트 이상) |
+| `KAKAO_CLIENT_ID`      | 카카오 OAuth 앱 키         |
+| `KAKAO_CLIENT_SECRET`  | 카카오 OAuth 시크릿        |
+| `KAKAO_REDIRECT_URI`   | 카카오 콜백 URI            |
+| `GOOGLE_CLIENT_ID`     | 구글 OAuth 클라이언트 ID   |
+| `GOOGLE_CLIENT_SECRET` | 구글 OAuth 시크릿          |
+| `GOOGLE_REDIRECT_URI`  | 구글 콜백 URI              |
 
 **Frontend** — 환경 변수는 Vercel 프로젝트 설정에서 관리합니다.
 
 ### GitHub Actions 시크릿 설정
 
-| 시크릿 | 용도 |
-|---|---|
-| `VERCEL_TOKEN` | Vercel 배포 인증 토큰 |
-| `VERCEL_ORG_ID` | Vercel 조직 ID |
-| `VERCEL_PROJECT_ID` | Vercel 프로젝트 ID |
-| `EC2_HOST` | AWS EC2 퍼블릭 IP 또는 도메인 |
-| `EC2_SSH_KEY` | EC2 접속용 PEM 키 (개인키 전체) |
+| 시크릿              | 용도                            |
+| ------------------- | ------------------------------- |
+| `VERCEL_TOKEN`      | Vercel 배포 인증 토큰           |
+| `VERCEL_ORG_ID`     | Vercel 조직 ID                  |
+| `VERCEL_PROJECT_ID` | Vercel 프로젝트 ID              |
+| `EC2_HOST`          | AWS EC2 퍼블릭 IP 또는 도메인   |
+| `EC2_SSH_KEY`       | EC2 접속용 PEM 키 (개인키 전체) |

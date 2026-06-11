@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: thisconnect-server
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/disconnectdb}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DATABASE_USERNAME:root}
+    password: ${DATABASE_PASSWORD:7875}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+server:
+  port: 8080
+
+jwt:
+  secret: ${JWT_SECRET:8u8ZyEX60IBgbZp4M6MlXv3jYu5bhKlut9hzr8Xo/p8=}
+
+oauth:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:}
+    client-secret: ${KAKAO_CLIENT_SECRET:}
+    redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:3000/callback/kakao}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/callback/google}
+
+logging:
+  level:
+    com.thisconnect: DEBUG
