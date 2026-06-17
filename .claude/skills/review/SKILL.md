@@ -20,7 +20,7 @@ description: "구현된 FE/BE 코드를 프로젝트 컨벤션·보안·성능 �
 - [ ] 컴파일·타입 오류 가능성
 
 ### FE
-- [ ] 컴포넌트에서 `fetchAPI`·`fetch`·`END_POINT` 직접 호출
+- [ ] 컴포넌트에서 `privateApi`·`publicApi`·`fetch` 직접 호출 (features/api 레이어 우회)
 - [ ] features/ 구조 미준수 (api/hooks/index.ts 분리 안 됨)
 - [ ] effect 내 조건 없는 무한 setState
 - [ ] XSS 가능성 (`dangerouslySetInnerHTML` 무분별 사용)

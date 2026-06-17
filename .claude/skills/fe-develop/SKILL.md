@@ -12,12 +12,12 @@ description: "Next.js 16 + React 19 + TypeScript + SCSS Modules 프론트엔드 
 
 ```
 features/<domain>/
-├── api/<domain>-api.ts    # fetchAPI 순수 함수만
+├── api/<domain>-api.ts    # privateApi/publicApi 호출 순수 함수만
 ├── hooks/use<Domain>.ts   # 상태·이펙트 포함 훅
 └── index.ts               # barrel export
 ```
 
-컴포넌트에서 `fetchAPI`, `fetch`, `END_POINT`, `env` **직접 사용 금지**.
+컴포넌트에서 `privateApi`, `publicApi`, `fetch`, `END_POINT`, `env` **직접 사용 금지**.
 → 상세 패턴: `references/fe-conventions.md`
 
 ## 코드 작성 규칙
@@ -63,6 +63,7 @@ export const use<Domain>Store = create<State>()(
 - AudioContext는 `suspended` 상태 체크 + `resume()` 호출 필수
 
 ## 금지 패턴
-- `fetchAPI` 컴포넌트 직접 호출
+- `privateApi`/`publicApi` 컴포넌트 직접 호출
+- `fetch` 직접 사용 (axios 인스턴스 경유 필수)
 - `any` 타입 사용
 - effect 내 조건 없는 `setState` 루프
