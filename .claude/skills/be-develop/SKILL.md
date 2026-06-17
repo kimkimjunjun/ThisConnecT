@@ -12,17 +12,29 @@ description: "Spring Boot 3 + Java 17 + JPA 백엔드 구현 가이드. 신규 �
 
 ```
 com.thisconnect.server
-├── domain/<domain>/
-│   ├── controller/<Domain>Controller.java
-│   ├── dto/
-│   │   ├── request/  (record 사용)
-│   │   └── response/ (record 사용)
-│   ├── entity/<Domain>.java
-│   ├── repository/<Domain>Repository.java
-│   └── service/<Domain>Service.java
+├── domain/
+│   ├── auth/
+│   │   ├── controller/  dto/(request/ response/)  service/
+│   │   └── oauth/       # OAuthClient 인터페이스 + 소셜별 구현체
+│   ├── channel/
+│   │   ├── controller/  dto/(request/ response/)  service/
+│   │   └── entity/  repository/
+│   ├── chat/
+│   │   ├── controller/  dto/(request/ response/)
+│   │   └── service/     # ※ entity/repository 없음 — 인메모리 세션만 관리
+│   ├── member/
+│   │   ├── controller/  dto/(request/ response/)  service/
+│   │   └── entity/  repository/
+│   ├── message/
+│   │   ├── controller/  dto/(request/ response/)  service/
+│   │   └── entity/  repository/
+│   └── report/
+│       ├── controller/  dto/(request/ response/)  service/
+│       └── entity/  repository/
 └── global/
-    ├── config/   (Security, Swagger, Web, WebSocket)
-    └── security/ (JWT, Filter, Interceptor)
+    ├── config/      (SecurityConfig, SwaggerConfig, WebConfig, WebSocketConfig)
+    ├── controller/  (HealthController)
+    └── security/    (JwtAuthFilter, JwtProvider, WebSocketAuthInterceptor)
 ```
 
 → 상세 패턴: `references/be-conventions.md`
@@ -36,14 +48,14 @@ com.thisconnect.server
 public class Domain {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 }
 ```
 
-### DTO (record)
+### DTO (record 필수)
 ```java
 public record CreateDomainRequest(
     @NotBlank String title,
@@ -63,10 +75,10 @@ public interface DomainRepository extends JpaRepository<Domain, Long> {
 @Service @RequiredArgsConstructor
 public class DomainService {
     private final DomainRepository domainRepository;
-    
+
     @Transactional
     public DomainResponse create(CreateDomainRequest req) { ... }
-    
+
     @Transactional(readOnly = true)
     public List<DomainResponse> findAll() { ... }
 }
@@ -74,12 +86,14 @@ public class DomainService {
 
 ### Controller
 ```java
+@Tag(name = "Domain", description = "도메인 설명")
 @RestController
 @RequestMapping("/api/domains")
 @RequiredArgsConstructor
 public class DomainController {
     private final DomainService domainService;
-    
+
+    @Operation(summary = "생성")
     @PostMapping
     public ResponseEntity<DomainResponse> create(
         @RequestBody @Valid CreateDomainRequest req) {
@@ -87,15 +101,29 @@ public class DomainController {
     }
 }
 ```
+→ 모든 엔드포인트에 `@Tag` + `@Operation` + `@ApiResponses` 추가 필수
 
 ## WebSocket (STOMP)
-- 핸들러: `@MessageMapping` + `SimpMessagingTemplate`
-- 시그널링 패턴: `ChatController` 참조
-- CORS: `application.yml`의 `app.cors.allowed-origins` 환경변수 사용
+- `@Controller` (`@RestController` 아님)
+- `@MessageMapping` + `SimpMessagingTemplate`
+- 연결 해제: `@EventListener(SessionDisconnectEvent.class)`
+- 구독 토픽 패턴: `/sub/rooms/{roomId}/chat`, `/sub/rooms/{roomId}/participants`, `/sub/rooms/{roomId}/voice`
+- 참조: `ChatController.java`
 
-## 보안
+## 인증/보안
+- access token (1h): `Authorization: Bearer <token>` 헤더
+- refresh token (7d): HttpOnly 쿠키 (`refresh_token`, path=`/api/auth`)
 - JWT 검증: `JwtAuthFilter` 기존 필터 재사용
-- 새 엔드포인트 인증 필요 시 `SecurityConfig`에 경로 추가
+- 새 퍼블릭 엔드포인트: `SecurityConfig`의 `permitAll()` 목록에 추가
+- GUEST role: DB 미저장, JWT claims에만 존재
+
+## 환경변수 (application.yml)
+| 키 | 기본값 | 설명 |
+|----|--------|------|
+| `app.cors.allowed-origins` | `http://localhost:3000` | CORS 허용 오리진 (쉼표 구분) |
+| `app.cookie.secure` | `false` | 운영 환경에서 `true` |
+| `jwt.secret` | (Base64 기본값) | HMAC-SHA 시크릿 |
+| `DATABASE_URL` | `jdbc:mysql://localhost:3306/disconnectdb` | DB 연결 |
 
 ## 테스트 환경
 `src/test/resources/application.yml` — H2 인메모리 DB (MySQL 호환 모드)
