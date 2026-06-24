@@ -417,32 +417,3 @@ pnpm web
 # 백엔드 실행 (별도 터미널)
 pnpm server
 ```
-
-### 환경 변수
-
-**Backend** (`src/apps/server/src/main/resources/application.yml`)
-
-| 변수                   | 설명                       |
-| ---------------------- | -------------------------- |
-| `DATABASE_URL`         | MySQL 연결 URL             |
-| `DATABASE_USERNAME`    | DB 사용자 이름             |
-| `DATABASE_PASSWORD`    | DB 비밀번호                |
-| `JWT_SECRET`           | JWT 서명 키 (256비트 이상) |
-| `KAKAO_CLIENT_ID`      | 카카오 OAuth 앱 키         |
-| `KAKAO_CLIENT_SECRET`  | 카카오 OAuth 시크릿        |
-| `KAKAO_REDIRECT_URI`   | 카카오 콜백 URI            |
-| `GOOGLE_CLIENT_ID`     | 구글 OAuth 클라이언트 ID   |
-| `GOOGLE_CLIENT_SECRET` | 구글 OAuth 시크릿          |
-| `GOOGLE_REDIRECT_URI`  | 구글 콜백 URI              |
-
-**Frontend** — 환경 변수는 Vercel 프로젝트 설정에서 관리합니다.
-
-### GitHub Actions 시크릿 설정
-
-| 시크릿              | 용도                            |
-| ------------------- | ------------------------------- |
-| `VERCEL_TOKEN`      | Vercel 배포 인증 토큰           |
-| `VERCEL_ORG_ID`     | Vercel 조직 ID                  |
-| `VERCEL_PROJECT_ID` | Vercel 프로젝트 ID              |
-| `EC2_HOST`          | AWS EC2 퍼블릭 IP 또는 도메인   |
-| `EC2_SSH_KEY`       | EC2 접속용 PEM 키 (개인키 전체) |
