@@ -8,7 +8,7 @@ description: "ThisConnecT Git 워크플로우. 브랜치 생성, 커밋, 푸시,
 ## 브랜치 생성
 
 ```bash
-git checkout develop && git pull origin develop
+git checkout dev && git pull origin dev
 git checkout -b "<브랜치명>"
 ```
 
@@ -48,7 +48,7 @@ git push origin <현재 브랜치명>
 
 ```bash
 gh pr create \
-  --base develop \
+  --base dev \
   --head "<현재 브랜치>" \
   --title "[TYPE/SCOPE] #N <제목>" \
   --body "$(cat <<'EOF'
@@ -70,7 +70,7 @@ PR 타이틀 SCOPE 결정:
 - `--no-verify` 절대 금지
 - `--force` 절대 금지 (`--force-with-lease`는 허용)
 - `main`·`prod` 브랜치 직접 푸시 금지
-- 서브 브랜치 PR base는 항상 `develop`
+- 서브 브랜치 PR base는 항상 `dev`
 
 ## 브랜치별 코드 수정 범위
 - `/fe/` 포함 → `src/apps/client/`만
