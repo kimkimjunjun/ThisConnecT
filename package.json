@@ -8,8 +8,8 @@
     "web": "pnpm --dir src/apps/client dev",
     "web:build": "pnpm --dir src/apps/client build",
     "web:lint": "pnpm --dir src/apps/client lint",
-    "server": "JAVA_HOME=/Users/kimjunhwi/Library/Java/JavaVirtualMachines/temurin-21.0.10/Contents/Home ./src/apps/server/gradlew -p src/apps/server bootRun",
-    "server:build": "JAVA_HOME=/Users/kimjunhwi/Library/Java/JavaVirtualMachines/temurin-21.0.10/Contents/Home ./src/apps/server/gradlew -p src/apps/server build"
+    "server": "JAVA_HOME=/Users/kimjunhwi/Library/Java/JavaVirtualMachines/temurin-21.0.10/Contents/Home ./src/apps/server/gradlew -p src/apps/server bootRun --console=plain --no-daemon",
+    "server:build": "JAVA_HOME=/Users/kimjunhwi/Library/Java/JavaVirtualMachines/temurin-21.0.10/Contents/Home ./src/apps/server/gradlew -p src/apps/server build --console=plain --no-daemon"
   },
   "devDependencies": {
     "@commitlint/cli": "^19",
